@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身知 BodyLens · 方案 B 生物荧光</title>
+<style>
+:root{
+  --void:#050809; --void-2:#080E10; --void-3:#0B1417;
+  --ink:#E8F4F1; --muted:#7E9694; --faint:#4C605F;
+  --line:rgba(120,200,180,.13); --line-hot:rgba(59,240,180,.42);
+  --bio:#3BF0B4; --bio-dim:rgba(59,240,180,.16);
+  --alarm:#FF7043; --alarm-dim:rgba(255,112,67,.16);
+  --glass:linear-gradient(158deg,rgba(16,28,31,.92) 0%,rgba(9,17,19,.96) 52%,rgba(5,10,11,.98) 100%);
+  --sans:"Inter",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --pad:clamp(18px,2.6vw,38px);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--void);color:var(--ink);font-family:var(--sans);font-size:14px;
+  line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+  min-height:100dvh;
+}
+::selection{background:rgba(59,240,180,.25);color:#fff}
+:focus-visible{outline:2px solid var(--bio);outline-offset:3px}
+
+/* ---------- 背景层 ---------- */
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.aura{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;will-change:transform}
+.a1{width:52vw;height:52vw;left:-12vw;top:-14vw;background:radial-gradient(circle,rgba(59,240,180,.30),transparent 68%);animation:breathe 14s ease-in-out infinite}
+.a2{width:44vw;height:44vw;right:-10vw;bottom:-16vw;background:radial-gradient(circle,rgba(255,112,67,.20),transparent 68%);animation:breathe 18s ease-in-out infinite reverse}
+.a3{width:34vw;height:34vw;left:38%;top:26%;background:radial-gradient(circle,rgba(80,140,255,.14),transparent 70%);animation:breathe 22s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(1) translate(0,0);opacity:.42}50%{transform:scale(1.16) translate(2%,-3%);opacity:.62}}
+.grid{position:absolute;inset:0;opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:74px 74px;
+  mask-image:radial-gradient(ellipse 74% 62% at 50% 46%,#000 20%,transparent 78%)}
+.scan{position:absolute;left:0;right:0;height:170px;top:-170px;
+  background:linear-gradient(180deg,transparent,rgba(59,240,180,.055) 60%,rgba(59,240,180,.11) 92%,transparent);
+  animation:sweep 9s linear infinite}
+@keyframes sweep{0%{top:-170px}100%{top:100%}}
+.vignette{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 48%,transparent 40%,rgba(0,0,0,.72) 100%)}
+
+/* ---------- 顶部 ---------- */
+.hud{position:relative;z-index:10;display:flex;align-items:center;gap:clamp(14px,2.4vw,36px);
+  padding:18px var(--pad)}
+.logo{display:flex;align-items:center;gap:11px;text-decoration:none;color:var(--ink)}
+.logo .orb{width:26px;height:26px;border-radius:50%;flex:0 0 26px;
+  background:radial-gradient(circle at 32% 30%,#9CFFE0,var(--bio) 42%,#0B6B54 100%);
+  box-shadow:0 0 0 1px rgba(59,240,180,.5),0 0 22px 2px rgba(59,240,180,.55);
+  animation:pulse 3.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 1px rgba(59,240,180,.5),0 0 18px 0 rgba(59,240,180,.42)}50%{box-shadow:0 0 0 1px rgba(59,240,180,.8),0 0 30px 5px rgba(59,240,180,.6)}}
+.logo b{font-size:16px;letter-spacing:.3em;font-weight:600}
+.logo i{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.3em;color:var(--faint)}
+.hud nav{display:flex;gap:3px;margin-left:auto;padding:4px;border:1px solid var(--line);
+  border-radius:999px;background:rgba(9,17,19,.6);backdrop-filter:blur(12px)}
+.hud nav a{text-decoration:none;color:var(--muted);font-size:12.5px;letter-spacing:.1em;padding:7px 15px;border-radius:999px;transition:all .3s var(--ease)}
+.hud nav a:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+.hud nav a.on{color:#03130F;background:var(--bio);box-shadow:0 0 20px -4px rgba(59,240,180,.7)}
+.status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;color:var(--faint);text-transform:uppercase}
+.status s{width:6px;height:6px;border-radius:50%;background:var(--bio);text-decoration:none;box-shadow:0 0 9px var(--bio)}
+
+/* ---------- 舞台 ---------- */
+.stage{position:relative;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,26vw,380px);
+  gap:clamp(16px,3vw,40px);padding:0 var(--pad) var(--pad);align-items:stretch;min-height:calc(100dvh - 74px)}
+@media(max-width:1080px){.stage{grid-template-columns:1fr;min-height:0}}
+
+.canvas{position:relative;display:flex;flex-direction:column;justify-content:center;min-height:0}
+
+.headline{margin:0 0 clamp(10px,2vh,26px)}
+.headline .eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.32em;color:var(--bio);text-transform:uppercase;margin-bottom:14px}
+.headline .eyebrow s{width:22px;height:1px;background:var(--bio);text-decoration:none;opacity:.6}
+.headline h1{margin:0;font-size:clamp(30px,4.6vw,64px);font-weight:800;line-height:.98;letter-spacing:-.035em}
+.headline h1 em{font-style:normal;background:linear-gradient(96deg,#E8F4F1 6%,var(--bio) 56%,#2FB8E8 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.headline p{margin:16px 0 0;max-width:26em;color:var(--muted);font-size:13.5px;line-height:1.85}
+
+.figure{position:relative;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;padding:6px 0}
+.figure svg{width:auto;height:min(62vh,600px);max-width:100%;overflow:visible;
+  filter:drop-shadow(0 0 26px rgba(59,240,180,.16));transition:transform .5s var(--ease)}
+.silhouette{fill:rgba(59,240,180,.05);stroke:rgba(140,230,205,.45);stroke-width:1.1;
+  transition:all .45s var(--ease);filter:drop-shadow(0 0 10px rgba(59,240,180,.18))}
+.limb-l{fill:none;stroke:rgba(72,148,134,.34);stroke-width:34;stroke-linecap:round}
+.limb-a{fill:none;stroke:rgba(72,148,134,.34);stroke-width:28;stroke-linecap:round}
+.organ{cursor:pointer}
+.organ .core{fill:rgba(120,220,195,.22);stroke:rgba(180,255,235,.6);stroke-width:.9;
+  transition:all .45s var(--ease);transform-box:fill-box;transform-origin:center}
+.organ .ring{fill:none;stroke:var(--bio);stroke-width:1;opacity:0;transform-box:fill-box;transform-origin:center;transition:all .55s var(--ease)}
+.organ .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.04em;fill:#A6C3BE;transition:fill .4s var(--ease)}
+.organ .lead{stroke:rgba(140,230,205,.3);stroke-width:.8;fill:none;transition:stroke .4s var(--ease)}
+.organ[data-type="harm"] .core{fill:rgba(255,138,96,.52);stroke:rgba(255,195,165,.9)}
+.organ:hover .core,.organ.hot .core{transform:scale(1.12)}.organ:hover .ring,.organ.hot .ring{opacity:1;transform:scale(1.35)}
+.organ[data-type="harm"]:hover .core,.organ[data-type="harm"].hot .core{fill:rgba(255,120,80,.6);stroke:#FFB08A}
+.organ[data-type="harm"]:hover .ring,.organ[data-type="harm"].hot .ring{stroke:var(--alarm)}
+.organ[data-type="benefit"]:hover .core,.organ[data-type="benefit"].hot .core{fill:rgba(59,240,180,.55);stroke:var(--bio)}
+.organ:hover .lbl,.organ.hot .lbl{fill:#E8FFF8}
+.organ:hover .lead,.organ.hot .lead{stroke:rgba(200,255,240,.72)}
+
+/* 指针光斑 */
+.cursor-glow{position:fixed;left:0;top:0;width:520px;height:520px;margin:-260px 0 0 -260px;z-index:4;
+  pointer-events:none;border-radius:50%;opacity:0;transition:opacity .5s var(--ease);
+  background:radial-gradient(circle,rgba(59,240,180,.13),rgba(59,240,180,.04) 42%,transparent 68%);
+  mix-blend-mode:screen;will-change:transform}
+body:hover .cursor-glow{opacity:1}
+
+/* ---------- 右侧面板 ---------- */
+.panel{display:flex;flex-direction:column;gap:14px;min-height:0}
+.card{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:20px;
+  padding:18px 18px 16px;box-shadow:inset 0 1px 0 rgba(200,255,240,.07),0 30px 60px -34px #000,0 2px 8px rgba(0,0,0,.5);
+  backdrop-filter:blur(20px) saturate(1.2);transition:border-color .4s var(--ease),transform .4s var(--ease)}
+.card:hover{border-color:rgba(59,240,180,.24);transform:translateY(-2px)}
+.card-h{display:flex;align-items:center;gap:9px;margin-bottom:14px}
+.card-h .n{font-family:var(--mono);font-size:9px;letter-spacing:.22em;color:var(--bio)}
+.card-h h2{margin:0;font-size:12px;font-weight:600;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.card-h .badge{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.14em;
+  padding:3px 8px;border-radius:5px;border:1px solid var(--line);color:var(--faint)}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:6px;height:6px;border-radius:50%;display:inline-block;box-shadow:0 0 8px currentColor}
+.legend .h{background:var(--alarm);color:var(--alarm)}
+.legend .b{background:var(--bio);color:var(--bio)}
+.legend .n{background:transparent;border:1px solid var(--faint);box-shadow:none}
+
+.dock{display:flex;flex-wrap:wrap;gap:7px}
+.pill{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);
+  font-family:var(--sans);font-size:12px;padding:7px 12px;border-radius:9px;cursor:pointer;
+  transition:all .28s var(--ease);letter-spacing:.03em}
+.pill:hover{color:var(--ink);border-color:rgba(59,240,180,.4);background:rgba(59,240,180,.08);transform:translateY(-1px)}
+.pill[aria-pressed="true"]{background:rgba(59,240,180,.14);border-color:rgba(59,240,180,.55);color:#C8FFEC;
+  box-shadow:0 0 18px -6px rgba(59,240,180,.6)}
+.action{appearance:none;border:0;width:100%;margin-top:12px;padding:13px;border-radius:12px;cursor:pointer;
+  font-family:var(--sans);font-size:13.5px;font-weight:600;letter-spacing:.1em;color:#04140F;
+  background:linear-gradient(100deg,#7BFFD8,var(--bio) 42%,#22C9A0 100%);
+  box-shadow:0 10px 30px -12px rgba(59,240,180,.85),inset 0 1px 0 rgba(255,255,255,.45);
+  transition:all .3s var(--ease);position:relative;overflow:hidden}
+.action:hover{filter:brightness(1.08);box-shadow:0 14px 38px -12px rgba(59,240,180,1)}
+.action:active{transform:scale(.985)}
+
+.results{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;overflow:auto;max-height:36vh;
+  scrollbar-width:thin;scrollbar-color:#264A44 transparent}
+.results li{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:11px 8px;
+  border-bottom:1px solid rgba(120,200,180,.08);cursor:pointer;border-radius:10px;transition:all .3s var(--ease)}
+.results li:last-child{border-bottom:0}
+.results li:hover{background:rgba(59,240,180,.055);padding-left:12px}
+.results .nm{font-size:14px;letter-spacing:.06em}
+.results .nm small{display:block;font-size:11px;color:var(--faint);letter-spacing:0;margin-top:1px}
+.results .bar{width:44px;height:3px;border-radius:2px;background:rgba(255,255,255,.07);overflow:hidden}
+.results .bar s{display:block;height:100%;width:0;border-radius:2px;transition:width .9s var(--ease)}
+.results .bar.h s{background:var(--alarm);box-shadow:0 0 10px var(--alarm)}
+.results .bar.b s{background:var(--bio);box-shadow:0 0 10px var(--bio)}
+.results .bar.n s{background:var(--faint)}
+.results .k{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+.results .k.h{color:var(--alarm)}
+.results .k.b{color:var(--bio)}
+
+.srcs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.srcs li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center;
+  font-size:11px;padding:8px 10px;border:1px solid rgba(120,200,180,.1);border-radius:9px;
+  background:rgba(255,255,255,.02);transition:all .28s var(--ease)}
+.srcs li:hover{border-color:rgba(59,240,180,.3);background:rgba(59,240,180,.05);transform:translateX(2px)}
+.srcs b{font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--bio);font-weight:600}
+.srcs span{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcs i{font-style:normal;font-family:var(--mono);font-size:8.5px;color:var(--faint)}
+.foot{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;
+  display:flex;justify-content:space-between;padding:2px 2px 0}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="aura a1"></div><div class="aura a2"></div><div class="aura a3"></div>
+  <div class="grid"></div><div class="scan"></div><div class="vignette"></div>
+</div>
+<div class="cursor-glow" id="glow" aria-hidden="true"></div>
+
+<header class="hud">
+  <a class="logo" href="#"><span class="orb"></span><b>身知</b><i>BODYLENS</i></a>
+  <nav>
+    <a href="#" class="on">图谱</a><a href="#">行为</a><a href="#">今日</a><a href="#">资料</a>
+  </nav>
+  <div class="status"><s></s>本地运行</div>
+</header>
+
+<main class="stage">
+  <div class="canvas">
+    <div class="headline">
+      <div class="eyebrow"><s></s>Interactive Human Atlas</div>
+      <h1>看见行为的<br><em>回响</em></h1>
+      <p>三十条日常行为，十个器官入口。所有结论都能追溯到公开来源，也能追溯到它不适用的地方。</p>
+    </div>
+
+    <div class="figure">
+      <svg viewBox="0 0 620 640" role="img" aria-label="人体正面示意图，标注脑、肺、心、肝、胃、肾与体表七个入口">
+  <g transform="translate(100 0)">
+    <path class="limb-l" d="M180 350C176 420 178 470 180 510c1 30 1 60 1 86"/>
+    <path class="limb-l" d="M220 350C224 420 222 470 220 510c-1 30-1 60-1 86"/>
+    <ellipse class="silhouette" cx="180" cy="604" rx="16" ry="8"/>
+    <ellipse class="silhouette" cx="220" cy="604" rx="16" ry="8"/>
+    <path class="limb-a" d="M140 144C128 188 124 240 126 288c1 26 3 44 6 60"/>
+    <path class="limb-a" d="M260 144C272 188 276 240 274 288c-1 26-3 44-6 60"/>
+
+    <path class="silhouette" d="M186 94L214 94L219 124L181 124Z"/>
+    <ellipse class="silhouette" cx="200" cy="56" rx="33" ry="44"/>
+    <path class="silhouette" d="M200 118C182 118 164 122 152 130C140 138 132 152 130 170C128 200 142 232 147 262C150 288 146 310 146 330C146 346 170 356 200 356C230 356 254 346 254 330C254 310 250 288 253 262C258 232 272 200 270 170C268 152 260 138 248 130C236 122 218 118 200 118Z"/>
+
+    <g class="organ" data-organ="brain" data-type="harm">
+      <ellipse class="ring" cx="200" cy="52" rx="28" ry="24"/>
+      <path class="core" d="M200 32c-15 0-24 9-24 20s9 20 24 20 24-9 24-20-9-20-24-20z"/>
+      <path class="lead" d="M176 50h-26l-12-8"/><text class="lbl" x="130" y="45" text-anchor="end">脑 · 睡眠</text>
+    </g>
+
+    <g class="organ" data-organ="lung" data-type="harm">
+      <ellipse class="ring" cx="181" cy="190" rx="24" ry="44"/><ellipse class="ring" cx="219" cy="190" rx="24" ry="44"/>
+      <path class="core" d="M181 158c-9 0-14 4-15 12l-4 36c-1 11 3 18 12 19 9 1 15-5 16-13l3-28v-14c0-8-4-12-12-12z"/>
+      <path class="core" d="M219 158c9 0 14 4 15 12l4 36c1 11-3 18-12 19-9 1-15-5-16-13l-3-28v-14c0-8 4-12 12-12z"/>
+      <path class="lead" d="M238 184h34l12-8"/><text class="lbl" x="294" y="179">肺 · 吸烟</text>
+    </g>
+
+    <g class="organ" data-organ="heart" data-type="harm">
+      <ellipse class="ring" cx="214" cy="218" rx="24" ry="24"/>
+      <path class="core" d="M214 206c-5-7-14-6-15 2-1 7 7 14 15 20 8-6 16-13 15-20-1-8-10-9-15-2z"/>
+      <path class="lead" d="M232 220h40l12 8"/><text class="lbl" x="294" y="233">心 · 久坐</text>
+    </g>
+
+    <g class="organ" data-organ="liver" data-type="harm">
+      <ellipse class="ring" cx="226" cy="260" rx="34" ry="22"/>
+      <path class="core" d="M204 248c13-6 34-4 45 4 7 5 1 16-10 20-13 4-30 1-37-5-6-5-5-15 2-19z"/>
+      <path class="lead" d="M246 260h32l12 8"/><text class="lbl" x="300" y="273">肝 · 饮酒</text>
+    </g>
+
+    <g class="organ" data-organ="stomach" data-type="none">
+      <ellipse class="ring" cx="172" cy="262" rx="26" ry="22"/>
+      <path class="core" d="M172 250c-8 3-12 11-8 18 4 8 15 12 23 8 8-3 12-11 8-18-4-8-15-11-23-8z"/>
+      <path class="lead" d="M160 262h-30l-12-8"/><text class="lbl" x="110" y="250" text-anchor="end">胃 · 未收录</text>
+    </g>
+
+    <g class="organ" data-organ="kidney" data-type="harm">
+      <ellipse class="ring" cx="170" cy="302" rx="18" ry="24"/><ellipse class="ring" cx="230" cy="302" rx="18" ry="24"/>
+      <ellipse class="core" cx="170" cy="302" rx="12" ry="18"/>
+      <ellipse class="core" cx="230" cy="302" rx="12" ry="18"/>
+      <path class="lead" d="M244 300h34l12 8"/><text class="lbl" x="300" y="313">肾 · 高盐</text>
+    </g>
+
+    <g class="organ" data-organ="skin" data-type="benefit">
+      <ellipse class="ring" cx="200" cy="340" rx="56" ry="22"/>
+      <path class="core" d="M156 322c8 20 26 30 44 30s36-10 44-30" style="fill:none;stroke-dasharray:4 5"/>
+      <path class="lead" d="M254 348h30l12 8"/><text class="lbl" x="310" y="361">皮肤 · 日晒</text>
+    </g>
+  </g>
+</svg>
+    </div>
+  </div>
+
+  <aside class="panel">
+    <section class="card">
+      <div class="card-h"><span class="n">01</span><h2>今天</h2><span class="badge" id="cnt">2 项</span></div>
+      <div class="dock" id="chips">
+        <button class="pill" aria-pressed="true" data-to="lung">吸烟</button>
+        <button class="pill" aria-pressed="true" data-to="heart">久坐 6h</button>
+        <button class="pill" aria-pressed="false" data-to="brain">睡眠 5h</button>
+        <button class="pill" aria-pressed="false" data-to="liver">饮酒</button>
+        <button class="pill" aria-pressed="false" data-to="kidney">高盐外卖</button>
+        <button class="pill" aria-pressed="false" data-to="skin">日晒 30min</button>
+        <button class="pill" aria-pressed="false" data-to="heart">快走 40min</button>
+        <button class="pill" aria-pressed="false" data-to="stomach">空腹咖啡</button>
+      </div>
+      <button class="action" id="go">生成分析</button>
+    </section>
+
+    <section class="card" style="flex:1;min-height:0">
+      <div class="card-h"><span class="n">02</span><h2>落在哪里</h2><span class="badge">3 个器官</span></div>
+      <ul class="results" id="results">
+        <li><span class="nm">肺<small>呼吸道 · 长期吸烟</small></span><span class="bar h"><s style="width:88%"></s></span><span class="k h">不利</span></li>
+        <li><span class="nm">心脏<small>心血管 · 久坐 6h</small></span><span class="bar h"><s style="width:64%"></s></span><span class="k h">不利</span></li>
+        <li><span class="nm">皮肤<small>维生素 D · 双重</small></span><span class="bar b"><s style="width:42%"></s></span><span class="k b">双重</span></li>
+      </ul>
+      <div class="legend" style="margin-top:14px">
+        <span><i class="h"></i>不利</span><span><i class="b"></i>有益</span><span><i class="n"></i>未收录</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><span class="n">03</span><h2>来源</h2><span class="badge">3 篇</span></div>
+      <ul class="srcs">
+        <li><b>NCI</b><span>Harms of Cigarette Smoking</span><i>2024</i></li>
+        <li><b>WHO</b><span>Physical activity</span><i>2024</i></li>
+        <li><b>NHS</b><span>Vitamin D guidance</span><i>2024</i></li>
+      </ul>
+    </section>
+
+    <div class="foot"><span>群体证据 · 非个人预测</span><span>v2 · local</span></div>
+  </aside>
+</main>
+
+<script>
+(function(){
+  var glow=document.getElementById('glow');
+  var tx=0,ty=0,cx=0,cy=0,raf=null;
+  function loop(){
+    cx+=(tx-cx)*.14; cy+=(ty-cy)*.14;
+    glow.style.transform='translate3d('+cx.toFixed(1)+'px,'+cy.toFixed(1)+'px,0)';
+    if(Math.abs(tx-cx)>.4||Math.abs(ty-cy)>.4){raf=requestAnimationFrame(loop)}else{raf=null}
+  }
+  window.addEventListener('pointermove',function(e){
+    tx=e.clientX;ty=e.clientY;
+    if(!raf)raf=requestAnimationFrame(loop);
+  },{passive:true});
+
+  var organs=[].slice.call(document.querySelectorAll('.organ'));
+  function focus(id,on){
+    organs.forEach(function(g){
+      if(!on){g.classList.remove('hot');g.style.opacity='';return}
+      var hit=g.dataset.organ===id;
+      g.classList.toggle('hot',hit);
+      g.style.opacity=hit?'1':'.3';
+    });
+  }
+  organs.forEach(function(g){
+    g.addEventListener('mouseenter',function(){focus(g.dataset.organ,true)});
+    g.addEventListener('mouseleave',function(){focus(null,false)});
+  });
+
+  var chips=[].slice.call(document.querySelectorAll('.pill'));
+  var cnt=document.getElementById('cnt');
+  function refresh(){
+    var n=chips.filter(function(c){return c.getAttribute('aria-pressed')==='true'}).length;
+    cnt.textContent=n+' 项';
+    var on={};
+    chips.forEach(function(c){if(c.getAttribute('aria-pressed')==='true')on[c.dataset.to]=true});
+    organs.forEach(function(g){g.style.opacity=on[g.dataset.organ]||!n?'':'0.32'});
+  }
+  chips.forEach(function(c){
+    c.addEventListener('click',function(){
+      c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+      refresh();
+    });
+  });
+  refresh();
+
+  document.getElementById('go').addEventListener('click',function(){
+    document.querySelectorAll('.results .bar s').forEach(function(s){
+      var w=s.style.width;s.style.width='0';
+      setTimeout(function(){s.style.width=w},40);
+    });
+  });
+})();
+</script>
+</body>
+</html>

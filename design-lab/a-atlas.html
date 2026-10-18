@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身知 BodyLens · 方案 A 解剖图谱</title>
+<style>
+:root{
+  --paper:#FBFAF7; --paper-2:#F4F1EA; --paper-3:#EAE4D8;
+  --ink:#191714; --ink-2:#4C463C; --ink-3:#8B8272;
+  --rule:#DED7C9; --rule-2:#C4BA9F;
+  --vermilion:#B4432A; --teal:#1F4E4A;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,"SimSun",serif;
+  --sans:"Inter",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --pad:clamp(20px,4vw,64px);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:15px;line-height:1.7;
+  -webkit-font-smoothing:antialiased;
+  background-image:
+    radial-gradient(1200px 600px at 78% -8%,rgba(180,67,42,.045),transparent 70%),
+    radial-gradient(900px 500px at 8% 22%,rgba(31,78,74,.05),transparent 70%);
+}
+.grain{position:fixed;inset:0;z-index:90;pointer-events:none;opacity:.30;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='.42'/%3E%3C/svg%3E")}
+
+/* ---------- 报头 ---------- */
+.masthead{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:clamp(16px,3vw,44px);
+  padding:16px var(--pad);background:rgba(251,250,247,.86);backdrop-filter:blur(14px) saturate(1.2);
+  border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:inherit}
+.brand b{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.14em}
+.brand i{font-style:normal;font-family:var(--mono);font-size:9.5px;letter-spacing:.34em;color:var(--ink-3);text-transform:uppercase}
+.masthead nav{display:flex;gap:clamp(14px,2.2vw,34px);margin-left:auto}
+.masthead nav a{position:relative;text-decoration:none;color:var(--ink-2);font-size:13px;letter-spacing:.12em;padding:4px 0}
+.masthead nav a::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .42s var(--ease)}
+.masthead nav a:hover::after,.masthead nav a.on::after{transform:scaleX(1)}
+.masthead nav a.on{color:var(--ink)}
+.mast-meta{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase}
+
+/* ---------- 通用序号 ---------- */
+.kicker{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3)}
+.kicker .num{color:var(--vermilion);font-size:11px}
+.kicker .dash{flex:0 0 42px;height:1px;background:var(--rule-2)}
+
+/* ---------- 序章 ---------- */
+.hero{padding:clamp(32px,4.6vw,60px) var(--pad) clamp(20px,3.4vw,38px)}
+.hero h1{font-family:var(--serif);font-weight:500;font-size:clamp(38px,5.4vw,68px);
+  line-height:1.06;letter-spacing:.02em;margin:20px 0 0;max-width:14em}
+.hero h1 em{font-style:normal;color:var(--vermilion);position:relative}
+.hero h1 em::after{content:"";position:absolute;left:0;right:-.06em;bottom:.08em;height:2px;background:currentColor;opacity:.28}
+.hero .lede{margin:26px 0 0;max-width:32em;font-family:var(--serif);font-size:clamp(15px,1.3vw,17px);
+  line-height:1.95;color:var(--ink-2)}
+
+/* ---------- 图谱 ---------- */
+.atlas{padding:0 var(--pad) clamp(48px,7vw,88px);border-top:1px solid var(--rule);padding-top:clamp(32px,4vw,52px)}
+.atlas-head{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:clamp(24px,4vw,44px)}
+.atlas-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(26px,3.2vw,40px);margin:0;letter-spacing:.04em}
+.legend{margin-left:auto;display:flex;gap:26px;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.legend span{display:flex;align-items:center;gap:7px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot.harm{background:var(--vermilion)}
+.dot.benefit{background:var(--teal)}
+.dot.none{background:transparent;border:1px solid var(--ink-3)}
+
+.atlas-body{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,.85fr);gap:clamp(24px,5vw,72px);align-items:start}
+@media(max-width:880px){.atlas-body{grid-template-columns:1fr}}
+
+.figure-wrap{position:relative;padding:clamp(12px,3vw,40px) 0}
+.figure-wrap::before{content:"";position:absolute;inset:8% 12%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(180,67,42,.055),transparent 72%);pointer-events:none}
+figure{margin:0;position:relative}
+.figure{width:100%;height:auto;display:block;max-height:74vh}
+.figcaption{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--ink-3);
+  text-transform:uppercase;padding-top:14px;border-top:1px solid var(--rule);display:flex;gap:16px}
+.figcaption .id{color:var(--ink-2)}
+
+/* 人体线条 */
+.body-line{fill:url(#fadeBody);stroke:var(--rule-2);stroke-width:1.1}
+.limb-outer{fill:none;stroke:var(--rule-2);stroke-width:38;stroke-linecap:round}
+.limb-inner{fill:none;stroke:#F6F2EA;stroke-width:36;stroke-linecap:round}
+.organ{cursor:pointer}
+.organ .shape{fill:rgba(196,186,159,.20);stroke:var(--ink-3);stroke-width:.9;transition:all .42s var(--ease);transform-box:fill-box;transform-origin:center}
+.organ .halo{fill:none;stroke:var(--vermilion);stroke-width:1;opacity:0;transition:opacity .42s var(--ease);transform-box:fill-box;transform-origin:center}
+.organ .tick{stroke:var(--ink-3);stroke-width:.7;fill:none;opacity:.55;transition:all .42s var(--ease)}
+.organ text{font-family:var(--mono);font-size:11px;letter-spacing:.04em;fill:var(--ink-3);opacity:.55;transition:opacity .42s var(--ease)}
+.organ:hover .shape,.organ.hot .shape{fill:rgba(180,67,42,.14);stroke:var(--vermilion);stroke-width:1.4;transform:scale(1.14)}
+.organ:hover .halo,.organ.hot .halo{opacity:1;transform:scale(1.5)}
+.organ:hover text,.organ.hot text{opacity:1}
+.organ[data-type="benefit"]:hover .shape,.organ[data-type="benefit"].hot .shape{fill:rgba(31,78,74,.13);stroke:var(--teal)}
+.organ[data-type="benefit"]:hover .halo,.organ[data-type="benefit"].hot .halo{stroke:var(--teal)}
+.dimmed{opacity:.28;transition:opacity .42s var(--ease)}
+
+/* 图注 */
+.notes{list-style:none;margin:0;padding:0;border-top:1px solid var(--rule)}
+.notes li{border-bottom:1px solid var(--rule);padding:15px 2px;display:grid;grid-template-columns:34px 1fr auto;
+  gap:12px;align-items:baseline;cursor:pointer;transition:background .3s var(--ease),padding-left .3s var(--ease)}
+.notes li:hover,.notes li.hot{background:var(--paper-2);padding-left:10px}
+.notes .idx{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--ink-3)}
+.notes .nm{font-family:var(--serif);font-size:17px;letter-spacing:.06em}
+.notes .nm small{display:block;font-family:var(--sans);font-size:11.5px;letter-spacing:.02em;color:var(--ink-3);margin-top:2px;line-height:1.5}
+.notes .tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.tag.harm{color:var(--vermilion)}
+.tag.benefit{color:var(--teal)}
+.tag.none{color:var(--ink-3)}
+.notes li.hot .nm{color:var(--vermilion)}
+
+/* ---------- 行为记录 ---------- */
+.log{padding:clamp(32px,5vw,64px) var(--pad);background:var(--paper-2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.log-head{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap;margin-bottom:26px}
+.log-head h2{font-family:var(--serif);font-weight:500;font-size:clamp(22px,2.6vw,30px);margin:0;letter-spacing:.05em}
+.log-head p{margin:0;color:var(--ink-3);font-size:13px}
+.chips{display:flex;flex-wrap:wrap;gap:10px}
+.chip{appearance:none;border:1px solid var(--rule-2);background:var(--paper);color:var(--ink-2);
+  font-family:var(--sans);font-size:13px;letter-spacing:.04em;padding:9px 16px;border-radius:999px;cursor:pointer;
+  transition:all .3s var(--ease);display:flex;align-items:center;gap:8px}
+.chip:hover{background:#fff;border-color:var(--ink-2);transform:translateY(-2px);box-shadow:0 6px 16px -10px rgba(25,23,20,.5)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.chip .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;opacity:.6}
+.log-foot{margin-top:26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.btn{appearance:none;border:0;background:var(--ink);color:var(--paper);font-family:var(--sans);
+  font-size:13.5px;letter-spacing:.14em;padding:14px 30px;cursor:pointer;transition:all .38s var(--ease);position:relative;overflow:hidden}
+.btn::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 20%,rgba(255,255,255,.22) 50%,transparent 80%);
+  transform:translateX(-110%);transition:transform .7s var(--ease)}
+.btn:hover::after{transform:translateX(110%)}
+.btn:hover{letter-spacing:.2em}
+.btn:active{transform:translateY(1px)}
+.hint{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+
+/* ---------- 结语 ---------- */
+.verdict{padding:clamp(40px,6vw,80px) var(--pad) clamp(56px,8vw,96px);display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:clamp(24px,6vw,80px)}
+@media(max-width:880px){.verdict{grid-template-columns:1fr}}
+.verdict h2{font-family:var(--serif);font-weight:500;font-size:clamp(24px,3vw,36px);line-height:1.35;margin:20px 0 0;letter-spacing:.04em}
+.verdict .note{font-size:13px;color:var(--ink-3);margin-top:18px;line-height:1.9;max-width:26em}
+.entries{border-top:1px solid var(--rule)}
+.entry{display:grid;grid-template-columns:1fr auto;gap:18px;padding:22px 0;border-bottom:1px solid var(--rule);
+  animation:rise .6s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.entry h3{margin:0;font-family:var(--serif);font-size:19px;font-weight:500;letter-spacing:.05em}
+.entry h3 span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);margin-left:10px}
+.entry p{margin:7px 0 0;font-size:13.5px;color:var(--ink-2);line-height:1.85}
+.entry .mark{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;align-self:start;padding-top:5px}
+.entry .mark.harm{color:var(--vermilion)}
+.entry .mark.benefit{color:var(--teal)}
+.src{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3);margin-top:9px;display:block}
+footer{padding:28px var(--pad) 44px;border-top:1px solid var(--rule);display:flex;gap:24px;flex-wrap:wrap;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase}
+footer span:last-child{margin-left:auto}
+::selection{background:rgba(180,67,42,.18)}
+:focus-visible{outline:2px solid var(--vermilion);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="masthead">
+  <a class="brand" href="#"><b>身知</b><i>Bodylens</i></a>
+  <nav>
+    <a href="#atlas" class="on">图谱</a>
+    <a href="#log">行为</a>
+    <a href="#verdict">今日</a>
+    <a href="#">资料</a>
+  </nav>
+  <div class="mast-meta">Vol.01 · 离线可用</div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="kicker"><span class="num">01</span><span class="dash"></span><span>交互式人体行为图谱</span></div>
+    <h1>看见行为的<br><em>回响</em></h1>
+    <p class="lede">三十条日常行为，十个器官入口。每一条结论都能追溯到公开来源，也能追溯到它不适用的地方。这里不预测你的寿命，只把已知的证据摆在你面前。</p>
+  </section>
+
+  <section class="atlas" id="atlas">
+    <div class="atlas-head">
+      <div class="kicker"><span class="num">02</span><span class="dash"></span><span>Atlas</span></div>
+      <h2>人体图谱</h2>
+      <div class="legend">
+        <span><i class="dot harm"></i>不利影响</span>
+        <span><i class="dot benefit"></i>有益作用</span>
+        <span><i class="dot none"></i>未收录</span>
+      </div>
+    </div>
+
+    <div class="atlas-body">
+      <div class="figure-wrap">
+        <figure>
+          <svg class="figure" viewBox="0 0 620 640" role="img" aria-label="人体正面示意图，标注脑、肺、心、肝、胃、肾与体表七个入口">
+  <defs>
+    <linearGradient id="fadeBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F8F4EC"/><stop offset="1" stop-color="#E9E3D6"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(100 0)">
+    <path class="limb-outer" d="M180 350C176 420 178 470 180 510c1 30 1 60 1 86"/>
+    <path class="limb-inner" d="M180 350C176 420 178 470 180 510c1 30 1 60 1 86"/>
+    <path class="limb-outer" d="M220 350C224 420 222 470 220 510c-1 30-1 60-1 86"/>
+    <path class="limb-inner" d="M220 350C224 420 222 470 220 510c-1 30-1 60-1 86"/>
+    <ellipse class="body-line" cx="180" cy="604" rx="16" ry="8"/>
+    <ellipse class="body-line" cx="220" cy="604" rx="16" ry="8"/>
+
+    <path class="limb-outer" d="M140 144C128 188 124 240 126 288c1 26 3 44 6 60"/>
+    <path class="limb-inner" d="M140 144C128 188 124 240 126 288c1 26 3 44 6 60"/>
+    <path class="limb-outer" d="M260 144C272 188 276 240 274 288c-1 26-3 44-6 60"/>
+    <path class="limb-inner" d="M260 144C272 188 276 240 274 288c-1 26-3 44-6 60"/>
+
+    <path class="body-line" d="M186 94L214 94L219 124L181 124Z"/>
+    <ellipse class="body-line" cx="200" cy="56" rx="33" ry="44"/>
+    <path class="body-line" d="M200 118C182 118 164 122 152 130C140 138 132 152 130 170C128 200 142 232 147 262C150 288 146 310 146 330C146 346 170 356 200 356C230 356 254 346 254 330C254 310 250 288 253 262C258 232 272 200 270 170C268 152 260 138 248 130C236 122 218 118 200 118Z"/>
+
+    <g class="organ" data-organ="brain" data-type="harm">
+      <ellipse class="halo" cx="200" cy="52" rx="28" ry="24"/>
+      <path class="shape" d="M200 32c-15 0-24 9-24 20s9 20 24 20 24-9 24-20-9-20-24-20z"/>
+      <path class="tick" d="M176 50h-26l-12-8"/>
+      <text x="130" y="45" text-anchor="end">脑 · 睡眠</text>
+    </g>
+
+    <g class="organ" data-organ="lung" data-type="harm">
+      <ellipse class="halo" cx="181" cy="190" rx="24" ry="44"/><ellipse class="halo" cx="219" cy="190" rx="24" ry="44"/>
+      <path class="shape" d="M181 158c-9 0-14 4-15 12l-4 36c-1 11 3 18 12 19 9 1 15-5 16-13l3-28v-14c0-8-4-12-12-12z"/>
+      <path class="shape" d="M219 158c9 0 14 4 15 12l4 36c1 11-3 18-12 19-9 1-15-5-16-13l-3-28v-14c0-8 4-12 12-12z"/>
+      <path class="tick" d="M238 184h34l12-8"/>
+      <text x="294" y="179">肺 · 吸烟</text>
+    </g>
+
+    <g class="organ" data-organ="heart" data-type="harm">
+      <ellipse class="halo" cx="214" cy="218" rx="24" ry="24"/>
+      <path class="shape" d="M214 206c-5-7-14-6-15 2-1 7 7 14 15 20 8-6 16-13 15-20-1-8-10-9-15-2z"/>
+      <path class="tick" d="M232 220h40l12 8"/>
+      <text x="294" y="233">心 · 久坐</text>
+    </g>
+
+    <g class="organ" data-organ="liver" data-type="harm">
+      <ellipse class="halo" cx="226" cy="260" rx="34" ry="22"/>
+      <path class="shape" d="M204 248c13-6 34-4 45 4 7 5 1 16-10 20-13 4-30 1-37-5-6-5-5-15 2-19z"/>
+      <path class="tick" d="M246 260h32l12 8"/>
+      <text x="300" y="273">肝 · 饮酒</text>
+    </g>
+
+    <g class="organ" data-organ="stomach" data-type="none">
+      <ellipse class="halo" cx="172" cy="262" rx="26" ry="22"/>
+      <path class="shape" d="M172 250c-8 3-12 11-8 18 4 8 15 12 23 8 8-3 12-11 8-18-4-8-15-11-23-8z"/>
+      <path class="tick" d="M160 262h-30l-12-8"/>
+      <text x="110" y="250" text-anchor="end">胃 · 未收录</text>
+    </g>
+
+    <g class="organ" data-organ="kidney" data-type="harm">
+      <ellipse class="halo" cx="170" cy="302" rx="18" ry="24"/><ellipse class="halo" cx="230" cy="302" rx="18" ry="24"/>
+      <ellipse class="shape" cx="170" cy="302" rx="12" ry="18"/>
+      <ellipse class="shape" cx="230" cy="302" rx="12" ry="18"/>
+      <path class="tick" d="M244 300h34l12 8"/>
+      <text x="300" y="313">肾 · 高盐</text>
+    </g>
+
+    <g class="organ" data-organ="skin" data-type="benefit">
+      <ellipse class="halo" cx="200" cy="340" rx="56" ry="22"/>
+      <path class="shape" d="M156 322c8 20 26 30 44 30s36-10 44-30" style="fill:none;stroke-dasharray:4 5"/>
+      <path class="tick" d="M254 348h30l12 8"/>
+      <text x="310" y="361">皮肤 · 日晒</text>
+    </g>
+  </g>
+</svg>
+          <figcaption>
+            <span class="id">Fig. 01</span>
+            <span>人体图谱 · 正面 · 七个入口</span>
+            <span style="margin-left:auto">Hover 任一器官</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <aside>
+        <ol class="notes" id="notes">
+          <li data-organ="brain"><span class="idx">01</span><span class="nm">脑<small>睡眠不足与认知表现</small></span><span class="tag harm">不利</span></li>
+          <li data-organ="lung"><span class="idx">02</span><span class="nm">肺<small>吸烟与呼吸道</small></span><span class="tag harm">不利</span></li>
+          <li data-organ="heart"><span class="idx">03</span><span class="nm">心脏<small>久坐与心血管</small></span><span class="tag harm">不利</span></li>
+          <li data-organ="liver"><span class="idx">04</span><span class="nm">肝<small>饮酒与代谢</small></span><span class="tag harm">不利</span></li>
+          <li data-organ="stomach"><span class="idx">05</span><span class="nm">胃<small>该行为暂无收录证据</small></span><span class="tag none">未收录</span></li>
+          <li data-organ="kidney"><span class="idx">06</span><span class="nm">肾<small>高盐饮食与血压</small></span><span class="tag harm">不利</span></li>
+          <li data-organ="skin"><span class="idx">07</span><span class="nm">皮肤<small>日晒与维生素 D</small></span><span class="tag benefit">有益</span></li>
+        </ol>
+        <p class="hint" style="margin-top:20px;line-height:1.9">未收录 ≠ 无害。<br>空格是资料的边界，不是安全的证明。</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="log" id="log">
+    <div class="log-head">
+      <div class="kicker"><span class="num">03</span><span class="dash"></span><span>Log</span></div>
+      <h2>今天，你做了什么</h2>
+      <p>选三到五项，看它们落在哪里。</p>
+    </div>
+    <div class="chips" id="chips">
+      <button class="chip" aria-pressed="true" data-to="lung">吸烟 <span class="k">01</span></button>
+      <button class="chip" aria-pressed="true" data-to="heart">久坐 6 小时 <span class="k">02</span></button>
+      <button class="chip" aria-pressed="false" data-to="brain">睡眠 5 小时 <span class="k">03</span></button>
+      <button class="chip" aria-pressed="false" data-to="liver">饮酒 <span class="k">04</span></button>
+      <button class="chip" aria-pressed="false" data-to="kidney">高盐外卖 <span class="k">05</span></button>
+      <button class="chip" aria-pressed="false" data-to="skin">户外日晒 30 分钟 <span class="k">06</span></button>
+      <button class="chip" aria-pressed="false" data-to="heart">快走 40 分钟 <span class="k">07</span></button>
+      <button class="chip" aria-pressed="false" data-to="stomach">空腹喝咖啡 <span class="k">08</span></button>
+    </div>
+    <div class="log-foot">
+      <button class="btn" id="go">生成分析</button>
+      <span class="hint">共 8 条可选 · 已选 <b id="cnt">2</b> 条</span>
+    </div>
+  </section>
+
+  <section class="verdict" id="verdict">
+    <div>
+      <div class="kicker"><span class="num">04</span><span class="dash"></span><span>Reading</span></div>
+      <h2>两项行为，<br>落在三个器官上。</h2>
+      <p class="note">这里展示的是群体层面的关联，不是你个人的风险预测。资料会告诉你结论的适用范围，也会告诉你它在哪些人身上并不成立。</p>
+    </div>
+    <div class="entries" id="entries">
+      <article class="entry">
+        <div>
+          <h3>肺 <span>RESPIRATORY</span></h3>
+          <p>吸烟是肺癌与慢性阻塞性肺疾病最主要的可控因素。证据来自大规模队列研究，适用于长期吸烟人群；对单次暴露无法给出个体化结论。</p>
+          <span class="src">来源 · NCI《Harms of Cigarette Smoking》</span>
+        </div>
+        <span class="mark harm">不利</span>
+      </article>
+      <article class="entry">
+        <div>
+          <h3>心脏 <span>CARDIOVASCULAR</span></h3>
+          <p>每日久坐超过 6 小时与心血管疾病风险升高相关。若同时存在每周 150 分钟中等强度活动，关联强度会明显减弱。</p>
+          <span class="src">来源 · WHO《Physical activity》</span>
+        </div>
+        <span class="mark harm">不利</span>
+      </article>
+      <article class="entry">
+        <div>
+          <h3>皮肤 <span>INTEGUMENTARY</span></h3>
+          <p>适度日晒有助于维生素 D 合成，但同时增加紫外线累积暴露。此条同时包含有益与不利两面，需要按暴露时长区分判断。</p>
+          <span class="src">来源 · NHS《Vitamin D guidance》</span>
+        </div>
+        <span class="mark benefit">双重</span>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>身知 BodyLens</span>
+  <span>方案 A · 解剖图谱</span>
+  <span>全部数据本地运行</span>
+</footer>
+
+<script>
+(function(){
+  var organs=[].slice.call(document.querySelectorAll('.organ'));
+  var notes=[].slice.call(document.querySelectorAll('#notes li'));
+
+  function focusOrgan(id,on){
+    organs.forEach(function(g){
+      g.classList.toggle('hot',on&&g.dataset.organ===id);
+      if(on) g.classList.toggle('dimmed',g.dataset.organ!==id);
+      else g.classList.remove('dimmed');
+    });
+    notes.forEach(function(li){
+      li.classList.toggle('hot',on&&li.dataset.organ===id);
+      if(on) li.style.opacity=(li.dataset.organ===id)?'1':'.42';
+      else li.style.opacity='';
+    });
+  }
+  organs.forEach(function(g){
+    g.addEventListener('mouseenter',function(){focusOrgan(g.dataset.organ,true)});
+    g.addEventListener('mouseleave',function(){focusOrgan(g.dataset.organ,false)});
+  });
+  notes.forEach(function(li){
+    li.addEventListener('mouseenter',function(){focusOrgan(li.dataset.organ,true)});
+    li.addEventListener('mouseleave',function(){focusOrgan(li.dataset.organ,false)});
+  });
+
+  var chips=[].slice.call(document.querySelectorAll('.chip'));
+  var cnt=document.getElementById('cnt');
+  function refresh(){
+    var n=chips.filter(function(c){return c.getAttribute('aria-pressed')==='true'}).length;
+    cnt.textContent=n;
+    var on={};
+    chips.forEach(function(c){if(c.getAttribute('aria-pressed')==='true')on[c.dataset.to]=true});
+    organs.forEach(function(g){g.style.opacity=on[g.dataset.organ]?'':'0.34'});
+  }
+  chips.forEach(function(c){
+    c.addEventListener('click',function(){
+      c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+      refresh();
+    });
+  });
+  refresh();
+
+  document.getElementById('go').addEventListener('click',function(){
+    var e=document.getElementById('entries');
+    e.querySelectorAll('.entry').forEach(function(el,i){
+      el.style.animation='none';void el.offsetWidth;
+      el.style.animation='rise .6s var(--ease) both';
+      el.style.animationDelay=(i*90)+'ms';
+    });
+    document.getElementById('verdict').scrollIntoView({behavior:'smooth',block:'start'});
+  });
+
+  // 滚动视差：人体随滚动微微上浮，营造书页层次
+  var fig=document.querySelector('.figure-wrap');
+  var raf=null;
+  function onScroll(){
+    if(raf)return;
+    raf=requestAnimationFrame(function(){
+      raf=null;
+      var r=fig.getBoundingClientRect();
+      var p=(window.innerHeight/2-(r.top+r.height/2))/window.innerHeight;
+      fig.style.transform='translateY('+(p*-16).toFixed(2)+'px)';
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+})();
+</script>
+</body>
+</html>

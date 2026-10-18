@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身知 BodyLens · 界面方案对比</title>
+<style>
+:root{
+  --bg:#0C0F10; --panel:#121718; --line:#242C2E;
+  --ink:#EDF2F0; --muted:#8C9C99; --faint:#5D6D6A;
+  --a:#B4432A; --b:#3BF0B4; --c:#0E7C66;
+  --sans:"Inter",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"SF Mono",Consolas,monospace;
+  --serif:"Source Han Serif SC","Noto Serif SC","Songti SC",Georgia,serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;padding:clamp(24px,4vw,56px)}
+header{max-width:1400px;margin:0 auto clamp(28px,4vw,52px)}
+.kick{font-family:var(--mono);font-size:10px;letter-spacing:.3em;color:var(--faint);text-transform:uppercase}
+h1{font-family:var(--serif);font-weight:500;font-size:clamp(28px,4vw,46px);letter-spacing:.04em;margin:14px 0 0}
+header p{color:var(--muted);max-width:46em;line-height:1.85;margin:16px 0 0;font-size:14px}
+
+.grid{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px)}
+@media(max-width:1080px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;transition:border-color .35s,transform .35s}
+.card:hover{transform:translateY(-3px)}
+.card.a:hover{border-color:rgba(180,67,42,.6)}
+.card.b:hover{border-color:rgba(59,240,180,.5)}
+.card.c:hover{border-color:rgba(14,124,102,.6)}
+
+.shot{position:relative;overflow:hidden;background:#000;border-bottom:1px solid var(--line);
+  aspect-ratio:16/10;cursor:pointer}
+.shot iframe{position:absolute;left:0;top:0;border:0;transform-origin:0 0;pointer-events:none}
+.shot::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,rgba(0,0,0,.55))}
+.shot .go{position:absolute;right:12px;bottom:12px;z-index:3;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(0,0,0,.55);
+  border:1px solid rgba(255,255,255,.28);padding:6px 11px;border-radius:6px;backdrop-filter:blur(8px)}
+
+.body{padding:18px 18px 20px;display:flex;flex-direction:column;gap:0;flex:1}
+.tag{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;
+  letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+.tag s{width:16px;height:2px;text-decoration:none;display:block}
+.a .tag{color:var(--a)} .a .tag s{background:var(--a)}
+.b .tag{color:var(--b)} .b .tag s{background:var(--b)}
+.c .tag{color:var(--c)} .c .tag s{background:var(--c)}
+.body h2{margin:0;font-family:var(--serif);font-size:20px;font-weight:500;letter-spacing:.06em}
+.body .desc{margin:9px 0 0;font-size:13px;color:var(--muted);line-height:1.8}
+.swatches{display:flex;gap:5px;margin:16px 0 14px}
+.swatches i{height:14px;flex:1;border-radius:3px}
+dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:7px 12px;font-size:12px;padding-top:14px;border-top:1px solid var(--line)}
+dt{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;padding-top:3px}
+dd{margin:0;color:var(--ink);line-height:1.65}
+dd.warn{color:var(--muted)}
+
+footer{max-width:1400px;margin:clamp(28px,4vw,48px) auto 0;padding-top:20px;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;
+  display:flex;gap:20px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <div class="kick">BodyLens · Design Directions 2026</div>
+  <h1>三套界面方案</h1>
+  <p>同一份功能与同一批数据，三种完全不同的界面语言。差别不在配色，而在结构与情绪：一套让你读，一套让你沉进去，一套让你信任。点击任意预览可直接打开完整页面。</p>
+</header>
+
+<div class="grid">
+  <article class="card a">
+    <div class="shot" data-src="a-atlas.html">
+      <iframe src="a-atlas.html" tabindex="-1" loading="lazy" title="方案 A 预览"></iframe>
+      <span class="go">打开 →</span>
+    </div>
+    <div class="body">
+      <div class="tag"><s></s>方案 A</div>
+      <h2>解剖图谱</h2>
+      <p class="desc">像一本十九世纪的医学图谱被搬到屏幕上。纸张、细线、宋体、图注编号，人体以版画线条呈现，阅读顺序就是书的顺序。</p>
+      <div class="swatches">
+        <i style="background:#FBFAF7"></i><i style="background:#EAE4D8"></i><i style="background:#1F4E4A"></i><i style="background:#B4432A"></i>
+      </div>
+      <dl>
+        <dt>气质</dt><dd>有文化、可信、慢</dd>
+        <dt>适合</dt><dd>评委里有医学或学术背景；想论证"我们不娱乐化健康"</dd>
+        <dt>代价</dt><dd class="warn">暗色科技感为零，视觉冲击偏弱，靠排版精度取胜</dd>
+      </dl>
+    </div>
+  </article>
+
+  <article class="card b">
+    <div class="shot" data-src="b-bioluminescent.html">
+      <iframe src="b-bioluminescent.html" tabindex="-1" loading="lazy" title="方案 B 预览"></iframe>
+      <span class="go">打开 →</span>
+    </div>
+    <div class="body">
+      <div class="tag"><s></s>方案 B</div>
+      <h2>生物荧光</h2>
+      <p class="desc">人体像悬浮在暗室里被一束光扫描。荧光青绿、呼吸光晕、缓慢下移的扫描线、跟随指针的光斑，所有控件浮在画面上。</p>
+      <div class="swatches">
+        <i style="background:#050809"></i><i style="background:#0B1417"></i><i style="background:#3BF0B4"></i><i style="background:#FF7043"></i>
+      </div>
+      <dl>
+        <dt>气质</dt><dd>未来、沉浸、强记忆点</dd>
+        <dt>适合</dt><dd>答辩与演示视频；需要三秒内抓住评委注意力</dd>
+        <dt>代价</dt><dd class="warn">最容易被认为"像 AI 生成"，需要用手写细节压住塑料感</dd>
+      </dl>
+    </div>
+  </article>
+
+  <article class="card c">
+    <div class="shot" data-src="c-clinical.html">
+      <iframe src="c-clinical.html" tabindex="-1" loading="lazy" title="方案 C 预览"></iframe>
+      <span class="go">打开 →</span>
+    </div>
+    <div class="body">
+      <div class="tag"><s></s>方案 C</div>
+      <h2>临床仪表</h2>
+      <p class="desc">像一台高端医疗设备的操作界面。严格三栏栅格、刻度尺、编号索引、等宽数字，信息密度高但不拥挤。</p>
+      <div class="swatches">
+        <i style="background:#EFF2F1"></i><i style="background:#FFFFFF"></i><i style="background:#0E7C66"></i><i style="background:#B4341C"></i>
+      </div>
+      <dl>
+        <dt>气质</dt><dd>精密、专业、克制</dd>
+        <dt>适合</dt><dd>想强调"这是工具不是玩具"；数据安全与可复现性是该项目的强项</dd>
+        <dt>代价</dt><dd class="warn">屏幕小时信息密度会变成压力，动效空间最小</dd>
+      </dl>
+    </div>
+  </article>
+</div>
+
+<footer>
+  <span>BodyLens</span>
+  <span>Design Lab · 2026-10</span>
+  <span>三套方案共用同一批数据与交互模型</span>
+</footer>
+
+<script>
+(function(){
+  var W=1440, H=900;
+  function fit(){
+    document.querySelectorAll('.shot').forEach(function(s){
+      var f=s.querySelector('iframe');
+      var k=s.clientWidth/W;
+      f.style.width=W+'px';
+      f.style.height=H+'px';
+      f.style.transform='scale('+k+')';
+    });
+  }
+  fit();
+  window.addEventListener('resize',fit);
+  document.querySelectorAll('.shot').forEach(function(s){
+    s.addEventListener('click',function(){
+      window.open(s.dataset.src,'_blank');
+    });
+  });
+})();
+</script>
+</body>
+</html>

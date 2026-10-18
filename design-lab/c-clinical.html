@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身知 BodyLens · 方案 C 临床仪表</title>
+<style>
+:root{
+  --bg:#EFF2F1; --surface:#FFFFFF; --surface-2:#F7F9F8;
+  --ink:#0F1615; --muted:#5D6B68; --faint:#8E9A97;
+  --line:#DCE1DF; --line-2:#C6CDCA; --line-3:#EDF0EF;
+  --accent:#0E7C66; --accent-soft:#E6F2EE;
+  --alert:#B4341C; --alert-soft:#FBE9E4;
+  --amber:#9A6400; --amber-soft:#FBF0DC;
+  --sans:"Inter",-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;
+  --ease:cubic-bezier(.2,.7,.3,1);
+  --u:4px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13px;
+  line-height:1.55;-webkit-font-smoothing:antialiased;
+  display:grid;grid-template-rows:48px auto minmax(0,1fr) 30px;
+  height:100dvh;overflow:hidden}
+::selection{background:rgba(14,124,102,.18)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- 顶栏 ---------- */
+.bar{display:flex;align-items:center;height:48px;padding:0 18px;gap:20px;
+  background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30}
+.mark{display:flex;align-items:center;gap:9px}
+.mark .sq{width:18px;height:18px;border:1.5px solid var(--accent);position:relative}
+.mark .sq::after{content:"";position:absolute;inset:4px;background:var(--accent);opacity:.85}
+.mark b{font-size:13px;letter-spacing:.26em;font-weight:600}
+.mark i{font-style:normal;font-family:var(--mono);font-size:9px;letter-spacing:.2em;color:var(--faint)}
+.crumbs{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
+.crumbs em{font-style:normal;color:var(--ink)}
+.crumbs s{text-decoration:none;opacity:.45}
+.bar nav{margin-left:auto;display:flex;gap:1px;background:var(--line-3);padding:2px;border:1px solid var(--line)}
+.bar nav a{text-decoration:none;color:var(--muted);font-size:12px;letter-spacing:.1em;padding:5px 13px;transition:all .2s var(--ease)}
+.bar nav a:hover{color:var(--ink);background:var(--surface-2)}
+.bar nav a.on{background:var(--ink);color:#fff}
+.bar .live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.16em;color:var(--accent);text-transform:uppercase;padding-left:18px;border-left:1px solid var(--line)}
+.bar .live s{width:5px;height:5px;background:var(--accent);text-decoration:none;box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* ---------- 指标条 ---------- */
+.metrics{display:flex;background:var(--surface);border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.metrics::-webkit-scrollbar{display:none}
+.metric{padding:11px 20px;border-right:1px solid var(--line);min-width:132px;flex:0 0 auto}
+.metric:last-child{border-right:0;margin-left:auto}
+.metric .k{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase;display:block;margin-bottom:3px}
+.metric .v{font-family:var(--mono);font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;display:flex;align-items:baseline;gap:4px}
+.metric .v u{text-decoration:none;font-size:10px;font-weight:400;color:var(--faint);letter-spacing:.06em}
+.metric .delta{font-size:10px;color:var(--accent);font-family:var(--mono)}
+
+/* ---------- 三栏 ---------- */
+.work{display:grid;grid-template-columns:290px minmax(0,1fr) 424px;gap:1px;background:var(--line);
+  flex:1;min-height:0;overflow:hidden}
+
+@media(max-width:1180px){
+  body{display:block;height:auto;overflow:visible}
+  .work{grid-template-columns:1fr;background:transparent;gap:12px;padding:12px;overflow:visible}
+  .figure{position:relative;inset:auto;height:520px}
+}
+.col{background:var(--surface);display:flex;flex-direction:column;min-height:0;min-width:0}
+.col-h{display:flex;align-items:center;gap:9px;padding:11px 16px;border-bottom:1px solid var(--line);flex:0 0 auto}
+.col-h .n{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--accent)}
+.col-h h2{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.col-h .tool{margin-left:auto;font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--faint);text-transform:uppercase}
+.col-b{flex:1;overflow:auto;min-height:0;scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+
+/* ---------- 左：记录 ---------- */
+.rec{list-style:none;margin:0;padding:0}
+.rec li{display:grid;grid-template-columns:22px 1fr 52px;align-items:center;gap:10px;
+  padding:11px 16px;border-bottom:1px solid var(--line-3);cursor:pointer;transition:background .2s var(--ease)}
+.rec li:hover{background:var(--surface-2)}
+.rec li .box{width:14px;height:14px;border:1px solid var(--line-2);border-radius:3px;display:flex;
+  align-items:center;justify-content:center;transition:all .2s var(--ease)}
+.rec li .box svg{width:9px;height:9px;opacity:0;transition:opacity .2s}
+.rec li[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent)}
+.rec li[aria-pressed="true"] .box svg{opacity:1}
+.rec li .nm{font-size:13px;letter-spacing:.02em}
+.rec li .nm small{display:block;color:var(--faint);font-size:10.5px;letter-spacing:0;margin-top:1px}
+.rec li[aria-pressed="true"] .nm{font-weight:500}
+.rec li .id{font-family:var(--mono);font-size:9.5px;color:var(--faint);text-align:right;letter-spacing:.06em}
+
+.quick{padding:14px 16px;border-top:1px solid var(--line);flex:0 0 auto;background:var(--surface-2)}
+.quick .q-h{font-family:var(--mono);font-size:9px;letter-spacing:.16em;color:var(--faint);
+  text-transform:uppercase;margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{appearance:none;border:1px solid var(--line-2);background:var(--surface);color:var(--muted);
+  font-family:var(--sans);font-size:11.5px;padding:5px 10px;cursor:pointer;transition:all .2s var(--ease)}
+.chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn{appearance:none;border:0;background:var(--ink);color:#fff;font-family:var(--sans);font-size:12.5px;
+  letter-spacing:.14em;padding:11px 16px;cursor:pointer;width:100%;margin-top:12px;
+  transition:all .2s var(--ease);display:flex;align-items:center;justify-content:center;gap:9px}
+.btn:hover{background:var(--accent)}
+.btn:active{transform:translateY(1px)}
+.btn s{text-decoration:none;font-family:var(--mono);font-size:10px;opacity:.6}
+
+/* ---------- 中：舞台 ---------- */
+.stage{position:relative;display:flex;align-items:center;justify-content:center;flex:1;min-height:0;
+  background:
+    linear-gradient(var(--line-3) 1px,transparent 1px) 0 0/100% 28px,
+    linear-gradient(90deg,var(--line-3) 1px,transparent 1px) 0 0/28px 100%,
+    var(--surface-2);
+  padding:24px;overflow:hidden}
+.stage::before{content:"";position:absolute;inset:20px;border:1px dashed var(--line-2);opacity:.55;pointer-events:none}
+.figure{position:absolute;inset:26px 0;display:flex;align-items:center;justify-content:center}
+.figure svg{height:100%;width:auto;max-width:100%;overflow:visible}
+.sil{fill:#FBFCFC;stroke:var(--line-2);stroke-width:1}
+.limb-edge{fill:none;stroke:var(--line-2);stroke-width:36;stroke-linecap:round}
+.limb-solid{fill:none;stroke:#F7FAF9;stroke-width:34;stroke-linecap:round}
+.arm-edge{fill:none;stroke:var(--line-2);stroke-width:28;stroke-linecap:round}
+.arm-solid{fill:none;stroke:#F7FAF9;stroke-width:26;stroke-linecap:round}
+.foot{fill:#F7FAF9;stroke:var(--line-2);stroke-width:1}
+.sil-2{fill:#F4F7F6;stroke:var(--line-2);stroke-width:1}
+.limb-dash{fill:none;stroke:var(--line-2);stroke-width:1;stroke-linecap:round;stroke-dasharray:3 4}
+.organ{cursor:pointer}
+.organ-shape{fill:#E9EFED;stroke:#B4C2BE;stroke-width:.9;transition:all .24s var(--ease);transform-box:fill-box;transform-origin:center}
+.organ .tick{stroke:var(--line-2);stroke-width:.8;fill:none;transition:stroke .22s}
+.organ .tag{font-family:var(--mono);font-size:11px;letter-spacing:.06em;fill:var(--faint);transition:fill .22s}
+.organ .dot{fill:var(--faint);transition:all .22s}
+.organ:hover .organ-shape,.organ.hot .organ-shape{fill:var(--alert-soft);stroke:var(--alert);stroke-width:1.4;transform:scale(1.07)}
+.organ[data-type="benefit"]:hover .organ-shape,.organ[data-type="benefit"].hot .organ-shape{fill:var(--accent-soft);stroke:var(--accent)}
+.organ[data-type="none"]:hover .organ-shape,.organ[data-type="none"].hot .organ-shape{fill:#EEF1F0;stroke:var(--faint);stroke-dasharray:3 3}
+.organ:hover .tick,.organ.hot .tick{stroke:var(--ink)}
+.organ:hover .tag,.organ.hot .tag{fill:var(--ink)}
+.organ:hover .dot,.organ.hot .dot{fill:var(--ink)}
+
+/* 刻度尺 */
+.ruler{position:absolute;top:40px;bottom:40px;width:34px;z-index:2;
+  border-left:1px solid var(--line-2);font-family:var(--mono);font-size:8px;color:var(--faint)}
+.ruler.left{left:26px}
+.ruler span{position:absolute;left:0;display:flex;align-items:center;gap:3px}
+.ruler span::before{content:"";width:6px;height:1px;background:var(--line-2)}
+.ruler span.major::before{width:12px;background:var(--faint)}
+.corner{position:absolute;font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;
+  color:var(--faint);text-transform:uppercase;z-index:3}
+.corner.tl{top:26px;left:70px}
+.corner.br{bottom:26px;right:26px;text-align:right;line-height:1.7}
+
+/* ---------- 右：结果 ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:12.5px;table-layout:fixed}
+.tbl th:nth-child(1){width:64px}
+.tbl th:nth-child(3){width:76px}
+.tbl th:nth-child(4){width:46px}
+.tbl thead th{position:sticky;top:0;background:var(--surface);z-index:2;text-align:left;
+  font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;
+  font-weight:400;padding:9px 12px;border-bottom:1px solid var(--line)}
+.tbl tbody tr{border-bottom:1px solid var(--line-3);cursor:pointer;transition:background .2s var(--ease)}
+.tbl tbody tr:hover{background:var(--surface-2)}
+.tbl td{padding:11px 12px;vertical-align:top}
+.tbl .org{font-weight:500;letter-spacing:.04em;white-space:nowrap}
+.tbl .org small{display:block;font-family:var(--mono);font-size:8.5px;color:var(--faint);letter-spacing:.1em;font-weight:400;margin-top:2px}
+.tbl .why{color:var(--muted);font-size:11.5px;line-height:1.6}
+.tbl .why b{color:var(--ink);font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:9px;
+  letter-spacing:.1em;padding:3px 7px;text-transform:uppercase;white-space:nowrap}
+.badge.h{background:var(--alert-soft);color:var(--alert)}
+.badge.b{background:var(--accent-soft);color:var(--accent)}
+.badge.m{background:var(--amber-soft);color:var(--amber)}
+.badge.n{background:var(--surface-2);color:var(--faint);border:1px solid var(--line)}
+.meter{display:flex;gap:2px;margin-top:5px}
+.meter i{width:9px;height:3px;background:var(--line);display:block}
+.meter i.on{background:currentColor}
+.meter.h{color:var(--alert)}
+.meter.b{color:var(--accent)}
+.tbl .src{font-family:var(--mono);font-size:8.5px;letter-spacing:.08em;color:var(--faint);white-space:nowrap}
+
+.note{margin:0;padding:12px 16px;background:var(--amber-soft);border-top:1px solid var(--line);
+  font-size:11.5px;color:#6B4A00;line-height:1.7;display:flex;gap:8px;flex:0 0 auto}
+.note b{font-weight:600;white-space:nowrap}
+
+/* ---------- 状态栏 ---------- */
+.statusbar{display:flex;align-items:center;gap:18px;height:30px;padding:0 16px;
+  background:var(--ink);color:rgba(255,255,255,.62);font-family:var(--mono);font-size:9px;
+  letter-spacing:.14em;text-transform:uppercase;flex:0 0 auto}
+.statusbar span{display:flex;align-items:center;gap:6px}
+.statusbar s{text-decoration:none;width:5px;height:5px;border-radius:50%;background:#3FCFA0}
+.statusbar .r{margin-left:auto}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<header class="bar">
+  <div class="mark"><span class="sq"></span><b>身知</b><i>BODYLENS</i></div>
+  <div class="crumbs"><span>工作台</span><s>/</s><em>人体图谱</em></div>
+  <nav><a href="#" class="on">图谱</a><a href="#">行为</a><a href="#">今日</a><a href="#">资料</a></nav>
+  <div class="live"><s></s>本地运行</div>
+</header>
+
+<div class="metrics">
+  <div class="metric"><span class="k">今日已记录</span><span class="v"><span id="m-rec">2</span><u>/ 30 项</u></span></div>
+  <div class="metric"><span class="k">命中器官</span><span class="v"><span id="m-org">3</span><u>/ 10</u></span></div>
+  <div class="metric"><span class="k">覆盖来源</span><span class="v">12<u>篇</u></span></div>
+  <div class="metric"><span class="k">数据版本</span><span class="v">v2.1<u>2026-10</u></span></div>
+  <div class="metric"><span class="k">最后保存</span><span class="v">19:42<u class="delta">本地</u></span></div>
+</div>
+
+<div class="work">
+  <!-- 左栏 -->
+  <aside class="col">
+    <div class="col-h"><span class="n">01</span><h2>行为记录</h2><span class="tool">选择</span></div>
+    <div class="col-b">
+      <ul class="rec" id="rec">
+        <li aria-pressed="true" data-to="lung"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">吸烟<small>今日 · 多次</small></span><span class="id">B-01</span></li>
+        <li aria-pressed="true" data-to="heart"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">久坐 6 小时<small>10:00–16:00</small></span><span class="id">B-04</span></li>
+        <li aria-pressed="false" data-to="brain"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">睡眠 5 小时<small>01:30–06:30</small></span><span class="id">B-07</span></li>
+        <li aria-pressed="false" data-to="liver"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">饮酒<small>晚间 · 2 标准杯</small></span><span class="id">B-09</span></li>
+        <li aria-pressed="false" data-to="kidney"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">高盐外卖<small>钠摄入偏高</small></span><span class="id">B-12</span></li>
+        <li aria-pressed="false" data-to="skin"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">户外日晒 30 分钟<small>12:20 · 无防晒</small></span><span class="id">B-18</span></li>
+        <li aria-pressed="false" data-to="heart"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">快走 40 分钟<small>18:10–18:50</small></span><span class="id">B-21</span></li>
+        <li aria-pressed="false" data-to="stomach"><span class="box"><svg viewBox="0 0 10 10"><path d="M1 5l3 3 5-6" stroke="#fff" stroke-width="1.8" fill="none"/></svg></span><span class="nm">空腹喝咖啡<small>07:40</small></span><span class="id">B-26</span></li>
+      </ul>
+    </div>
+    <div class="quick">
+      <div class="q-h">快捷添加</div>
+      <div class="chips" id="chips">
+        <button class="chip" aria-pressed="false">吸烟</button>
+        <button class="chip" aria-pressed="false">久坐</button>
+        <button class="chip" aria-pressed="false">睡眠不足</button>
+        <button class="chip" aria-pressed="false">饮酒</button>
+        <button class="chip" aria-pressed="false">高盐</button>
+        <button class="chip" aria-pressed="false">日晒</button>
+      </div>
+      <button class="btn" id="go">生成分析 <s>↵</s></button>
+    </div>
+  </aside>
+
+  <!-- 中栏 -->
+  <section class="col">
+    <div class="col-h"><span class="n">02</span><h2>人体图谱</h2>
+      <span class="tool">正面 · 10 入口</span></div>
+    <div class="stage">
+      <div class="ruler left" aria-hidden="true">
+        <span class="major" style="top:0">180</span><span style="top:18%">150</span>
+        <span class="major" style="top:36%">120</span><span style="top:54%">90</span>
+        <span class="major" style="top:72%">60</span><span style="top:90%">30</span>
+      </div>
+      <div class="corner tl">Fig. 01 — 人體正面 · Anterior view</div>
+      <div class="figure">
+        <svg viewBox="0 0 620 640" role="img" aria-label="人体正面示意图，标注脑、肺、心、肝、胃、肾与体表七个入口">
+  <g transform="translate(100 0)">
+    <path class="limb-edge" d="M180 350C176 420 178 470 180 510c1 30 1 60 1 86"/>
+    <path class="limb-solid" d="M180 350C176 420 178 470 180 510c1 30 1 60 1 86"/>
+    <path class="limb-edge" d="M220 350C224 420 222 470 220 510c-1 30-1 60-1 86"/>
+    <path class="limb-solid" d="M220 350C224 420 222 470 220 510c-1 30-1 60-1 86"/>
+    <ellipse class="foot" cx="180" cy="604" rx="16" ry="8"/>
+    <ellipse class="foot" cx="220" cy="604" rx="16" ry="8"/>
+
+    <path class="arm-edge" d="M140 144C128 188 124 240 126 288c1 26 3 44 6 60"/>
+    <path class="arm-solid" d="M140 144C128 188 124 240 126 288c1 26 3 44 6 60"/>
+    <path class="arm-edge" d="M260 144C272 188 276 240 274 288c-1 26-3 44-6 60"/>
+    <path class="arm-solid" d="M260 144C272 188 276 240 274 288c-1 26-3 44-6 60"/>
+
+    <path class="sil" d="M186 94L214 94L219 124L181 124Z"/>
+    <ellipse class="sil" cx="200" cy="56" rx="33" ry="44"/>
+    <path class="sil" d="M200 118C182 118 164 122 152 130C140 138 132 152 130 170C128 200 142 232 147 262C150 288 146 310 146 330C146 346 170 356 200 356C230 356 254 346 254 330C254 310 250 288 253 262C258 232 272 200 270 170C268 152 260 138 248 130C236 122 218 118 200 118Z"/>
+
+    <g class="organ" data-organ="brain" data-type="harm">
+      <path class="organ-shape" d="M200 32c-15 0-24 9-24 20s9 20 24 20 24-9 24-20-9-20-24-20z"/>
+      <path class="tick" d="M176 50h-26l-12-8"/><circle class="dot" cx="134" cy="41" r="2"/>
+      <text class="tag" x="130" y="45" text-anchor="end">C-01 脑</text>
+    </g>
+
+    <g class="organ" data-organ="lung" data-type="harm">
+      <path class="organ-shape" d="M181 158c-9 0-14 4-15 12l-4 36c-1 11 3 18 12 19 9 1 15-5 16-13l3-28v-14c0-8-4-12-12-12z"/>
+      <path class="organ-shape" d="M219 158c9 0 14 4 15 12l4 36c1 11-3 18-12 19-9 1-15-5-16-13l-3-28v-14c0-8 4-12 12-12z"/>
+      <path class="tick" d="M238 184h34l12-8"/><circle class="dot" cx="290" cy="175" r="2"/>
+      <text class="tag" x="294" y="179">C-02 肺</text>
+    </g>
+
+    <g class="organ" data-organ="heart" data-type="harm">
+      <path class="organ-shape" d="M214 206c-5-7-14-6-15 2-1 7 7 14 15 20 8-6 16-13 15-20-1-8-10-9-15-2z"/>
+      <path class="tick" d="M232 220h40l12 8"/><circle class="dot" cx="290" cy="229" r="2"/>
+      <text class="tag" x="294" y="233">C-03 心</text>
+    </g>
+
+    <g class="organ" data-organ="liver" data-type="harm">
+      <path class="organ-shape" d="M204 248c13-6 34-4 45 4 7 5 1 16-10 20-13 4-30 1-37-5-6-5-5-15 2-19z"/>
+      <path class="tick" d="M246 260h32l12 8"/><circle class="dot" cx="296" cy="269" r="2"/>
+      <text class="tag" x="300" y="273">C-04 肝</text>
+    </g>
+
+    <g class="organ" data-organ="stomach" data-type="none">
+      <path class="organ-shape" d="M172 250c-8 3-12 11-8 18 4 8 15 12 23 8 8-3 12-11 8-18-4-8-15-11-23-8z"/>
+      <path class="tick" d="M160 262h-30l-12-8"/><circle class="dot" cx="114" cy="253" r="2"/>
+      <text class="tag" x="110" y="250" text-anchor="end">C-05 胃</text>
+    </g>
+
+    <g class="organ" data-organ="kidney" data-type="harm">
+      <ellipse class="organ-shape" cx="170" cy="302" rx="12" ry="18"/>
+      <ellipse class="organ-shape" cx="230" cy="302" rx="12" ry="18"/>
+      <path class="tick" d="M244 300h34l12 8"/><circle class="dot" cx="296" cy="309" r="2"/>
+      <text class="tag" x="300" y="313">C-06 肾</text>
+    </g>
+
+    <g class="organ" data-organ="skin" data-type="benefit">
+      <path class="organ-shape" d="M156 322c8 20 26 30 44 30s36-10 44-30" style="fill:none;stroke-dasharray:4 5"/>
+      <path class="tick" d="M254 348h30l12 8"/><circle class="dot" cx="306" cy="357" r="2"/>
+      <text class="tag" x="310" y="361">C-10 皮肤</text>
+    </g>
+  </g>
+</svg>
+      </div>
+      <div class="corner br">10 个器官入口<br>7 个已收录 · 3 个未收录</div>
+    </div>
+  </section>
+
+  <!-- 右栏 -->
+  <aside class="col">
+    <div class="col-h"><span class="n">03</span><h2>影响清单</h2><span class="tool" id="hits">3 项命中</span></div>
+    <div class="col-b">
+      <table class="tbl">
+        <thead><tr><th>器官</th><th>依据行为</th><th>方向</th><th>来源</th></tr></thead>
+        <tbody id="rows">
+          <tr data-organ="lung">
+            <td class="org">肺<small>C-02</small></td>
+            <td class="why"><b>吸烟</b><br>长期暴露是肺癌与慢阻肺最主要的可控因素</td>
+            <td><span class="badge h">不利</span><span class="meter h"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></td>
+            <td class="src">NCI</td>
+          </tr>
+          <tr data-organ="heart">
+            <td class="org">心脏<small>C-03</small></td>
+            <td class="why"><b>久坐 6 小时</b><br>与心血管风险升高相关；规律活动可减弱</td>
+            <td><span class="badge h">不利</span><span class="meter h"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td>
+            <td class="src">WHO</td>
+          </tr>
+          <tr data-organ="skin">
+            <td class="org">皮肤<small>C-10</small></td>
+            <td class="why"><b>日晒 30 分钟</b><br>有助于维生素 D 合成，同时累积紫外线暴露</td>
+            <td><span class="badge m">双重</span><span class="meter b"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></td>
+            <td class="src">NHS</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><b>注意</b>这是群体层面的关联，不是个人风险预测。未收录不代表没有影响。</p>
+  </aside>
+</div>
+
+<footer class="statusbar">
+  <span><s></s>数据保存在本地</span>
+  <span>无网络请求</span>
+  <span>8 项已选</span>
+  <span class="r">身知 BodyLens · 方案 C</span>
+</footer>
+
+<script>
+(function(){
+  var recs=[].slice.call(document.querySelectorAll('#rec li'));
+  var organs=[].slice.call(document.querySelectorAll('.organ'));
+  var rows=[].slice.call(document.querySelectorAll('#rows tr'));
+
+  function focus(id,on){
+    organs.forEach(function(g){
+      if(!on){g.classList.remove('hot');g.style.opacity='';return}
+      var hit=g.dataset.organ===id;
+      g.classList.toggle('hot',hit);
+      g.style.opacity=hit?'1':'.35';
+    });
+    rows.forEach(function(r){
+      r.style.background=(on&&r.dataset.organ===id)?'var(--accent-soft)':'';
+    });
+  }
+  organs.forEach(function(g){
+    g.addEventListener('mouseenter',function(){focus(g.dataset.organ,true)});
+    g.addEventListener('mouseleave',function(){focus(null,false)});
+  });
+  rows.forEach(function(r){
+    r.addEventListener('mouseenter',function(){focus(r.dataset.organ,true)});
+    r.addEventListener('mouseleave',function(){focus(null,false)});
+  });
+
+  var mRec=document.getElementById('m-rec'), mOrg=document.getElementById('m-org'), hits=document.getElementById('hits');
+  function refresh(){
+    var on=[],set={};
+    recs.forEach(function(li){
+      if(li.getAttribute('aria-pressed')==='true'){on.push(li);if(!set[li.dataset.to]){set[li.dataset.to]=1}}
+    });
+    mRec.textContent=on.length;
+    mOrg.textContent=Object.keys(set).length;
+    hits.textContent=Object.keys(set).length+' 项命中';
+    organs.forEach(function(g){g.style.opacity=set[g.dataset.organ]||!on.length?'':'0.3'});
+  }
+  recs.forEach(function(li){
+    li.addEventListener('click',function(){
+      li.setAttribute('aria-pressed',li.getAttribute('aria-pressed')==='true'?'false':'true');
+      refresh();
+    });
+  });
+  document.querySelectorAll('#chips .chip').forEach(function(c){
+    c.addEventListener('click',function(){
+      c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')==='true'?'false':'true');
+    });
+  });
+  refresh();
+
+  document.getElementById('go').addEventListener('click',function(){
+    var body=document.querySelector('.col-b');
+    rows.forEach(function(r,i){
+      r.style.transition='none';r.style.background='var(--accent-soft)';
+      setTimeout(function(){r.style.transition='';r.style.background=''},260+i*90);
+    });
+    document.querySelector('.col-b').scrollTop=0;
+  });
+})();
+</script>
+</body>
+</html>
