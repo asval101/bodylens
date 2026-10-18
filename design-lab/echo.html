@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>身知 BodyLens · 牵连与沉淀</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0B0908;--panel:#12100E;--panel2:#191512;
+  --line:#262019;--line2:#3A3027;
+  --ink:#F3EDE5;--muted:#9B8F84;--faint:#5F564E;
+  --harm:#E8734A;--benefit:#8CB86E;--mixed:#D9A441;
+  --ease:cubic-bezier(.2,.7,.3,1);
+}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:13px/1.6 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  display:grid;grid-template-rows:56px minmax(0,1fr);height:100dvh;overflow:hidden}
+
+header{display:flex;align-items:center;gap:28px;padding:0 24px;
+  border-bottom:1px solid var(--line);background:var(--panel)}
+.brand{display:flex;align-items:baseline;gap:9px;flex:none}
+.brand .zh{font-size:15px;letter-spacing:.16em;font-weight:500}
+.brand .en{font-size:9px;letter-spacing:.3em;color:var(--faint)}
+.seg{display:flex;gap:2px;background:var(--panel2);padding:3px;border-radius:9px;
+  border:1px solid var(--line)}
+.seg button{appearance:none;border:0;background:transparent;color:var(--muted);
+  font:inherit;font-size:12px;padding:5px 14px;border-radius:7px;cursor:pointer;
+  transition:color .25s var(--ease),background .25s var(--ease)}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:#2A231D;color:var(--ink)}
+.count{margin-left:auto;font-size:11.5px;color:#8B7E72;letter-spacing:.06em}
+
+main{display:grid;grid-template-columns:250px minmax(0,1fr) 372px;
+  gap:1px;background:var(--line);overflow:hidden}
+aside,section{background:var(--panel);min-height:0}
+
+.picker{overflow-y:auto;padding:18px 0 40px}
+.picker::-webkit-scrollbar,.read::-webkit-scrollbar{width:1px}
+.picker::-webkit-scrollbar-thumb,.read::-webkit-scrollbar-thumb{background:var(--line2)}
+.cat{padding:14px 20px 6px;font-size:10px;letter-spacing:.22em;color:var(--faint)}
+.act{display:flex;align-items:center;gap:9px;width:100%;appearance:none;border:0;
+  background:transparent;color:var(--muted);font:inherit;text-align:left;
+  padding:7px 20px;cursor:pointer;position:relative;
+  transition:color .2s var(--ease),background .2s var(--ease)}
+.act::before{content:"";position:absolute;left:0;top:4px;bottom:4px;width:2px;
+  background:transparent;transition:background .25s var(--ease)}
+.act:hover{color:var(--ink);background:#171310}
+.act:hover::before{background:var(--line2)}
+.act.on{color:var(--ink);background:#1C1714}
+.act.on::before{background:var(--harm)}
+.act .d{width:5px;height:5px;border-radius:50%;background:var(--faint);flex:none;
+  transition:background .25s var(--ease),box-shadow .25s var(--ease)}
+.act.on .d{background:var(--harm);box-shadow:0 0 0 3px rgba(232,115,74,.16)}
+.act[data-type="benefit"].on::before{background:var(--benefit)}
+.act[data-type="benefit"].on .d{background:var(--benefit);box-shadow:0 0 0 3px rgba(140,184,110,.16)}
+
+.stage{position:relative;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;overflow:hidden}
+.stage-hd{position:absolute;top:26px;left:0;right:0;text-align:center;z-index:3;
+  font-size:11.5px;letter-spacing:.1em;color:#7E7165;
+  transition:color .4s var(--ease)}
+.stage-hd b{color:#EFE7DE;font-weight:500}
+.stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 58% 46% at 50% 44%,rgba(232,115,74,.05),transparent 72%)}
+svg#body{height:calc(100% - 62px);width:auto;max-width:100%;position:relative;z-index:2}
+
+.side{font-size:8px;letter-spacing:.34em;fill:#3E352D;
+  font-family:system-ui,-apple-system,sans-serif}
+.skel{fill:none;stroke:#4E4238;stroke-width:1.15;vector-effect:non-scaling-stroke}
+.skel .lmb-o{stroke-width:12;stroke:#41372E;stroke-linecap:round}
+.skel .lmb-i{stroke:none}
+.skel .lg-o{stroke-width:18;stroke:#41372E;stroke-linecap:round}
+.skel .lg-i{stroke:none}
+.skel .soft{stroke:#41372E;stroke-width:1.1}
+.skel .hand{fill:none;stroke:#41372E;stroke-width:1.1}
+
+.organ{--c:var(--harm);--v:0;--d:0;transition:opacity .4s var(--ease);cursor:pointer}
+.organ .form{opacity:.9}
+.organ .halo{fill:var(--c);opacity:0;filter:url(#soft);transition:opacity .7s var(--ease)}
+.organ.on .halo{opacity:calc(var(--v) * .4);animation:breathe 6.4s ease-in-out infinite;
+  animation-delay:var(--t);transform-box:fill-box;transform-origin:center}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.organ .ring{fill:none;stroke:var(--c);stroke-width:0;opacity:0;
+  transition:opacity .6s var(--ease),stroke-width .6s var(--ease)}
+.organ.on .ring{opacity:calc(var(--d) * .55);stroke-dasharray:2.5 4;
+  stroke-width:calc(.5 + var(--d) * 3.6)}
+.organ .form{fill:none;stroke:#4E4238;stroke-width:.95;
+  transition:fill .6s var(--ease),stroke .6s var(--ease),fill-opacity .6s var(--ease)}
+.organ.on .form{fill:var(--c);fill-opacity:calc(.05 + var(--v) * .22);
+  stroke:var(--c);stroke-opacity:calc(.2 + var(--v) * .8);
+  stroke-width:calc(1 + var(--v) * .9)}
+.organ.on .warm{filter:drop-shadow(0 0 6px var(--c))}
+.organ:hover .form{stroke:#7C6E60}
+.organ .lead{stroke:#4A3E34;stroke-width:.6;opacity:0;transition:opacity .45s var(--ease)}
+.organ .lbl{font-size:10.5px;letter-spacing:.06em;fill:#7C6F63;opacity:0;
+  transition:opacity .45s var(--ease),fill .45s var(--ease);
+  font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+.organ.on .lead{opacity:.9}
+.organ.on .lbl{opacity:1;fill:#B5A697}
+
+.link{fill:none;stroke:var(--c);stroke-width:.9;opacity:0;
+  transition:opacity .55s var(--ease)}
+.link.on{opacity:calc(var(--v) * .52)}
+
+.legend{position:relative;z-index:2;display:flex;align-items:center;gap:16px;
+  font-size:10.5px;color:var(--faint);letter-spacing:.05em;padding-bottom:14px;flex:none}
+.legend .sw{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;
+  vertical-align:1px}
+.legend .sw.harm{background:var(--harm)}
+.legend .sw.benefit{background:var(--benefit)}
+.legend .sw.mixed{background:var(--mixed)}
+.legend .ln{width:1px;height:10px;background:var(--line2)}
+
+.read{overflow-y:auto;padding:22px 24px 60px}
+.empty{color:var(--faint);font-size:12.5px;line-height:2.1;margin:36px 0 0}
+.empty b{color:var(--muted);font-weight:400}
+
+.lead{font-size:13px;line-height:2;color:#B3A699;margin:0 0 22px;
+  padding-bottom:20px;border-bottom:1px solid var(--line)}
+.lead b{color:var(--ink);font-weight:500}
+.lead .h{color:var(--harm)}
+.lead .b{color:var(--benefit)}
+
+.ob{margin-bottom:20px;animation:rise .45s var(--ease) both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.ob-h{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.ob-h .nm{font-size:13px;font-weight:500;letter-spacing:.05em;color:#E4DAD0}
+.ob-h .dv{font-size:10px;letter-spacing:.16em;color:var(--faint);margin-left:auto}
+.ob-h .bar{flex:1;height:1px;background:var(--line);margin-bottom:4px}
+
+.it{padding:0 0 12px 11px;border-left:1px solid var(--line);position:relative}
+.it:last-child{padding-bottom:2px}
+.it::before{content:"";position:absolute;left:-2.5px;top:7px;width:4px;height:4px;
+  border-radius:50%;background:var(--c,var(--harm))}
+.ih{display:flex;align-items:center;gap:7px;margin-bottom:3px}
+.ih .bn{font-size:12px;color:var(--ink)}
+.ih em{font-style:normal;font-size:10.5px;letter-spacing:.08em;color:#8C7F73;
+  margin-left:auto;white-space:nowrap}
+.it p{margin:0;font-size:12.5px;line-height:1.85;color:#BCAFA2}
+.scl{display:flex;gap:2px;margin-top:6px}
+.scl i{width:11px;height:2px;background:var(--line2);border-radius:1px}
+.scl i.on{background:var(--c,var(--harm));opacity:.8}
+
+.tip{position:fixed;z-index:99;pointer-events:none;opacity:0;transform:translate(-50%,-140%);
+  background:#221C18;border:1px solid var(--line2);color:var(--ink);
+  font-size:11px;padding:3px 8px;border-radius:5px;white-space:nowrap;
+  transition:opacity .15s}
+.tip.on{opacity:1}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+@media(max-width:1120px){
+  main{grid-template-columns:210px minmax(0,1fr) 320px}
+}
+@media(max-width:900px){
+  body{grid-template-rows:auto auto;height:auto;overflow:auto}
+  main{grid-template-columns:1fr;overflow:visible}
+  .picker{max-height:200px;display:flex;flex-wrap:wrap;gap:2px;padding:10px}
+  .cat{width:100%}
+  .act{width:auto;padding:5px 10px;border-radius:6px}
+  .act::before{display:none}
+  svg#body{height:60vh}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span class="zh">身知</span><span class="en">BODYLENS</span></div>
+  <div class="seg" id="seg">
+    <button data-scale="near" class="on">此刻</button>
+    <button data-scale="far">如果一直这样</button>
+  </div>
+  <div class="count" id="count">未选择行为</div>
+</header>
+
+<main>
+  <aside class="picker" id="picker"></aside>
+
+  <section class="stage">
+    <div class="stage-hd" id="stageHd">尚未选择行为</div>
+    <svg id="body" viewBox="0 0 400 760" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="5"/>
+        </filter>
+      </defs>
+
+      <text class="side" x="46" y="392" transform="rotate(-90 46 392)">HUMAN ANATOMY</text>
+      <text class="side" x="358" y="392" transform="rotate(-90 358 392)">BEHAVIORAL TRACE</text>
+      <g class="skel">
+        <ellipse cx="200" cy="74" rx="38" ry="48"/>
+        <path d="M186 116 L186 148 M214 116 L214 148"/>
+        <path d="M200 146 C172 150 153 158 146 176 C139 196 143 226 149 256
+                 C154 282 159 302 161 324 C163 346 161 362 157 377
+                 L243 377 C239 362 237 346 239 324 C241 302 246 282 251 256
+                 C257 226 261 196 254 176 C247 158 228 150 200 146 Z"/>
+        <path class="lmb-o" d="M147 177 C136 199 131 231 133 263 C135 293 139 319 143 341"/>
+        <path class="lmb-i" d="M147 177 C136 199 131 231 133 263 C135 293 139 319 143 341"/>
+        <path class="lmb-o" d="M253 177 C264 199 269 231 267 263 C265 293 261 319 257 341"/>
+        <path class="lmb-i" d="M253 177 C264 199 269 231 267 263 C265 293 261 319 257 341"/>
+        <path class="lg-o" d="M177 377 C173 443 171 523 170 603 L169 693"/>
+        <path class="lg-i" d="M177 377 C173 443 171 523 170 603 L169 693"/>
+        <path class="lg-o" d="M223 377 C227 443 229 523 230 603 L231 693"/>
+        <path class="lg-i" d="M223 377 C227 443 229 523 230 603 L231 693"/>
+        <ellipse class="hand" cx="143" cy="352" rx="6.5" ry="9"/>
+        <ellipse class="hand" cx="257" cy="352" rx="6.5" ry="9"/>
+        <ellipse class="soft" cx="163" cy="702" rx="15" ry="8"/>
+        <ellipse class="soft" cx="237" cy="702" rx="15" ry="8"/>
+      </g>
+
+      <g id="linkLayer"></g>
+      <g id="organLayer"></g>
+    </svg>
+
+    <div class="legend">
+      <span><i class="sw harm"></i>不利</span>
+      <span><i class="sw benefit"></i>有益</span>
+      <span><i class="sw mixed"></i>同时被拉向两边</span>
+      <span class="ln"></span>
+      <span>外环越粗，留得越久</span>
+    </div>
+  </section>
+
+  <aside class="read" id="read"></aside>
+</main>
+
+<div class="tip" id="tip"></div>
+
+<script>
+'use strict';
+
+const ORG = {
+  spine:  {n:'脊柱与肌肉', x:200, y:330, r:20, rx:14, ry:96, lx:132, ly:340, a:'end'},
+  brain:  {n:'大脑',       x:200, y:72,  r:24, rx:26, ry:22, lx:266, ly:64,  a:'start'},
+  eyes:   {n:'眼睛',       x:200, y:90,  r:16, rx:26, ry:12, lx:266, ly:92,  a:'start'},
+  mouth:  {n:'口腔',       x:200, y:108, r:12, rx:14, ry:7,  lx:266, ly:116, a:'start'},
+  lungs:  {n:'肺部',       x:200, y:197, r:34, rx:38, ry:30, lx:266, ly:194, a:'start'},
+  kidneys:{n:'肾脏',       x:200, y:279, r:30, rx:38, ry:15, lx:132, ly:286, a:'end'},
+  heart:  {n:'心脏',       x:204, y:220, r:20, rx:15, ry:17, lx:266, ly:230, a:'start'},
+  liver:  {n:'肝脏',       x:174, y:253, r:24, rx:25, ry:16, lx:132, ly:252, a:'end'},
+  stomach:{n:'胃',         x:225, y:264, r:18, rx:14, ry:17, lx:266, ly:268, a:'start'},
+  gut:    {n:'肠道',       x:200, y:307, r:28, rx:29, ry:22, lx:132, ly:314, a:'end'}
+};
+
+const SHAPE = {
+  spine:'<path class="form" d="M200 154 L200 352" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="1.5 7"/>',
+  brain:'<ellipse class="form" cx="200" cy="72" rx="25" ry="20"/>' +
+        '<path class="form" d="M182 63 Q191 72 184 83 M218 63 Q209 72 216 83" fill="none" stroke-width=".8"/>',
+  eyes:'<ellipse class="form" cx="187" cy="90" rx="5" ry="4"/>' +
+       '<ellipse class="form" cx="213" cy="90" rx="5" ry="4"/>',
+  mouth:'<path class="form" d="M188 106 Q200 114 212 106" fill="none" stroke-width="3" stroke-linecap="round"/>',
+  lungs:'<path class="form" d="M194 175 C180 175 168 187 166 205 C164 221 172 230 184 228 C192 226 194 214 194 198 Z"/>' +
+        '<path class="form" d="M206 175 C220 175 232 187 234 205 C236 221 228 230 216 228 C208 226 206 214 206 198 Z"/>' +
+        '<path class="form" d="M200 172 L200 190" fill="none" stroke-width="1.2"/>',
+  kidneys:'<path class="form" d="M174 269 C167 269 163 278 165 287 C167 295 175 295 177 287 C179 279 178 271 174 269 Z"/>' +
+          '<path class="form" d="M226 269 C233 269 237 278 235 287 C233 295 225 295 223 287 C221 279 222 271 226 269 Z"/>',
+  heart:'<path class="form" d="M206 205 C215 203 221 210 220 220 C219 229 211 235 206 240 C201 235 194 228 195 218 C196 209 200 206 206 205 Z"/>',
+  liver:'<path class="form" d="M153 246 C166 240 187 242 194 251 C200 259 188 270 172 268 C160 266 150 256 153 246 Z"/>',
+  stomach:'<path class="form" d="M222 250 C233 250 238 262 234 273 C230 283 219 281 217 272 C215 262 216 252 222 250 Z"/>',
+  gut:'<ellipse class="form" cx="200" cy="307" rx="27" ry="20"/>' +
+      '<path class="form" d="M187 296 Q200 306 187 317 M200 294 Q213 306 200 320" fill="none" stroke-width=".8"/>'
+};
+
+const BACK = {
+  hours:  {t:'数小时',     d:.12},
+  days:   {t:'数天',       d:.3},
+  weeks:  {t:'数周',       d:.52},
+  months: {t:'数月',       d:.72},
+  years:  {t:'数年',       d:.9},
+  never:  {t:'不完全回落', d:1}
+};
+const ORDER = ['hours','days','weeks','months','years','never'];
+
+const ORIGIN = {
+  smoke:[200,110], alcohol:[200,110], salt:[200,110], sugary:[200,110],
+  'low-veg':[200,110], water:[200,110], brush:[200,110],
+  'short-sleep':[200,60], 'enough-sleep':[200,60],
+  screen:[200,90], sit:[200,368], walk:[200,600]
+};
+
+const BEHAVIORS = [
+  {id:'smoke', name:'抽烟', cat:'烟酒', type:'harm', eff:[
+    {o:'lungs', t:'harm', near:.92, far:1, back:'months',
+     now:'烟刚到肺泡，纤毛被麻痹，暂时扫不动灰尘。',
+     later:'长期暴露与肺癌、慢阻肺相关，是证据最扎实的一项。',
+     bk:'戒烟数周后纤毛开始恢复，数月后肺功能可见改善。'},
+    {o:'heart', t:'harm', near:.5, far:.85, back:'years',
+     now:'心率加快，血管收缩，血压短时升高。',
+     later:'冠心病与卒中风险随吸烟年数累积。运动不能抵消这一项。',
+     bk:'戒烟 1 年后，冠心病风险约降到继续吸烟者的一半。'},
+    {o:'brain', t:'harm', near:.35, far:.7, back:'weeks',
+     now:'尼古丁几秒到大脑，奖赏回路被点亮。',
+     later:'依赖一旦形成，戒断反应会替你维持这个行为。',
+     bk:'尼古丁数小时就代谢完，依赖却要数周至数月才消退。'},
+    {o:'mouth', t:'harm', near:.22, far:.8, back:'months',
+     now:'热烟和焦油直接接触牙龈与口腔黏膜。',
+     later:'口腔癌与牙周病的重要风险因素。',
+     bk:'牙龈炎症数月内改善，已吸收的牙槽骨不会回来。'},
+    {o:'kidneys', t:'harm', near:.06, far:.6, back:'never',
+     now:'这一支对肾脏几乎没有即时影响。',
+     later:'长期吸烟与肾癌风险相关。',
+     bk:'属于长期累积，不是今天能观察到的变化。'}
+  ]},
+  {id:'alcohol', name:'饮酒', cat:'烟酒', type:'harm', eff:[
+    {o:'liver', t:'harm', near:.7, far:.9, back:'weeks',
+     now:'酒精主要在肝脏代谢，肝细胞开始处理乙醛。',
+     later:'长期饮酒与脂肪肝、肝硬化、肝癌相关。',
+     bk:'停酒后数周肝酶可回落，纤维化不会完全逆转。'},
+    {o:'brain', t:'harm', near:.6, far:.7, back:'hours',
+     now:'抑制性作用让反应变慢，判断力下降。',
+     later:'长期大量饮酒与依赖、焦虑、抑郁相关。',
+     bk:'血液酒精数小时代谢完，这一项的即时影响会消失。'},
+    {o:'stomach', t:'harm', near:.45, far:.55, back:'days',
+     now:'胃黏膜受到直接刺激，胃酸分泌增加。',
+     later:'反复刺激与胃炎、溃疡风险相关。',
+     bk:'黏膜数天内修复，反复刺激才会累积。'},
+    {o:'heart', t:'harm', near:.28, far:.6, back:'years',
+     now:'血管扩张，心率代偿性加快。',
+     later:'长期过量与高血压、心肌病、房颤相关。',
+     bk:'需要数年持续减量才能看到风险回落。'},
+    {o:'gut', t:'harm', near:.18, far:.5, back:'years',
+     now:'这一杯对肠道几乎没有即时影响。',
+     later:'酒精被列为已知致癌物，与结直肠癌风险相关。',
+     bk:'长期累积项，不会因为停几天就归零。'}
+  ]},
+  {id:'short-sleep', name:'睡眠不足', cat:'睡眠作息', type:'harm', eff:[
+    {o:'brain', t:'harm', near:.82, far:.7, back:'days',
+     now:'注意力与工作记忆下降，情绪更难压住。',
+     later:'长期睡眠缺口与认知、代谢风险相关。',
+     bk:'补足一两晚可明显改善，长期缺口不会一次补齐。'},
+    {o:'heart', t:'harm', near:.3, far:.5, back:'weeks',
+     now:'夜间血压本该下降，这次没有降够。',
+     later:'长期睡眠不足与高血压风险相关。',
+     bk:'恢复规律睡眠数周后可见改善。'}
+  ]},
+  {id:'enough-sleep', name:'充足睡眠', cat:'睡眠作息', type:'benefit', eff:[
+    {o:'brain', t:'benefit', near:.72, far:.8, back:'days',
+     now:'记忆在睡眠中被整理，代谢废物被清除。',
+     later:'规律而充足的睡眠与更稳定的认知状态相关。',
+     bk:'效果当晚就出现，但不累积成存款，需要持续。'},
+    {o:'heart', t:'benefit', near:.25, far:.45, back:'days',
+     now:'夜间血压正常回落，心脏得到休息。',
+     later:'规律睡眠与更低的血压风险相关。',
+     bk:'属于当天收益，作息一乱就还回去。'}
+  ]},
+  {id:'walk', name:'快走', cat:'运动', type:'benefit', eff:[
+    {o:'heart', t:'benefit', near:.55, far:.8, back:'days',
+     now:'心率上升，心肌收缩更有力，血流加快。',
+     later:'规律活动与更低的心血管风险相关。',
+     bk:'单次的即时效应数小时内消退，长期获益靠累积。'},
+    {o:'brain', t:'benefit', near:.6, far:.7, back:'hours',
+     now:'脑血流增加，情绪相关的神经递质上升。',
+     later:'规律活动与更好的认知和情绪状态相关。',
+     bk:'当天的情绪改善明显，认知获益要靠长期。'},
+    {o:'spine', t:'benefit', near:.4, far:.5, back:'days',
+     now:'核心肌群参与稳定，椎间压力重新分配。',
+     later:'肌肉力量与日常功能相关。',
+     bk:'需要持续练习才能维持，停下会慢慢退回去。'}
+  ]},
+  {id:'sit', name:'连续久坐', cat:'久坐', type:'harm', eff:[
+    {o:'heart', t:'harm', near:.42, far:.7, back:'weeks',
+     now:'下肢血流变慢，肌肉泵暂时停止工作。',
+     later:'长期久坐与心血管疾病和全因死亡风险相关。',
+     bk:'每次起身都能打断它，不必等到"去运动"才算。'},
+    {o:'spine', t:'harm', near:.58, far:.5, back:'days',
+     now:'腰椎压力上升，腰背肌开始代偿。',
+     later:'长期姿势负荷与腰背不适相关。',
+     bk:'起身活动后数小时内缓解。'},
+    {o:'gut', t:'harm', near:.28, far:.4, back:'days',
+     now:'腹部受压，肠道蠕动变慢。',
+     later:'活动不足与代谢和消化问题相关。',
+     bk:'走动之后当天就有改善。'}
+  ]},
+  {id:'screen', name:'长时间看屏幕', cat:'用眼', type:'harm', eff:[
+    {o:'eyes', t:'harm', near:.85, far:.6, back:'hours',
+     now:'眨眼次数减少，泪膜蒸发加快，眼表开始发干。',
+     later:'长期持续用眼与干眼症状相关。',
+     bk:'离开屏幕休息后，几十分钟到几小时可缓解。'},
+    {o:'spine', t:'harm', near:.48, far:.4, back:'days',
+     now:'头往前伸，颈椎负荷增加。',
+     later:'长期姿势与颈肩不适相关。',
+     bk:'调整姿势并活动之后缓解。'},
+    {o:'brain', t:'harm', near:.3, far:.22, back:'hours',
+     now:'持续注视消耗注意力资源。',
+     later:'与入睡时间推迟相互影响。',
+     bk:'休息后就恢复，是当天的事。'}
+  ]},
+  {id:'salt', name:'高盐饮食', cat:'饮食饮水', type:'harm', eff:[
+    {o:'heart', t:'harm', near:.3, far:.8, back:'weeks',
+     now:'血容量增加，血压短时上升。',
+     later:'长期高钠与高血压、心血管疾病相关。',
+     bk:'减盐数周后血压可见回落。'},
+    {o:'kidneys', t:'harm', near:.4, far:.7, back:'months',
+     now:'肾脏加快排钠，滤过负荷上升。',
+     later:'长期高盐与肾脏负担、血压相关肾病相关。',
+     bk:'减盐后数月内负荷下降。'}
+  ]},
+  {id:'sugary', name:'含糖饮料', cat:'饮食饮水', type:'harm', eff:[
+    {o:'mouth', t:'harm', near:.75, far:.8, back:'never',
+     now:'糖被牙菌斑转成酸，牙面开始脱矿。',
+     later:'反复的酸蚀是龋齿的直接原因。',
+     bk:'唾液几十分钟内中和酸，但已脱矿的部分不会自己长回来。'},
+    {o:'gut', t:'harm', near:.25, far:.4, back:'days',
+     now:'液体糖吸收快，血糖短时上升。',
+     later:'长期与体重和代谢问题相关。',
+     bk:'当天的血糖波动会平复。'}
+  ]},
+  {id:'low-veg', name:'蔬果吃得少', cat:'饮食饮水', type:'harm', eff:[
+    {o:'gut', t:'harm', near:.3, far:.6, back:'weeks',
+     now:'膳食纤维不足，肠道菌群缺少底物。',
+     later:'长期纤维不足与多种慢性病风险相关。',
+     bk:'增加蔬果数周后菌群结构可见变化。'},
+    {o:'heart', t:'harm', near:.18, far:.5, back:'years',
+     now:'这一餐对心脏几乎没有即时影响。',
+     later:'长期饮食模式与心血管风险相关。',
+     bk:'属于饮食模式项，不靠单餐改变。'}
+  ]},
+  {id:'water', name:'规律喝水', cat:'饮食饮水', type:'benefit', eff:[
+    {o:'kidneys', t:'benefit', near:.6, far:.6, back:'hours',
+     now:'有足够水分形成尿液，把代谢废物带走。',
+     later:'稳定的水分摄入有助于维持体液平衡。',
+     bk:'效果是当天的，不累积成"资本"，所以每天都要喝。'}
+  ]},
+  {id:'brush', name:'认真刷牙', cat:'日常清洁', type:'benefit', eff:[
+    {o:'mouth', t:'benefit', near:.8, far:.8, back:'hours',
+     now:'牙菌斑被机械清除，氟化物留在牙面。',
+     later:'每天两次是预防龋齿和牙周问题的基础。',
+     bk:'菌斑数小时内重新形成，这正是要刷两次的原因。'}
+  ]}
+];
+
+const byId = new Map(BEHAVIORS.map(b => [b.id, b]));
+const state = { scale:'near', active:new Set() };
+
+const organLayer = document.getElementById('organLayer');
+const linkLayer  = document.getElementById('linkLayer');
+const pickerEl   = document.getElementById('picker');
+const readEl     = document.getElementById('read');
+const countEl    = document.getElementById('count');
+const tipEl      = document.getElementById('tip');
+
+organLayer.innerHTML = Object.keys(ORG).map((k, i) => {
+  const o = ORG[k];
+  const dx = o.lx - o.x, dy = o.ly - o.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const sx = (o.x + dx / len * o.r).toFixed(1);
+  const sy = (o.y + dy / len * o.r).toFixed(1);
+  return '<g class="organ" data-k="' + k + '" style="--c:var(--harm);--t:' + (i * 0.63).toFixed(2) + 's">' +
+    '<circle class="halo" cx="' + o.x + '" cy="' + o.y + '" r="' + o.r + '"/>' +
+    SHAPE[k] +
+    '<ellipse class="ring" cx="' + o.x + '" cy="' + o.y + '" rx="' + o.rx + '" ry="' + o.ry + '"/>' +
+    '<line class="lead" x1="' + sx + '" y1="' + sy + '" x2="' + o.lx + '" y2="' + o.ly + '"/>' +
+    '<text class="lbl" x="' + o.lx + '" y="' + o.ly + '" text-anchor="' + o.a +
+      '" dominant-baseline="middle">' + o.n + '</text>' +
+    '</g>';
+}).join('');
+
+const organEl = {};
+document.querySelectorAll('.organ').forEach(g => { organEl[g.dataset.k] = g; });
+
+linkLayer.innerHTML = BEHAVIORS.flatMap(b => b.eff.map(e => {
+  const o = ORG[e.o], a = ORIGIN[b.id] || [200,190];
+  const mx = (a[0] + o.x) / 2;
+  const my = (a[1] + o.y) / 2;
+  const d = `M${a[0]} ${a[1]} Q${mx} ${my} ${o.x} ${o.y}`;
+  return `<path class="link" data-e="${b.id}|${e.o}" style="--c:var(--${e.t});--v:0" d="${d}"/>`;
+})).join('');
+
+const linkEl = {};
+document.querySelectorAll('.link').forEach(p => { linkEl[p.dataset.e] = p; });
+
+pickerEl.innerHTML = ['烟酒','睡眠作息','运动','久坐','用眼','饮食饮水','日常清洁']
+  .map(cat => {
+    const items = BEHAVIORS.filter(b => b.cat === cat);
+    if (!items.length) return '';
+    return `<div class="cat">${cat}</div>` + items.map(b =>
+      `<button class="act" data-id="${b.id}" data-type="${b.type}">
+        <i class="d"></i><span>${b.name}</span>
+      </button>`).join('');
+  }).join('');
+
+function compute() {
+  const acc = {};
+  const effs = [];
+  for (const id of state.active) {
+    const b = byId.get(id);
+    for (const e of b.eff) {
+      const decay = state.scale === 'near' ? 1 :
+        (BACK[e.back].d < .35 ? .04 : BACK[e.back].d < .6 ? .3 : 1);
+      const v = (state.scale === 'near' ? e.near : e.far) * decay;
+      if (!acc[e.o]) acc[e.o] = { harm:0, benefit:0, items:[] };
+      if (e.t === 'benefit') acc[e.o].benefit = Math.max(acc[e.o].benefit, v);
+      else acc[e.o].harm = Math.max(acc[e.o].harm, v);
+      acc[e.o].items.push({ b, e, v });
+      effs.push({ b, e, v, o:e.o });
+    }
+  }
+  return { acc, effs };
+}
+
+function render() {
+  const { acc, effs } = compute();
+  const onKeys = Object.keys(acc);
+
+  for (const k of Object.keys(ORG)) {
+    const g = organEl[k];
+    const a = acc[k];
+    if (!a || Math.max(a.harm, a.benefit) < .05) {
+      g.classList.remove('on');
+      g.style.setProperty('--v', '0');
+      continue;
+    }
+    const both = a.harm > 0 && a.benefit > 0;
+    const type = both ? 'mixed' : (a.benefit > 0 ? 'benefit' : 'harm');
+    const v = both ? Math.max(a.harm, a.benefit) : (a.benefit || a.harm);
+    const d = Math.max(...a.items.map(it => BACK[it.e.back].d));
+    g.classList.add('on');
+    g.style.setProperty('--c', `var(--${type})`);
+    g.style.setProperty('--v', v.toFixed(2));
+    g.style.setProperty('--d', d.toFixed(2));
+  }
+
+  const linkState = {};
+  for (const f of effs) linkState[f.b.id + '|' + f.o] = f.v;
+
+  for (const key of Object.keys(linkEl)) {
+    const p = linkEl[key];
+    const v = linkState[key];
+    if (v === undefined) { p.classList.remove('on'); continue; }
+    p.style.setProperty('--v', v.toFixed(2));
+    p.classList.add('on');
+  }
+
+  const hd = document.getElementById('stageHd');
+  if (hd) {
+    hd.innerHTML = !effs.length
+      ? '尚未选择行为'
+      : (state.scale === 'near'
+        ? '此刻，<b>' + state.active.size + '</b> 个行为正在身体里发生'
+        : '如果一直这样，<b>' + Object.keys(acc).filter(k =>
+            acc[k].items.some(it => BACK[it.e.back].d >= .5)).length + '</b> 处会留下痕迹');
+  }
+
+  const shownKeys = state.scale === 'near'
+    ? onKeys
+    : onKeys.filter(k => acc[k].items.some(it => BACK[it.e.back].d >= .5));
+  countEl.textContent = !effs.length
+    ? '未选择行为'
+    : state.active.size + ' 个行为 · 波及 ' + shownKeys.length + ' 处';
+
+  document.querySelectorAll('.act').forEach(btn => {
+    btn.classList.toggle('on', state.active.has(btn.dataset.id));
+  });
+
+  renderRead(acc, effs);
+}
+
+function renderRead(acc, effs) {
+  if (!effs.length) {
+    readEl.innerHTML = `<p class="empty">
+      点左边的任意一个行为。<br>
+      身体不会给这件事打分。<br>
+      它只回答两个问题——<br>
+      <b>牵动了哪几处，以及留得多久。</b>
+    </p>`;
+    return;
+  }
+
+  const allKeys = Object.keys(acc);
+  const keep = k => state.scale === 'near'
+    || acc[k].items.some(it => BACK[it.e.back].d >= .5);
+  const keys = allKeys.filter(keep);
+  const shown = effs.filter(f => state.scale === 'near' || BACK[f.e.back].d >= .5);
+  const quick = shown.filter(f => BACK[f.e.back].d < .5).length;
+  const slow = shown.filter(f => BACK[f.e.back].d >= .5).length;
+
+  const lead = '牵连 <b>' + keys.length + '</b> 处：' + keys.map(k => ORG[k].n).join('、') +
+    (state.scale === 'near'
+      ? '。其中 <b>' + quick + '</b> 项影响会自行散去，<b class="' +
+        (slow > quick ? 'h' : 'b') + '">' + slow + '</b> 项会留下更久的痕迹。'
+      : '。这些是即使现在停下，也不会随之消失的部分。');
+
+  if (!keys.length) {
+    readEl.innerHTML = '<p class="lead">在"此刻"之外，这些行为没有留下会累积的痕迹。切回"此刻"可以看当下的反应。</p>';
+    return;
+  }
+
+  const blocks = keys
+    .map(k => ({ k, d: Math.max(...acc[k].items.map(it => BACK[it.e.back].d)) }))
+    .sort((a, b) => b.d - a.d)
+    .map(({ k }) => {
+      const a = acc[k];
+      const both = a.harm > 0 && a.benefit > 0;
+      const type = both ? 'mixed' : (a.benefit > 0 ? 'benefit' : 'harm');
+      const items = a.items
+        .filter(it => state.scale === 'near' || BACK[it.e.back].d >= .5)
+        .slice()
+        .sort((x, y) => BACK[y.e.back].d - BACK[x.e.back].d)
+        .map(it => {
+          const seg = ORDER.indexOf(it.e.back) + 1;
+          const marks = ORDER.map((_, i) => `<i class="${i < seg ? 'on' : ''}"></i>`).join('');
+          const text = state.scale === 'near' ? it.e.now : it.e.later;
+          return `<div class="it" style="--c:var(--${it.e.t})">
+            <div class="ih"><span class="bn">${it.b.name}</span>
+              <em>${BACK[it.e.back].t}</em></div>
+            <p>${text}</p>
+            <div class="scl">${marks}</div>
+          </div>`;
+        }).join('');
+      return `<div class="ob">
+        <div class="ob-h"><span class="nm">${ORG[k].n}</span>
+          <span class="bar"></span>
+          <span class="dv" style="color:var(--${type})">${
+            both ? '两个方向' : (type === 'benefit' ? '有益' : '不利')}</span></div>
+        ${items}
+      </div>`;
+    }).join('');
+
+  readEl.innerHTML = `<p class="lead">${lead}</p>${blocks}`;
+}
+
+pickerEl.addEventListener('click', ev => {
+  const btn = ev.target.closest('.act');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (state.active.has(id)) state.active.delete(id);
+  else state.active.add(id);
+  render();
+});
+
+document.getElementById('seg').addEventListener('click', ev => {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+  state.scale = btn.dataset.scale;
+  document.querySelectorAll('#seg button').forEach(b => b.classList.toggle('on', b === btn));
+  render();
+});
+
+organLayer.addEventListener('click', ev => {
+  const g = ev.target.closest('.organ');
+  if (!g) return;
+  const name = ORG[g.dataset.k].n;
+  const blocks = [...readEl.querySelectorAll('.ob')];
+  const target = blocks.find(b => b.querySelector('.nm')?.textContent === name);
+  if (target) target.scrollIntoView({ behavior:'smooth', block:'nearest' });
+});
+
+organLayer.addEventListener('mousemove', ev => {
+  const g = ev.target.closest('.organ');
+  if (!g) { tipEl.classList.remove('on'); return; }
+  tipEl.textContent = ORG[g.dataset.k].n;
+  tipEl.style.left = ev.clientX + 'px';
+  tipEl.style.top = ev.clientY + 'px';
+  tipEl.classList.add('on');
+});
+organLayer.addEventListener('mouseleave', () => tipEl.classList.remove('on'));
+
+render();
+</script>
+</body>
+</html>
