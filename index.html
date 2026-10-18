@@ -11,6 +11,7 @@
   <script src="domain.js" defer></script>
   <script src="anatomy.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="vfx.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -44,7 +45,7 @@
           <section class="body-stage" aria-label="人体交互探索">
             <div class="stage-top"><div><span class="stage-dot"></span><span id="stage-state">人体探索 / 示例情境</span></div><button class="icon-button" id="motion-toggle" aria-label="关闭动态效果" aria-pressed="true"></button></div>
             <div class="stage-toolbar"><div class="segmented"><button data-view="front" aria-pressed="true">正面</button><button data-view="back" aria-pressed="false">背面</button></div><select id="system" aria-label="筛选身体系统"><option value="all">全部系统</option><option value="respiratory">呼吸系统</option><option value="circulatory">循环系统</option><option value="digestive">消化系统</option><option value="nervous">神经系统</option><option value="urinary">泌尿系统</option><option value="sensory">感官与口腔</option><option value="musculoskeletal">运动系统</option></select></div>
-            <div class="anatomy-scene" id="anatomy-scene"><div class="stage-grid" aria-hidden="true"></div><div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div><div class="vertical-caption" aria-hidden="true">HUMAN ANATOMY / INTERACTIVE ATLAS</div><div id="anatomy-art"></div><div id="organ-labels"></div><div class="platform" aria-hidden="true"></div><div class="organ-tooltip" id="organ-tooltip" role="tooltip" hidden></div><div class="view-caption" id="view-caption">正面解剖示意 · 非个人检测</div></div>
+            <div class="anatomy-scene" id="anatomy-scene"><div class="stage-grid" aria-hidden="true"></div><div class="vfx-cursor" aria-hidden="true"></div><div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div><div class="vertical-caption" aria-hidden="true">HUMAN ANATOMY / INTERACTIVE ATLAS</div><div id="anatomy-art"></div><div class="vfx-front" aria-hidden="true"></div><div id="organ-labels"></div><div class="platform" aria-hidden="true"></div><div class="organ-tooltip" id="organ-tooltip" role="tooltip" hidden></div><div class="view-caption" id="view-caption">正面解剖示意 · 非个人检测</div></div>
             <div class="stage-bottom"><div class="legend"><span><i class="harm"></i>不利影响</span><span><i class="benefit"></i>有益作用</span><span><i class="neutral"></i>未收录关联</span></div><div class="zoom-controls"><button data-zoom="torso" aria-pressed="true">躯干</button><button data-zoom="full" aria-pressed="false">全身</button></div></div>
             <div class="organ-picker" id="organ-picker" aria-label="用文字选择器官"></div>
             <div id="path-caption" class="path-caption" aria-live="polite">移动到器官探索，点击后查看影响</div>
