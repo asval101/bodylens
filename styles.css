@@ -9,3 +9,170 @@
 .source-link:not(a){border:0;background:none;padding:0;text-align:left;cursor:pointer}
 .organ-function{font-size:12px}.metric-scope,.metric-limit,.context-description,.form-note,.source-link{font-size:11px}.metric-overline{font-size:10px}.sidebar-footer{font-size:11px}.path-item{font-size:11px}.path-item b{font-size:12px}
 @media(min-width:981px){.detail-panel{max-height:790px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#466353 transparent}.detail-panel .section-kicker{margin-bottom:18px}.focused .detail-panel{max-height:870px}}
+
+/* ===================================================================
+   V2 视觉层 · 分层景深与交互增强
+   仅作追加覆盖，不修改上方既有规则。全部效果受 body.no-motion /
+   body.no-depth 两个既有开关控制，与设置页复选框联动。
+   =================================================================== */
+
+/* ---------- 1. 基调变量 ---------- */
+.app-shell{
+  --vfx-ease:cubic-bezier(.2,.7,.3,1);
+  --vfx-glass:linear-gradient(168deg,rgba(24,40,42,.94) 0%,rgba(14,25,27,.97) 46%,rgba(9,17,19,.99) 100%);
+  --vfx-edge:rgba(126,176,158,.17);
+  --vfx-edge-hot:rgba(156,222,201,.34);
+  --vfx-shadow:inset 0 1px 0 rgba(200,240,224,.10),inset 0 -1px 0 rgba(0,0,0,.55),0 34px 76px -36px rgba(0,0,0,.98),0 3px 12px rgba(0,0,0,.45);
+}
+
+/* ---------- 2. 氛围层：远景光源更实，加一层极慢扫光 ---------- */
+.ambient>span{width:920px;height:780px;opacity:.27;filter:blur(175px)}
+.ambient>span:nth-child(2){width:600px;height:560px;opacity:.2;filter:blur(150px)}
+.ambient::before{content:"";position:absolute;inset:-25%;background:conic-gradient(from 0deg at 50% 26%,transparent 0deg 210deg,rgba(156,222,201,.055) 250deg,transparent 292deg 360deg);pointer-events:none}
+.ambient::after{content:"";position:absolute;right:-6%;bottom:-16%;width:660px;height:580px;border-radius:50%;background:#4a3428;opacity:.16;filter:blur(165px);pointer-events:none}
+body:not(.no-motion) .ambient::before{animation:vfx-sweep 38s linear infinite}
+@keyframes vfx-sweep{to{transform:rotate(360deg)}}
+
+/* ---------- 3. 面板：分层边缘光 + 玻璃底面 + 悬浮抬升 ---------- */
+.panel{
+  background:var(--vfx-glass);
+  border:1px solid var(--vfx-edge);
+  box-shadow:var(--vfx-shadow);
+  transition:transform .5s var(--vfx-ease),box-shadow .5s var(--vfx-ease),border-color .5s var(--vfx-ease);
+}
+body:not(.no-motion) .panel:hover{
+  transform:translateY(-3px);
+  border-color:var(--vfx-edge-hot);
+  box-shadow:inset 0 1px 0 rgba(200,240,224,.17),inset 0 -1px 0 rgba(0,0,0,.55),0 46px 96px -42px rgba(0,0,0,1),0 0 0 1px rgba(156,222,201,.10),0 0 42px -14px rgba(120,200,180,.30);
+}
+/* 顶部一道细分隔光，制造面板“厚度” */
+.panel::before{content:"";position:absolute;left:18px;right:18px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(180,240,220,.28),transparent);opacity:.7;pointer-events:none}
+.panel{position:relative}
+
+/* ---------- 4. 舞台：三层景深 ---------- */
+.anatomy-scene{--vfx-rx:0deg;--vfx-ry:0deg;--vfx-ax:0px;--vfx-ay:0px;--vfx-gx:0px;--vfx-gy:0px;--vfx-lx:0px;--vfx-ly:0px;--vfx-mx:50%;--vfx-my:50%}
+
+.stage-grid{
+  transform:translate3d(var(--vfx-gx),var(--vfx-gy),-70px) scale(1.08);
+  transition:transform .7s var(--vfx-ease);
+  opacity:.85;
+}
+#anatomy-art{
+  transform:translate3d(var(--vfx-ax),var(--vfx-ay),0) rotateY(var(--vfx-ry)) rotateX(var(--vfx-rx));
+  transform-origin:50% 44%;
+  transform-style:preserve-3d;
+  transition:transform .55s var(--vfx-ease),filter .5s var(--vfx-ease);
+}
+#organ-labels{
+  transform:translate3d(var(--vfx-lx),var(--vfx-ly),40px);
+  transition:transform .7s var(--vfx-ease);
+}
+.platform{filter:drop-shadow(0 0 26px rgba(120,200,180,.26));transition:filter .6s var(--vfx-ease)}
+body:not(.no-motion) .orbit-one{animation:vfx-spin 44s linear infinite}
+body:not(.no-motion) .orbit-two{animation:vfx-spin 62s linear infinite reverse}
+@keyframes vfx-spin{to{transform:rotate(360deg)}}
+
+/* 近景：暗角 + 轻微浮尘，位于器官之前，强化景深 */
+.vfx-front{position:absolute;inset:0;z-index:2;pointer-events:none;transform:translateZ(120px);
+  background:radial-gradient(ellipse 62% 48% at 50% 50%,transparent 40%,rgba(3,8,9,.58) 100%)}
+/* 指针柔光：跟随鼠标的局部提亮，克制且可关闭 */
+.vfx-cursor{position:absolute;left:0;top:0;width:480px;height:480px;margin:-240px 0 0 -240px;z-index:1;
+  border-radius:50%;pointer-events:none;mix-blend-mode:screen;filter:blur(10px);opacity:0;
+  background:radial-gradient(circle,rgba(156,222,201,.15) 0%,rgba(120,196,176,.07) 42%,transparent 72%);
+  transform:translate3d(var(--vfx-mx),var(--vfx-my),0) translateZ(10px);
+  transition:opacity .5s var(--vfx-ease)}
+.anatomy-scene.vfx-pointer .vfx-cursor{opacity:1}
+
+/* ---------- 5. 器官交互：修正缩放跳位，hover 聚焦其余 ---------- */
+.human .organ{
+  transform-box:fill-box;transform-origin:center;
+  transition:transform .3s var(--vfx-ease),filter .3s var(--vfx-ease),opacity .35s var(--vfx-ease);
+}
+.human .organ.selected{transform-box:fill-box;transform-origin:center}
+body:not(.no-motion) .human .organ:hover{transform:scale(1.06);filter:drop-shadow(0 0 13px rgba(156,222,201,.5)) brightness(1.08)}
+body:not(.no-motion) .human .organ.selected:hover{transform:scale(1.07);filter:drop-shadow(0 0 15px rgba(230,164,140,.55)) brightness(1.12)}
+/* 悬停某一器官时，其余淡出，形成“焦点—景深”关系（不模糊文字，仅降不透明度） */
+.anatomy-scene.vfx-focus .human .organ:not(.vfx-hot){opacity:.4}
+.anatomy-scene.vfx-focus .organ-label:not(.vfx-hot){opacity:.42}
+.organ-label{transition:transform .22s var(--vfx-ease),border-color .22s,opacity .3s,box-shadow .22s}
+.organ-label.vfx-hot{border-color:rgba(156,222,201,.55);box-shadow:0 6px 20px -6px rgba(0,0,0,.8),0 0 16px -4px rgba(156,222,201,.45)}
+
+/* 点击脉冲：从命中点向外扩散的一圈光，交代“这一下点中了” */
+.vfx-ripple{position:absolute;width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:50%;
+  border:1px solid rgba(156,222,201,.55);pointer-events:none;z-index:8;
+  animation:vfx-ripple .9s var(--vfx-ease) forwards}
+@keyframes vfx-ripple{0%{opacity:.85;transform:scale(.16)}100%{opacity:0;transform:scale(1)}}
+
+/* ---------- 6. 控件微交互 ---------- */
+.primary-button{position:relative;overflow:hidden;background:linear-gradient(162deg,#bdf3dd,#8ed3bd 54%,#6cb6a2);
+  color:#05231d;border-color:rgba(190,245,225,.5);
+  box-shadow:0 12px 32px -14px rgba(120,220,190,.62),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -2px 8px rgba(0,0,0,.14);}
+.primary-button:hover{transform:translateY(-2px);box-shadow:0 20px 44px -16px rgba(120,220,190,.78),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -2px 8px rgba(0,0,0,.14)}
+.primary-button:active{transform:translateY(0) scale(.985)}
+.primary-button>span:last-child{display:inline-block;transition:transform .34s var(--vfx-ease)}
+.primary-button:hover>span:last-child{transform:translateX(4px)}
+/* 掠过式高光：只在 hover 时走一遍，不常驻 */
+.primary-button::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 32%,rgba(255,255,255,.5) 50%,transparent 68%);
+  transform:translateX(-130%)}
+body:not(.no-motion) .primary-button:hover::after{animation:vfx-glide .85s var(--vfx-ease)}
+@keyframes vfx-glide{to{transform:translateX(130%)}}
+
+.behavior-chip{transition:transform .28s var(--vfx-ease),border-color .28s,background .28s,box-shadow .28s}
+body:not(.no-motion) .behavior-chip:hover{transform:translateY(-2px);border-color:rgba(156,222,201,.42);
+  box-shadow:0 14px 28px -16px rgba(0,0,0,.95),0 0 0 1px rgba(156,222,201,.12)}
+.quiet-button,.icon-button{transition:transform .25s var(--vfx-ease),border-color .25s,background .25s,color .25s}
+body:not(.no-motion) .quiet-button:hover{transform:translateY(-1px)}
+
+.legend i.harm{box-shadow:0 0 12px rgba(230,164,140,.62)}
+.legend i.benefit{box-shadow:0 0 12px rgba(156,222,201,.62)}
+.legend i.neutral{box-shadow:0 0 10px rgba(105,127,128,.45)}
+.legend span{transition:opacity .3s}
+
+.stage-toolbar,.stage-top{backdrop-filter:blur(12px) saturate(1.15)}
+
+/* 详情区内容切换时的重入场，让“换了一个器官”在视觉上成立 */
+#detail-content.vfx-enter{animation:vfx-rise .5s var(--vfx-ease) both}
+@keyframes vfx-rise{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+
+/* ---------- 7. 入场节奏（只对无 hover 位移的元素加 transform 动画） ---------- */
+body:not(.no-motion) .page-heading{animation:vfx-rise .65s var(--vfx-ease) both}
+body:not(.no-motion) .body-stage{animation:vfx-rise .7s var(--vfx-ease) .1s both}
+body:not(.no-motion) .bottom-strip{animation:vfx-rise .7s var(--vfx-ease) .28s both}
+body:not(.no-motion) .library-grid>*{animation:vfx-rise .55s var(--vfx-ease) both}
+body:not(.no-motion) .library-grid>:nth-child(3n+2){animation-delay:.05s}
+body:not(.no-motion) .library-grid>:nth-child(3n+3){animation-delay:.1s}
+body:not(.no-motion) .setting-card{animation:vfx-rise .6s var(--vfx-ease) both}
+body:not(.no-motion) .setting-card:nth-child(2){animation-delay:.06s}
+body:not(.no-motion) .setting-card:nth-child(3){animation-delay:.12s}
+body:not(.no-motion) .setting-card:nth-child(4){animation-delay:.18s}
+/* 面板只做透明度淡入，保留 hover 的 translateY 不被动画覆盖 */
+body:not(.no-motion) .panel{animation:vfx-fade .8s var(--vfx-ease) both}
+@keyframes vfx-fade{from{opacity:0}to{opacity:1}}
+
+/* ---------- 8. 与既有开关 / 系统偏好联动 ---------- */
+body.no-motion *,body.no-motion *::before,body.no-motion *::after{
+  animation:none!important;transition:none!important
+}
+body.no-motion #anatomy-art,body.no-motion #organ-labels,body.no-motion .stage-grid,body.no-motion .ambient>span{
+  transform:none!important
+}
+body.no-motion .panel:hover{transform:none}
+body.no-depth .vfx-cursor,body.no-depth .vfx-front{display:none}
+body.no-depth #anatomy-art,body.no-depth #organ-labels,body.no-depth .stage-grid{
+  transform:none!important
+}
+body.no-depth .anatomy-scene.vfx-focus .human .organ{opacity:1}
+
+/* ---------- 9. 响应式与触屏 ---------- */
+@media(max-width:1180px){.vfx-cursor{width:380px;height:380px;margin:-190px 0 0 -190px}}
+@media(max-width:980px){
+  .anatomy-scene{perspective:760px}
+  .vfx-front{background:radial-gradient(ellipse 70% 54% at 50% 50%,transparent 44%,rgba(3,8,9,.5) 100%)}
+}
+@media(max-width:650px){
+  .vfx-cursor{display:none}
+  #anatomy-art{transform:none}
+  body:not(.no-motion) .panel:hover{transform:none}
+}
+@media(hover:none){.vfx-cursor{display:none}}
