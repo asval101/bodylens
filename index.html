@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#081012">
+  <title>身知 BodyLens · 看见行为的回响</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="data/catalog.js" defer></script>
+  <script src="domain.js" defer></script>
+  <script src="anatomy.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><div class="horizon"></div></div>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#explore" aria-label="身知首页"><span class="brand-symbol">身</span><span>身知<span class="brand-en">BODYLENS</span></span></a>
+      <nav aria-label="主导航">
+        <a href="#explore" data-nav="explore">身体探索</a><a href="#library" data-nav="library">行为资料库</a><a href="#plan" data-nav="plan">今日计划<span id="nav-plan-count"></span></a>
+      </nav>
+      <div class="top-actions"><span class="local-badge"><i></i><span id="save-state">本地运行</span></span><a href="#settings" class="icon-button" aria-label="数据与设置" id="settings-link"></a></div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section id="page-explore" class="page">
+        <div class="page-heading"><div><div class="eyebrow"><span class="small-line"></span> EVERY CHOICE LEAVES A TRACE</div><h1>看见行为，<span>在身体里的回响。</span></h1><p>从一次选择开始，理解它如何影响你的身体。</p></div><button class="quiet-button" id="focus-toggle" aria-pressed="false"></button></div>
+        <div class="workspace">
+          <aside class="input-panel panel" aria-label="行为与情境设置">
+            <div class="section-kicker"><span>01 / 设定情境</span><span class="tiny-label">YOUR CHOICE</span></div>
+            <h2>从一个日常行为开始</h2>
+            <div class="profile-fields"><label>年龄<input id="age" type="number" min="18" max="120" step="1" placeholder="18 岁及以上" inputmode="numeric"></label><label>性别<select id="sex"><option value="unspecified">暂不提供</option><option value="male">男</option><option value="female">女</option></select></label></div>
+            <form id="behavior-form" class="search-box"><span id="search-icon"></span><input id="behavior-input" aria-label="输入日常行为" placeholder="如：抽烟、睡眠不足…" autocomplete="off"><button type="submit" aria-label="添加行为">↵</button></form>
+            <div id="input-feedback" class="inline-feedback" role="status" hidden></div>
+            <div class="quick-heading"><span>常见行为</span><a href="#library">查看全部 ↗</a></div>
+            <div id="quick-behaviors" class="behavior-grid"></div>
+            <div class="selection-heading"><span>我的情境</span><div class="segmented" aria-label="分析模式"><button data-mode="single" aria-pressed="true">单项</button><button data-mode="combined" aria-pressed="false">综合</button></div></div>
+            <div id="selected-behaviors"></div>
+            <button id="analyze" class="primary-button"><span>查看身体影响</span><span>→</span></button>
+            <div id="dirty-note" class="form-note"></div>
+            <div class="sidebar-footer"><span id="sidebar-info-icon"></span><p>年龄与性别仅用于说明资料适用范围。人体是解剖示意，不是你的身体检测结果。</p></div>
+          </aside>
+          <section class="body-stage" aria-label="人体交互探索">
+            <div class="stage-top"><div><span class="stage-dot"></span><span id="stage-state">人体探索 / 示例情境</span></div><button class="icon-button" id="motion-toggle" aria-label="关闭动态效果" aria-pressed="true"></button></div>
+            <div class="stage-toolbar"><div class="segmented"><button data-view="front" aria-pressed="true">正面</button><button data-view="back" aria-pressed="false">背面</button></div><select id="system" aria-label="筛选身体系统"><option value="all">全部系统</option><option value="respiratory">呼吸系统</option><option value="circulatory">循环系统</option><option value="digestive">消化系统</option><option value="nervous">神经系统</option><option value="urinary">泌尿系统</option><option value="sensory">感官与口腔</option><option value="musculoskeletal">运动系统</option></select></div>
+            <div class="anatomy-scene" id="anatomy-scene"><div class="stage-grid" aria-hidden="true"></div><div class="orbit orbit-one" aria-hidden="true"></div><div class="orbit orbit-two" aria-hidden="true"></div><div class="vertical-caption" aria-hidden="true">HUMAN ANATOMY / INTERACTIVE ATLAS</div><div id="anatomy-art"></div><div id="organ-labels"></div><div class="platform" aria-hidden="true"></div><div class="organ-tooltip" id="organ-tooltip" role="tooltip" hidden></div><div class="view-caption" id="view-caption">正面解剖示意 · 非个人检测</div></div>
+            <div class="stage-bottom"><div class="legend"><span><i class="harm"></i>不利影响</span><span><i class="benefit"></i>有益作用</span><span><i class="neutral"></i>未收录关联</span></div><div class="zoom-controls"><button data-zoom="torso" aria-pressed="true">躯干</button><button data-zoom="full" aria-pressed="false">全身</button></div></div>
+            <div class="organ-picker" id="organ-picker" aria-label="用文字选择器官"></div>
+            <div id="path-caption" class="path-caption" aria-live="polite">移动到器官探索，点击后查看影响</div>
+          </section>
+          <aside class="detail-panel panel" aria-label="器官影响与依据"><div class="section-kicker"><span>02 / 理解后果</span><span class="tiny-label">THE CONSEQUENCE</span></div><div id="detail-heading"></div><div id="result-context"></div><div class="detail-tabs" role="tablist" aria-label="器官详情"><button role="tab" data-detail="impact" aria-selected="true">身体影响</button><button role="tab" data-detail="evidence" aria-selected="false">证据与来源</button><button role="tab" data-detail="action" aria-selected="false">可以怎么做</button></div><div id="detail-content" role="tabpanel"></div></aside>
+        </div>
+        <section class="bottom-strip"><div class="strip-message"><span class="strip-icon" id="strip-icon"></span><div><h2>理解后果，是改变的第一步。</h2><p>不用一次改变所有事。先把一个能做到的小行动，留给今天。</p></div></div><a href="#plan" class="plan-preview"><span class="eyebrow">TODAY'S SMALL STEP</span><span id="plan-summary">还没有计划，去添加一个小行动</span><span class="arrow">↗</span></a></section>
+      </section>
+      <section id="page-library" class="page inner-page" hidden><div class="page-heading"><div><div class="eyebrow">THE KNOWLEDGE ATLAS</div><h1>日常行为，<span>有据可查。</span></h1><p>浏览已收录的行为、情境和来源。没有匹配的资料，会明确告诉你。</p></div></div><div class="library-tools"><label class="search-box"><span id="library-search-icon"></span><input id="library-search" placeholder="搜索行为或别名" aria-label="搜索资料库"></label><div id="library-filters" class="filter-row"></div></div><div id="library-count" class="muted"></div><div id="library-grid" class="library-grid"></div></section>
+      <section id="page-plan" class="page inner-page" hidden><div class="page-heading"><div><div class="eyebrow">A SMALL STEP, TODAY</div><h1>把理解，<span>变成今天的行动。</span></h1><p id="plan-date"></p></div><span id="plan-progress" class="plan-progress"></span></div><div class="plan-layout"><div class="panel plan-main"><form id="plan-form" class="plan-add"><input id="plan-input" maxlength="120" placeholder="写下一件今天能做到的事…" aria-label="新增今日计划" required><button class="primary-button" type="submit">添加计划 ＋</button></form><div id="plan-list"></div></div><aside class="plan-aside"><div class="eyebrow">ONE THING AT A TIME</div><h2>小一点，也算开始。</h2><p>这里记录你决定尝试的行动。完成勾选只表示行动完成，不代表器官已修复或风险已经下降。</p><a href="#explore" class="quiet-button">回到身体探索 ↗</a><details id="past-plans"><summary>查看以前的计划</summary><div id="past-plan-list"></div></details></aside></div></section>
+      <section id="page-settings" class="page inner-page" hidden><div class="page-heading"><div><div class="eyebrow">YOUR DATA, YOUR CONTROL</div><h1>数据与设置</h1><p>记录保存在当前浏览器里。主动备份，才能在清除浏览器数据后恢复。</p></div></div><div class="settings-grid"><section class="panel setting-card"><h2>本地记录与备份</h2><p id="storage-info"></p><p>备份为明文 JSON，包含年龄、行为情境、计划及偏好。文件只在本机读取，恢复会整体替换这些用户记录。</p><div class="setting-actions"><button class="primary-button" id="export-backup">导出备份 ↓</button><label class="quiet-button file-label">选择备份恢复 ↑<input id="import-backup" type="file" accept=".json,application/json"></label><button class="quiet-button" id="undo-restore" hidden>撤销上次恢复</button></div><p class="form-note">恢复前会显示摘要并等待确认。网站的医学资料和素材不会被备份覆盖。</p></section><section class="panel setting-card"><h2>沉浸与动效</h2><label class="switch-row"><span>景深与轻微视差<small>背景柔焦，主体和文字保持清晰</small></span><input id="depth-setting" type="checkbox" checked></label><label class="switch-row"><span>交互动效<small>系统开启“减少动态效果”时自动减少</small></span><input id="motion-setting" type="checkbox" checked></label><p>无需账号、付费接口或在线模型。页面加载后，核心分析、计划与备份可离线使用；重新打开页面仍需本地文件或本地服务。</p></section><section class="panel setting-card"><h2>资料与使用范围</h2><p>面向 18 岁及以上一般成年人，用于健康科普。当前资料由开发阶段核对公开原文，尚未经临床专家审校。</p><p>有数字的研究保留人群、剂量与时间条件。相对风险不等于个人发病概率；未收录的影响也不代表没有影响。</p><p id="data-version"></p></section><section class="panel setting-card"><h2>人体素材与许可</h2><div id="asset-credits"></div><p>器官位置与层级用于交互科普，仍需后续专业解剖审校；不作为临床定位或测量依据。</p></section></div></section>
+    </main>
+    <footer class="app-footer"><span>身知 BODYLENS <span class="footer-divider">/</span> 让每一次选择，更有知觉。</span><span>健康科普 · 非诊断工具 <span class="footer-divider">/</span> <a href="#settings">资料与本地数据</a></span></footer>
+  </div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="restore-dialog"><form method="dialog"><div class="eyebrow">RESTORE LOCAL DATA</div><h2>确认恢复这份备份？</h2><div id="restore-summary"></div><p>现有记录将整体替换。替换前会保留本地恢复点，你也可以先导出当前记录。</p><div class="dialog-actions"><button class="quiet-button" value="cancel">取消</button><button class="quiet-button" id="export-before-restore" type="button">先导出当前数据</button><button class="primary-button" id="confirm-restore" type="button">确认恢复</button></div></form></dialog>
+  <noscript><p class="noscript">请启用 JavaScript，以使用器官交互、行为分析和本地保存。</p></noscript>
+</body>
+</html>

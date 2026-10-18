@@ -1,0 +1,82 @@
+[
+  {
+    "file": "assets/digestive-original.jpg",
+    "title": "Figure 23.2 Components of the Digestive System",
+    "author": "OpenStax",
+    "book": "Anatomy and Physiology, first edition",
+    "sourcePage": "https://openstax.org/books/anatomy-and-physiology/pages/23-1-overview-of-the-digestive-system",
+    "downloadUrl": "https://openstax.org/apps/archive/20260604.144757/resources/abe85277d60c52f85be133e1b5ddc40aea009e1c",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved": "2026-10-17",
+    "licenseEvidence": "Book-level license metadata and attribution link on the first-edition source page; global site footer also mentions a newer noncommercial share-alike license. The first-edition book metadata is the basis here.",
+    "changes": "None; original local teaching/reference copy."
+  },
+  {
+    "file": "assets/respiratory-original.jpg",
+    "title": "Figure 22.2 Major Respiratory Structures",
+    "author": "OpenStax",
+    "book": "Anatomy and Physiology, first edition",
+    "sourcePage": "https://openstax.org/books/anatomy-and-physiology/pages/22-1-organs-and-structures-of-the-respiratory-system",
+    "downloadUrl": "https://openstax.org/apps/archive/20260604.144757/resources/a20b8077aaf4688018122bf8f59ecfea069ed3b0",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved": "2026-10-17",
+    "licenseEvidence": "Book-level license metadata and attribution link on the first-edition source page; global site footer also mentions a newer noncommercial share-alike license. The first-edition book metadata is the basis here.",
+    "changes": "None; original local teaching/reference copy."
+  },
+  {
+    "file": "assets/lungs-original.jpg",
+    "title": "Bronchial Tree",
+    "author": "OpenStax",
+    "book": "Anatomy and Physiology, first edition",
+    "sourcePage": "https://openstax.org/books/anatomy-and-physiology/pages/22-1-organs-and-structures-of-the-respiratory-system",
+    "downloadUrl": "https://openstax.org/apps/archive/20260604.144757/resources/926317b6e6a394c5ff9439ee6e18daf02a54cb8f",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved": "2026-10-17",
+    "licenseEvidence": "Book-level license metadata and attribution link on the first-edition source page; global site footer also mentions a newer noncommercial share-alike license. The first-edition book metadata is the basis here.",
+    "changes": "None; original local teaching/reference copy."
+  },
+  {
+    "file": "assets/body-original.jpg",
+    "title": "Regions of the Human Body",
+    "author": "OpenStax",
+    "book": "Anatomy and Physiology, first edition",
+    "sourcePage": "https://openstax.org/books/anatomy-and-physiology/pages/1-6-anatomical-terminology",
+    "downloadUrl": "https://openstax.org/apps/archive/20260604.144757/resources/f809b006c4ba0de05e1fe5462ef7236e28c7186f",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "retrieved": "2026-10-17",
+    "licenseEvidence": "Book-level license metadata and attribution link on the first-edition source page; global site footer also mentions a newer noncommercial share-alike license. The first-edition book metadata is the basis here.",
+    "changes": "None; original local teaching/reference copy."
+  },
+  {
+    "file": "assets/lung-texture.webp",
+    "derivedFrom": "assets/lungs-original.jpg",
+    "author": "OpenStax; adapted by the BodyLens project",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Cropped, printed label lines locally reduced, resized and used with clipping and transparent overlay in SVG."
+  },
+  {
+    "file": "assets/gut-texture.png",
+    "derivedFrom": "assets/digestive-original.jpg",
+    "author": "OpenStax; adapted by the BodyLens project",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+    "changes": "Cropped, printed label lines locally reduced, background partly removed, resized and overlaid in SVG."
+  },
+  {
+    "file": "anatomy.js",
+    "author": "BodyLens project",
+    "source": "artwork/anatomy-base.js",
+    "license": "Project-authored editable vector drawing; underlying OpenStax texture assets retain their own licenses.",
+    "changes": "Updated lighting, organ surface details, posterior layers, face contours, interactive overlays; uses separately credited OpenStax-derived textures."
+  },
+  {
+    "file": "assets/favicon.svg",
+    "author": "BodyLens project",
+    "license": "Project-authored vector mark."
+  }
+]
