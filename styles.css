@@ -176,3 +176,53 @@ body.no-depth .anatomy-scene.vfx-focus .human .organ{opacity:1}
   body:not(.no-motion) .panel:hover{transform:none}
 }
 @media(hover:none){.vfx-cursor{display:none}}
+
+/* Organ close-up: a continuous camera move, with finite, source-backed steps.
+   Kept outside the pointer-depth transforms on anatomy-art / labels / grid. */
+.organ-focus{position:absolute;inset:0;z-index:12;overflow:hidden;isolation:isolate;color:var(--text);border-radius:var(--radius)}
+.organ-focus[hidden]{display:none}
+.organ-focus:focus{outline:none}
+.of-atmosphere{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 37%,color-mix(in srgb,var(--mint) 10%,var(--bg)),var(--bg) 76%)}
+.of-atmosphere::after{content:"";position:absolute;inset:75px 30px 172px;border:1px solid var(--line);border-radius:50%;opacity:.38;pointer-events:none}
+.of-world{position:absolute;left:0;top:0;transform-origin:0 0;pointer-events:none;will-change:transform}
+.of-human{width:100%;height:100%;display:block;overflow:visible}
+.of-human .of-context{opacity:.055}
+.of-human .of-organ-shape{stroke:color-mix(in srgb,var(--copper) 55%,var(--bg));stroke-width:.7}
+.of-human .of-target{opacity:1;filter:none}
+.of-human *{animation:none!important;transition:none!important}
+.of-human .of-flow{opacity:0;fill:var(--copper)}
+.organ-focus[data-step="0"] .of-flow{opacity:1}
+.of-airway{fill:none;stroke:var(--copper);stroke-width:1;stroke-opacity:.5;vector-effect:non-scaling-stroke}
+.of-tracer{opacity:0}
+body:not(.no-motion) .organ-focus.of-playing[data-step="0"] .of-tracer{animation:of-air-left 2.2s ease-in 2!important}
+body:not(.no-motion) .organ-focus.of-playing[data-step="0"] .of-tracer-1{animation-name:of-air-right!important}
+@keyframes of-air-left{0%{opacity:0;transform:translate(0,0)}15%{opacity:.9}65%{opacity:.9;transform:translate(0,46px)}100%{opacity:0;transform:translate(-24px,71px)}}
+@keyframes of-air-right{0%{opacity:0;transform:translate(0,0)}15%{opacity:.9}65%{opacity:.9;transform:translate(0,46px)}100%{opacity:0;transform:translate(24px,71px)}}
+.of-chrome{position:absolute;top:14px;left:14px;right:14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.of-back{border:1px solid var(--line);border-radius:30px;background:var(--panel-deep);color:var(--text);padding:7px 12px;font-size:11px;white-space:nowrap}
+.of-disclaimer{color:var(--muted);font-size:10px;text-align:right}
+.of-heading{position:absolute;top:68px;left:26px;pointer-events:none}
+.of-kicker{font-size:10px;letter-spacing:3px;color:var(--mint)}
+.of-heading h2{font-size:24px;font-weight:400;letter-spacing:2px;margin:3px 0 0}
+.of-story{position:absolute;bottom:15px;left:18px;right:18px;padding:15px 16px 12px;background:var(--vfx-glass);border:1px solid var(--vfx-edge-hot);border-radius:var(--radius);box-shadow:var(--vfx-shadow)}
+.of-story-top{display:flex;align-items:center;justify-content:space-between;min-height:22px;margin-bottom:9px}
+.of-counter{color:var(--mint);font-size:11px;letter-spacing:2px}
+.of-play{border:0;background:none;color:var(--muted);padding:0 0 0 12px;font-size:11px}
+.of-steps{display:flex;gap:7px;margin-bottom:10px}
+.of-step{flex:1;min-width:0;border:1px solid var(--line);background:var(--panel-deep);color:var(--muted);border-radius:6px;font-size:11px;line-height:1.6;padding:5px 3px}
+.of-step[aria-pressed=true]{color:var(--text);border-color:var(--mint);background:color-mix(in srgb,var(--mint) 9%,var(--panel-deep))}
+.of-caption{font-size:12px;line-height:1.8;margin:0;color:var(--text);min-height:43px}
+.of-evidence{display:block;margin-top:6px;padding:0;border:0;background:none;color:var(--mint);font-size:11px;text-align:left}
+.has-organ-focus #anatomy-art,.has-organ-focus #organ-labels,.has-organ-focus .organ-tooltip,.has-organ-focus .vfx-cursor,.has-organ-focus .vfx-front,.has-organ-focus .vertical-caption,.has-organ-focus .view-caption{opacity:0;pointer-events:none}
+.has-organ-focus #organ-labels{visibility:hidden}
+.has-organ-focus .organ-tooltip{display:none}
+.impact-explanation,.path-explanation{font-size:12px;color:var(--muted);line-height:1.9}
+.impact-explanation summary,.path-explanation summary{cursor:pointer;color:var(--mint);font-size:11px;width:fit-content;margin:10px 0}
+.impact-explanation p{margin:9px 0 0}
+.path-explanation{border-top:1px solid var(--line);margin-top:18px}
+.path-explanation .effect-path{margin:16px 0}
+.path-play{margin-top:18px;color:var(--mint);font-size:12px}
+.no-depth .of-atmosphere::after{display:none}
+@media(max-width:1180px) and (min-width:981px){.of-disclaimer{font-size:9px;max-width:116px}.of-story{left:8px;right:8px;padding:12px}.of-step{font-size:10px}.of-heading{left:18px}.of-caption{font-size:11px}}
+@media(max-width:650px){.of-chrome{left:9px;right:9px}.of-disclaimer{font-size:9px;max-width:150px}.of-story{left:9px;right:9px;padding:13px}.of-heading{left:20px}.of-step{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.organ-focus .of-tracer{animation:none!important}}
