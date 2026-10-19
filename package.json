@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "description": "身知 — 日常行为后果的交互式健康科普",
-  "scripts": { "start": "node scripts/serve.cjs", "test": "node --test tests/domain.test.cjs" },
+  "scripts": { "start": "node scripts/serve.cjs", "test": "node --test tests/domain.test.cjs tests/organ-focus.test.cjs" },
   "engines": { "node": ">=18" }
 }
