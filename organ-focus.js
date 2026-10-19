@@ -61,7 +61,7 @@
   const back = $('.of-back', layer);
   const stepRow = $('.of-steps', layer);
   const play = $('.of-play', layer);
-  let active = null, timer = null, version = 0, animations = [];
+  let active = null, timer = null, version = 0, selection = 0, animations = [];
   let readOnly = false;
   const transform = camera => 'translate(' + camera.x + 'px,' + camera.y + 'px) scale(' + camera.scale + ')';
 
@@ -195,7 +195,7 @@
     }));
     if (!box) return;
     stop(); cancelTravel(); ++version;
-    const view = source.viewBox.baseVal, rect = source.getBoundingClientRect(), frame = scene.getBoundingClientRect();
+    const view = source.viewBox.baseVal, frame = scene.getBoundingClientRect();
     active = { id, sourceButton, bounds: { x: box.x - view.x, y: box.y - view.y, width: box.width, height: box.height }, steps: readSteps(id), playing: false, index: 0 };
     const camera = cameraFor();
     if (!camera) { active = null; return; }
@@ -249,6 +249,7 @@
     if (restoreFocus) $('#organ-picker [data-organ-button="' + id + '"]')?.focus({ preventScroll: true });
   }
   function close(restoreFocus = true) {
+    ++selection;
     if (!active) return;
     const id = active.id;
     if (!restoreFocus || !travelOn() || !world.animate) { finishClose(id, restoreFocus); return; }
@@ -303,20 +304,25 @@
     const organ = event.target.closest('#anatomy-art [data-organ],#organ-labels [data-organ-button],#organ-picker [data-organ-button]');
     if (organ) {
       const id = organ.dataset.organ || organ.dataset.organButton;
-      queueMicrotask(() => open(id, organ));
+      const token = ++selection;
+      // Native event dispatch can run a microtask between capture and bubble.
+      // Wait for app.js to finish replacing the detail DOM before reading it.
+      setTimeout(() => { if (selection === token) open(id, organ); }, 0);
     } else if (active && event.target.closest('[data-view],[data-zoom],#analyze,[data-detail],[data-show-evidence],[data-show-action]')) {
       close(false);
     }
   }, true);
   $('#system').addEventListener('change', () => close(false));
   window.addEventListener('hashchange', () => close(false));
-  window.addEventListener('resize', () => {
+  function refit() {
     if (!active) return;
     if (active.closing) { finishClose(active.id, false); return; }
     cancelTravel();
     const camera = cameraFor();
     if (camera) world.style.transform = transform(camera);
-  });
+  }
+  window.addEventListener('resize', refit);
+  if (global.ResizeObserver) new ResizeObserver(refit).observe(scene);
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { stop(); refreshPlay(); }
   });
