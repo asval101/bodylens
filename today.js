@@ -115,16 +115,17 @@
     const qtyBox = $('#today-entry-qty');
     if (!chips || !qtyBox) return;
 
-    chips.innerHTML = W.order.map(id => {
+    chips.innerHTML = W.order.map((id, i) => {
       const item = W.get(id);
       const picked = id === pickedItem;
       return '<button type="button" class="entry-chip' + (picked ? ' is-picked' : '') + '"' +
+        ' style="--i:' + i + '"' +
         ' data-pick="' + id + '" aria-pressed="' + picked + '">' + esc(item.name) + '</button>';
     }).join('');
 
     const item = W.get(pickedItem);
-    qtyBox.innerHTML = item.presets.map(n =>
-      '<button type="button" class="qty-btn" data-add="' + pickedItem + '" data-qty="' + n + '">' + n + ' ' + esc(item.unit) + '</button>'
+    qtyBox.innerHTML = item.presets.map((n, i) =>
+      '<button type="button" class="qty-btn" style="--i:' + i + '" data-add="' + pickedItem + '" data-qty="' + n + '">' + n + ' ' + esc(item.unit) + '</button>'
     ).join('') + '<span class="qty-hint">' + (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记方向，不折算') + '</span>';
   }
 

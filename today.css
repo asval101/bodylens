@@ -8,7 +8,40 @@
   padding:42px 0 80px;
   display:flex;
   flex-direction:column;
-  gap:36px;
+  gap:30px;
+}
+
+/* ---------- 入场：从下往上、从浅到深 ----------
+   只动 transform 与 opacity，避免触发布局重算。
+   节奏是「先出现骨架，再出现细节」，所以区块用 40–380ms 递进，
+   区块内部的按钮再往后接一段，总时长控制在 1 秒内。 */
+@keyframes rise-in{
+  from{opacity:0;transform:translate3d(0,16px,0)}
+  to{opacity:1;transform:none}
+}
+@keyframes fade-only{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+.today > *{
+  animation:rise-in var(--dur-enter) var(--ease-out-expo) both;
+}
+.today > :nth-child(1){animation-delay:40ms}
+.today > :nth-child(2){animation-delay:130ms}
+.today > :nth-child(3){animation-delay:210ms}
+.today > :nth-child(4){animation-delay:270ms}
+.today > :nth-child(5){animation-delay:320ms}
+.today > :nth-child(6){animation-delay:360ms}
+
+/* 主数字单独走一条更慢的曲线：它是这一屏唯一的焦点，
+   晚到一点、幅度大一点，视线自然会先落在它上面。 */
+.hero-number{
+  animation:figure-in 820ms var(--ease-out-expo) 120ms both;
+}
+@keyframes figure-in{
+  from{opacity:0;transform:translate3d(0,22px,0)}
+  to{opacity:1;transform:none}
 }
 
 /* ---------- 焦点一：今天的时间 ---------- */
@@ -47,19 +80,24 @@
 }
 .hero-number.is-credit{color:var(--mint)}
 .hero-unit{
-  font-size:15px;
-  color:var(--muted);
-  letter-spacing:.1em;
+  font-size:14px;
+  color:var(--faint);
+  letter-spacing:.14em;
 }
 .hero-anchor{
   min-height:22px;
   font-size:15px;
-  color:var(--text);
+  color:var(--muted);
   letter-spacing:.02em;
 }
+/* 类比是这一屏的第二层次：数字给量，它给画面。
+   所以它要比正文更亮、更大一点，否则整块只剩一个孤零零的数。 */
 .hero-anchor em{
   font-style:normal;
-  color:var(--copper);
+  color:var(--text);
+  font-size:17px;
+  letter-spacing:.01em;
+  margin:0 2px;
 }
 .hero-compare{
   min-height:22px;
@@ -71,9 +109,16 @@
 .hero-compare .down{color:var(--copper)}
 
 /* ---------- 焦点二：记一笔 ---------- */
+/* 分隔线两端淡出，比一条通栏实线更少「表格感」 */
 .today-entry{
-  border-top:1px solid var(--line);
+  position:relative;
   padding-top:22px;
+}
+.today-entry::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(38,53,56,.95) 14%,rgba(38,53,56,.95) 72%,transparent);
 }
 .entry-head{
   display:flex;
@@ -90,20 +135,36 @@
   gap:8px;
 }
 .entry-chip{
+  position:relative;
   border:1px solid #2b3d40;
   background:transparent;
   color:var(--muted);
   font-size:12.5px;
   padding:7px 13px;
   border-radius:999px;
-  transition:color .2s ease,border-color .2s ease,background .2s ease;
+  transition:color var(--dur-fast) ease,border-color var(--dur-fast) ease,background var(--dur-fast) ease;
+  animation:rise-in 520ms var(--ease-out-expo) both;
+  animation-delay:calc(180ms + var(--i,0) * 34ms);
 }
 .entry-chip:hover{color:var(--text);border-color:#3d5457;filter:none}
+/* 选中态用一条从中间向两侧展开的底线，而不是整体变色——
+   动效本身在说明「这一项被展开了」，比换颜色更省动作也更准确。 */
+.entry-chip::after{
+  content:"";
+  position:absolute;
+  left:50%;
+  right:50%;
+  bottom:-1px;
+  height:1px;
+  background:var(--mint);
+  transition:left 300ms var(--ease-out-quart),right 300ms var(--ease-out-quart);
+}
 .entry-chip.is-picked{
   color:var(--mint);
-  border-color:rgba(156,222,201,.55);
-  background:rgba(156,222,201,.09);
+  border-color:rgba(156,222,201,.5);
+  background:rgba(156,222,201,.07);
 }
+.entry-chip.is-picked::after{left:13px;right:13px}
 .entry-qty{
   display:flex;
   flex-wrap:wrap;
@@ -125,14 +186,18 @@
   font-size:12.5px;
   padding:7px 12px;
   border-radius:999px;
-  transition:border-color .2s ease,background .2s ease,color .2s ease;
+  font-variant-numeric:tabular-nums;
+  transition:border-color var(--dur-fast) ease,background var(--dur-fast) ease,color var(--dur-fast) ease,transform var(--dur-fast) var(--ease-out-quart);
+  animation:rise-in 460ms var(--ease-out-expo) both;
+  animation-delay:calc(60ms + var(--i,0) * 40ms);
 }
 .qty-btn:hover{
   border-color:var(--mint);
   color:var(--mint);
+  background:rgba(156,222,201,.05);
   filter:none;
 }
-.qty-btn:active{transform:scale(.97)}
+.qty-btn:active{transform:scale(.96)}
 .qty-cancel{
   border:0;
   background:none;
@@ -208,7 +273,13 @@
 .log-empty b{color:var(--muted);font-weight:500}
 
 /* ---------- 次级：近 7 天 ---------- */
-.today-trend{border-top:1px solid var(--line);padding-top:22px}
+.today-trend{position:relative;padding-top:22px}
+.today-trend::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(38,53,56,.95) 14%,rgba(38,53,56,.95) 72%,transparent);
+}
 .trend-head{
   display:flex;justify-content:space-between;
   font-size:12px;color:var(--muted);letter-spacing:.08em;
@@ -306,4 +377,13 @@
 
 @media(prefers-reduced-motion:reduce){
   .hero-number,.trend-bar{transition:none}
+  /* 系统要求减少动态时，入场退化为纯淡入：不位移、不分批延迟，
+     内容一次性出现，避免「等它一个个冒出来」的焦虑感。 */
+  .today > *,
+  .hero-number,
+  .entry-chip,
+  .qty-btn{
+    animation:fade-only 180ms linear both !important;
+    animation-delay:0ms !important;
+  }
 }
