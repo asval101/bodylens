@@ -89,6 +89,33 @@
     return out;
   }
 
+  /* 该日所在的自然周起始（周一）。用于带周额度的行为做边际计算。 */
+  function weekStart(key) {
+    const d = new Date(key + 'T00:00:00');
+    const dow = d.getDay() === 0 ? 6 : d.getDay() - 1;
+    return shiftDay(key, -dow);
+  }
+
+  /* 带 weeklyCap 的行为：只有超出本周额度的那部分才计入分钟。
+   * 用「今日之后的超出量 − 今日之前的超出量」求边际，而不是简单按量相乘，
+   * 否则用户会在额度内也看到损耗，数字与研究的成立前提不一致。 */
+  function cappedMinutes(entries, itemId, key) {
+    const item = W.get(itemId);
+    const list = entries || [];
+    const todayQty = list
+      .filter(e => e.date === key && e.itemId === itemId)
+      .reduce((sum, e) => sum + e.qty, 0);
+    if (!todayQty) return 0;
+    const start = weekStart(key);
+    const beforeQty = list
+      .filter(e => e.itemId === itemId && e.date >= start && e.date < key)
+      .reduce((sum, e) => sum + e.qty, 0);
+    const cap = item.weeklyCap;
+    const overBefore = Math.max(0, beforeQty - cap);
+    const overAfter = Math.max(0, beforeQty + todayQty - cap);
+    return (overAfter - overBefore) * item.minutes;
+  }
+
   /* 汇总某一天。minutes 只累加有可靠口径的条目。 */
   function summarize(entries, key) {
     const day = (entries || []).filter(e => e.date === key);
@@ -101,19 +128,21 @@
     for (const e of day) {
       const item = W.get(e.itemId);
       if (!item) continue;
-      const m = W.minutesFor(e.itemId, e.qty);
+      const m = item.weeklyCap ? cappedMinutes(entries, e.itemId, key) : W.minutesFor(e.itemId, e.qty);
       if (m === null) {
         noted.push({ itemId: e.itemId, name: item.name, qty: e.qty, unit: item.unit });
         continue;
       }
       counted += 1;
       total += m;
+      const withinCap = !!item.weeklyCap && m === 0;
       if (index.has(e.itemId)) {
         const row = index.get(e.itemId);
         row.qty += e.qty;
         row.minutes += m;
+        row.withinCap = row.minutes === 0;
       } else {
-        const row = { itemId: e.itemId, name: item.name, unit: item.unit, qty: e.qty, minutes: m };
+        const row = { itemId: e.itemId, name: item.name, unit: item.unit, qty: e.qty, minutes: m, withinCap };
         index.set(e.itemId, row);
         byItem.push(row);
       }
@@ -186,9 +215,9 @@
 
   return {
     ANCHORS,
-    dayKey, shiftDay, isDayKey,
+    dayKey, shiftDay, isDayKey, weekStart,
     makeEntry, cleanEntries,
-    summarize, compare, dailyTotals,
+    summarize, compare, dailyTotals, cappedMinutes,
     formatMinutes, anchorText
   };
 });

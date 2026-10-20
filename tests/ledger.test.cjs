@@ -24,8 +24,9 @@ test('数值等级不得高于方向等级', () => {
 test('有出处的行为能算出分钟，无口径的返回 null 而不是 0', () => {
   assert.strictEqual(W.minutesFor('smoke', 1), -20);
   assert.strictEqual(W.minutesFor('smoke', 10), -200);
-  assert.strictEqual(W.minutesFor('alcohol', 3), null);
+  assert.strictEqual(W.minutesFor('alcohol', 3), -45);
   assert.strictEqual(W.minutesFor('shortSleep', 2), null);
+  assert.strictEqual(W.minutesFor('sleep', 1), null);
 });
 
 test('缺失或非法数量不产生数字', () => {
@@ -42,13 +43,13 @@ test('记录不冗余存储分钟，改权重后自动同步', () => {
 test('汇总把有数字与只有方向的分开统计', () => {
   const entries = [
     L.makeEntry('smoke', 3, '2026-10-20', new Date('2026-10-20T09:00:00Z')),
-    L.makeEntry('alcohol', 2, '2026-10-20', new Date('2026-10-20T22:00:00Z'))
+    L.makeEntry('shortSleep', 2, '2026-10-20', new Date('2026-10-20T22:00:00Z'))
   ];
   const s = L.summarize(entries, '2026-10-20');
   assert.strictEqual(s.totalMinutes, -60);
   assert.strictEqual(s.counted, 1);
   assert.strictEqual(s.noted.length, 1);
-  assert.strictEqual(s.noted[0].itemId, 'alcohol');
+  assert.strictEqual(s.noted[0].itemId, 'shortSleep');
   assert.strictEqual(s.byItem.length, 1);
   assert.strictEqual(s.byItem[0].qty, 3);
 });
@@ -139,4 +140,61 @@ test('逐日合计按从旧到新排列且长度正确', () => {
   assert.strictEqual(rows[6].date, '2026-10-20');
   assert.strictEqual(rows[6].totalMinutes, -20);
   assert.strictEqual(rows[0].date, '2026-10-14');
+});
+
+/* ---------- 周额度行为（酒精）的边际计算 ---------- */
+
+test('额度内饮酒不计入损耗', () => {
+  const e = [L.makeEntry('alcohol', 5, '2026-10-20', new Date('2026-10-20T21:00:00Z'))];
+  const s = L.summarize(e, '2026-10-20');
+  assert.strictEqual(s.totalMinutes, 0);
+  assert.strictEqual(s.byItem[0].withinCap, true);
+});
+
+test('超出额度的部分才按 −15 分钟计', () => {
+  // 2026-10-20 是周二，周一已喝 10 杯，今天再喝 5 杯 → 本周累计 15，超出 12.5 的 2.5 杯
+  const e = [
+    L.makeEntry('alcohol', 10, '2026-10-19', new Date('2026-10-19T21:00:00Z')),
+    L.makeEntry('alcohol', 5, '2026-10-20', new Date('2026-10-20T21:00:00Z'))
+  ];
+  const s = L.summarize(e, '2026-10-20');
+  assert.strictEqual(s.totalMinutes, -37.5);
+});
+
+test('周一已严重超标时，今天全部计入', () => {
+  const e = [
+    L.makeEntry('alcohol', 20, '2026-10-19', new Date('2026-10-19T21:00:00Z')),
+    L.makeEntry('alcohol', 2, '2026-10-20', new Date('2026-10-20T21:00:00Z'))
+  ];
+  assert.strictEqual(L.summarize(e, '2026-10-20').totalMinutes, -30);
+});
+
+test('额度按自然周重置，跨周不累加', () => {
+  // 10-18 是上周日，10-19 是本周一
+  const e = [
+    L.makeEntry('alcohol', 20, '2026-10-18', new Date('2026-10-18T21:00:00Z')),
+    L.makeEntry('alcohol', 2, '2026-10-19', new Date('2026-10-19T21:00:00Z'))
+  ];
+  assert.strictEqual(L.summarize(e, '2026-10-19').totalMinutes, 0);
+});
+
+test('周起始固定为周一', () => {
+  assert.strictEqual(L.weekStart('2026-10-20'), '2026-10-19');
+  assert.strictEqual(L.weekStart('2026-10-19'), '2026-10-19');
+  assert.strictEqual(L.weekStart('2026-10-25'), '2026-10-19');
+});
+
+test('屏幕时间带不确定区间，仍给出单一估算值', () => {
+  const item = W.get('sit');
+  assert.strictEqual(item.minutes, -21.8);
+  assert.deepStrictEqual(item.range, [-0.3, -44.7]);
+  const e = [L.makeEntry('sit', 2, '2026-10-20', new Date('2026-10-20T22:00:00Z'))];
+  assert.strictEqual(L.summarize(e, '2026-10-20').totalMinutes, -43.6);
+});
+
+test('minutesFor 是原始乘算，不含周额度；周额度只由 summarize 实施', () => {
+  // 防止将来有人在界面层直接调 minutesFor 算酒精，绕过阈值
+  assert.strictEqual(W.minutesFor('alcohol', 1), -15);
+  const e = [L.makeEntry('alcohol', 1, '2026-10-20', new Date('2026-10-20T21:00:00Z'))];
+  assert.strictEqual(L.summarize(e, '2026-10-20').totalMinutes, 0);
 });

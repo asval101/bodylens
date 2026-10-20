@@ -81,8 +81,16 @@
     }
 
     const abs = Math.abs(s.totalMinutes);
-    numEl.textContent = abs;
+    /* 大数字只取整：21.8 这种权重累加后会出现小数，而小数在这里传递的是假精度 */
+    numEl.textContent = Math.round(abs);
     unitEl.textContent = '分钟';
+
+    if (abs === 0) {
+      /* 有记录但没有超出任何门槛，这里给正面反馈而不是留一片空 */
+      anchorEl.innerHTML = '今天没有超出建议量的部分，账是平的。';
+      cmpEl.textContent = '';
+      return;
+    }
 
     const anchor = L.anchorText(abs);
     anchorEl.innerHTML = anchor
@@ -128,9 +136,21 @@
     const rows = [];
 
     for (const row of s.byItem) {
+      const item = W.get(row.itemId);
+      let valueHtml;
+      if (row.withinCap) {
+        valueHtml = '<span class="log-value qualitative">本周额度内</span>';
+      } else if (item && item.range) {
+        const lo = Math.round(Math.abs(item.range[0]) * row.qty);
+        const hi = Math.round(Math.abs(item.range[1]) * row.qty);
+        valueHtml = '<span class="log-value has-range" title="研究给出的不确定区间">−' + Math.round(Math.abs(row.minutes)) +
+          ' <em>分钟</em><small>区间 ' + lo + '–' + hi + '</small></span>';
+      } else {
+        valueHtml = '<span class="log-value">−' + Math.round(Math.abs(row.minutes)) + ' 分钟</span>';
+      }
       rows.push('<div class="log-line">' +
         '<span class="who"><b>' + esc(row.name) + '</b><span>' + row.qty + ' ' + esc(row.unit) + '</span></span>' +
-        '<span class="log-value">−' + Math.round(Math.abs(row.minutes)) + ' 分钟</span>' +
+        valueHtml +
         '<button type="button" class="log-del" data-remove="' + row.itemId + '" aria-label="删除今天的' + esc(row.name) + '记录">×</button>' +
         '</div>');
     }

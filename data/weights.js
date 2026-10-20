@@ -6,6 +6,10 @@
  *   3. value（数值等级）不得高于 direction（方向等级）——方向都不可信，数值必然不可信。
  *   4. minutes 为 null 表示「方向可信但没有可靠的折算口径」，界面只给方向，不给数字。
  *   5. 宁可不给数字，也不给一个找不到出处的数字。
+ *   6. weeklyCap 表示该口径只对「超出每周额度」的部分成立。这类条目的 minutes
+ *      只能经 ledger.summarize 的边际计算使用，不得直接乘数量。
+ *   7. range 表示研究给出了不确定区间。有 range 的条目必须在界面上同时显示区间，
+ *      不允许只给点估计——区间本身就是这条数据可信度的一部分。
  *
  * 证据等级含义：
  *   direction  A 多项独立研究结论一致 ｜ B 结论较一致但有前提 ｜ C 目前证据有限
@@ -26,6 +30,22 @@
       year: '2024-12-29',
       population: '英国医生研究（男性，1951 年起）与百万女性研究（女性，1996 年起）中的长期吸烟者',
       note: '每支烟平均缩短预期寿命 20 分钟：男性 17 分钟、女性 22 分钟。群体平均值，不是个人预测。DOI 与原文链接待补。'
+    },
+    'lancet-alcohol-2018': {
+      org: '剑桥大学等 · The Lancet',
+      title: 'Risk thresholds for alcohol consumption: combined analysis of individual-participant data for 599,912 current drinkers in 19 countries',
+      journal: 'The Lancet',
+      year: '2018-04-14',
+      population: '19 个国家、599,912 名当前饮酒者；随访期自报饮酒量',
+      note: '每周摄入 100g 纯酒精以上，全因死亡风险随摄入量上升。研究者给出的换算为「超出每周上限后每标准单位约 −15 分钟」，该换算是基于本研究的边际估算，非原文结论句。每周 100g 约合 12.5 个英国标准单位（1 单位 = 8g 纯酒精）。'
+    },
+    'bjsm-tv-2011': {
+      org: '昆士兰大学 · British Journal of Sports Medicine',
+      title: 'Television viewing time and reduced life expectancy: a life table analysis',
+      journal: 'Br J Sports Med',
+      year: '2011-08',
+      population: '澳大利亚 11,247 名 25 岁以上成年人（AusDiab 研究）＋ 全国生命表',
+      note: '25 岁以后每看 1 小时电视，预期寿命减少 21.8 分钟，95% 不确定区间 0.3–44.7 分钟。区间跨越两个数量级，是本表里精度最低的一个数。测的是电视观看时长，不是全部久坐行为。'
     },
     'who-alcohol': {
       org: '世界卫生组织 WHO',
@@ -81,13 +101,14 @@
     alcohol: {
       name: '酒精',
       unit: '标准杯',
-      minutes: null,
+      minutes: -15,
       direction: 'A',
-      value: 'C',
-      source: 'who-alcohol',
+      value: 'B',
+      source: 'lancet-alcohol-2018',
+      weeklyCap: 12.5,
       presets: [1, 2, 3, 5],
-      line: '酒精没有可以认定为安全的摄入量。',
-      caveat: '方向明确，但「一杯折合多少分钟」目前没有一致口径，所以这里不折算成分钟。'
+      line: '超出每周建议量的每一杯，大约拿走 15 分钟。',
+      caveat: '研究给出的是「超出每周约 12.5 标准杯之后」的边际值，所以额度内的部分不计入损耗。'
     },
     shortSleep: {
       name: '睡眠不足',
@@ -101,15 +122,16 @@
       caveat: '成年人平均需要 7–9 小时，个体差异大；单纯晚睡不等于睡眠不足。暂不折算分钟。'
     },
     sit: {
-      name: '连续久坐',
+      name: '屏幕时间',
       unit: '小时',
-      minutes: null,
+      minutes: -21.8,
       direction: 'B',
       value: 'C',
-      source: 'who-activity',
+      source: 'bjsm-tv-2011',
+      range: [-0.3, -44.7],
       presets: [1, 2, 4, 8],
-      line: '久坐的风险是长期累积的，不是坐一小时就发生病变。',
-      caveat: '现有资料不支持按每坐一小时计算损伤，暂不折算分钟。'
+      line: '每看一小时屏幕，平均拿走约 22 分钟。',
+      caveat: '整张表里最不确定的一条：研究给出的不确定区间是 0.3 到 44.7 分钟，相差一百多倍；而且测的是看电视时长，不能等同于全部久坐。只用于提醒，不用于任何推算。'
     },
     sugar: {
       name: '含糖饮料',
