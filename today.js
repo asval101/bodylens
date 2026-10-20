@@ -1,0 +1,245 @@
+/* 今天的账本 —— 首屏渲染层
+ * 只负责「读权重 → 算 → 显示」，所有计算都在 ledger.js / weights.js 里。
+ * 不写死任何分钟数，不从别处复制数字。 */
+(function () {
+  'use strict';
+
+  const W = window.BodyLensWeights;
+  const L = window.BodyLensLedger;
+  if (!W || !L) return;
+
+  const KEY = 'bodylens-ledger-v1';
+  const $ = sel => document.querySelector(sel);
+  const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  let entries = [];
+  let storeError = '';
+  let pickedItem = 'smoke';
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return L.cleanEntries(parsed && parsed.entries);
+    } catch (e) {
+      storeError = '本地记录读取失败，已从空白开始。之前的记录可能已被浏览器清除。';
+      return [];
+    }
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ v: 1, entries: entries }));
+      storeError = '';
+    } catch (e) {
+      storeError = '本地保存失败：浏览器可能禁用了存储，或空间已满。这一笔只留在当前页面，关闭后会丢失。';
+    }
+  }
+
+  function add(itemId, qty) {
+    try {
+      entries.push(L.makeEntry(itemId, qty));
+      save();
+      render();
+    } catch (e) {
+      // 数量或行为非法时不动账本，避免脏数据进入记录
+      storeError = e.message;
+      render();
+    }
+  }
+
+  function removeItem(itemId) {
+    const today = L.dayKey();
+    entries = entries.filter(e => !(e.date === today && e.itemId === itemId));
+    save();
+    render();
+  }
+
+  /* ---------- 焦点一 ---------- */
+  function renderHero() {
+    const today = L.dayKey();
+    const s = L.summarize(entries, today);
+    const y = L.summarize(entries, L.shiftDay(today, -1));
+    const numEl = $('#today-number');
+    const unitEl = $('#today-unit');
+    const anchorEl = $('#today-anchor');
+    const cmpEl = $('#today-compare');
+    if (!numEl) return;
+
+    numEl.classList.remove('is-empty', 'is-credit');
+
+    if (s.counted === 0) {
+      numEl.textContent = '还没开始';
+      numEl.classList.add('is-empty');
+      unitEl.textContent = '';
+      anchorEl.textContent = s.noted.length
+        ? '今天记了 ' + s.noted.length + ' 项，但这些行为没有可靠的折算口径，所以这里不给分钟数。'
+        : '点一下下面的行为，第一笔就记上了。';
+      cmpEl.textContent = '';
+      return;
+    }
+
+    const abs = Math.abs(s.totalMinutes);
+    numEl.textContent = abs;
+    unitEl.textContent = '分钟';
+
+    const anchor = L.anchorText(abs);
+    anchorEl.innerHTML = anchor
+      ? '大约等于 <em>' + esc(anchor.replace('大约', '')) + '</em>'
+      : '';
+
+    const c = L.compare(s, y);
+    if (!c.hasPrev) {
+      cmpEl.textContent = '昨天没有记录，今天是第一天。';
+    } else if (c.delta > 0) {
+      cmpEl.innerHTML = '<span class="up">比昨天少 ' + esc(L.formatMinutes(c.delta)) + '</span>　—　继续';
+    } else if (c.delta < 0) {
+      cmpEl.innerHTML = '<span class="down">比昨天多 ' + esc(L.formatMinutes(-c.delta)) + '</span>';
+    } else {
+      cmpEl.textContent = '和昨天持平。';
+    }
+  }
+
+  /* ---------- 焦点二：记一笔 ---------- */
+  function renderEntry() {
+    const chips = $('#today-entry-chips');
+    const qtyBox = $('#today-entry-qty');
+    if (!chips || !qtyBox) return;
+
+    chips.innerHTML = W.order.map(id => {
+      const item = W.get(id);
+      const picked = id === pickedItem;
+      return '<button type="button" class="entry-chip' + (picked ? ' is-picked' : '') + '"' +
+        ' data-pick="' + id + '" aria-pressed="' + picked + '">' + esc(item.name) + '</button>';
+    }).join('');
+
+    const item = W.get(pickedItem);
+    qtyBox.innerHTML = item.presets.map(n =>
+      '<button type="button" class="qty-btn" data-add="' + pickedItem + '" data-qty="' + n + '">' + n + ' ' + esc(item.unit) + '</button>'
+    ).join('') + '<span class="qty-hint">' + (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记方向，不折算') + '</span>';
+  }
+
+  /* ---------- 焦点三：今天记了什么 ---------- */
+  function renderLog() {
+    const box = $('#today-log');
+    if (!box) return;
+    const s = L.summarize(entries, L.dayKey());
+    const rows = [];
+
+    for (const row of s.byItem) {
+      rows.push('<div class="log-line">' +
+        '<span class="who"><b>' + esc(row.name) + '</b><span>' + row.qty + ' ' + esc(row.unit) + '</span></span>' +
+        '<span class="log-value">−' + Math.round(Math.abs(row.minutes)) + ' 分钟</span>' +
+        '<button type="button" class="log-del" data-remove="' + row.itemId + '" aria-label="删除今天的' + esc(row.name) + '记录">×</button>' +
+        '</div>');
+    }
+    for (const row of s.noted) {
+      rows.push('<div class="log-line">' +
+        '<span class="who"><b>' + esc(row.name) + '</b><span>' + row.qty + ' ' + esc(row.unit) + '</span></span>' +
+        '<span class="log-value qualitative">仅记录</span>' +
+        '<button type="button" class="log-del" data-remove="' + row.itemId + '" aria-label="删除今天的' + esc(row.name) + '记录">×</button>' +
+        '</div>');
+    }
+
+    if (!rows.length) {
+      box.innerHTML = '<div class="log-empty">今天还没有记录。<br><b>先从最想改的那一件开始记。</b></div>';
+      return;
+    }
+    box.innerHTML = '<div class="log-head"><span>今天记了 ' + (s.byItem.length + s.noted.length) + ' 项</span><span>计入分钟</span></div>' + rows.join('');
+  }
+
+  /* ---------- 次级：近 7 天 ---------- */
+  function renderTrend() {
+    const box = $('#today-trend');
+    if (!box) return;
+    const today = L.dayKey();
+    const rows = L.dailyTotals(entries, today, 7);
+    const peak = Math.max.apply(null, rows.map(r => Math.abs(r.totalMinutes)).concat([1]));
+    const names = ['日', '一', '二', '三', '四', '五', '六'];
+
+    const bars = rows.map(r => {
+      const abs = Math.abs(r.totalMinutes);
+      const h = abs ? Math.max(3, Math.round(abs / peak * 100)) : 0;
+      const isToday = r.date === today;
+      return '<div class="trend-col' + (isToday ? ' is-today' : '') + (abs ? '' : ' is-zero') + '">' +
+        '<div class="trend-bar" style="height:' + h + '%"></div>' +
+        '</div>';
+    }).join('');
+
+    const days = rows.map(r => {
+      const d = new Date(r.date + 'T00:00:00');
+      const isToday = r.date === today;
+      return '<div class="trend-col' + (isToday ? ' is-today' : '') + '">' +
+        '<span class="trend-day">' + (isToday ? '今天' : '周' + names[d.getDay()]) + '</span>' +
+        '</div>';
+    }).join('');
+
+    box.innerHTML = '<div class="trend-head"><span>近 7 天</span><span>' + (peak > 1 ? '最高 ' + L.formatMinutes(peak) : '还没有数据') + '</span></div>' +
+      '<div class="trend-bars">' + bars + '</div>' +
+      '<div class="trend-days">' + days + '</div>';
+  }
+
+  function render() {
+    const page = document.getElementById('page-today');
+    if (!page) return;
+    const warn = $('#today-storage-warn');
+    if (warn) {
+      warn.hidden = !storeError;
+      warn.textContent = storeError;
+    }
+    renderHero();
+    renderEntry();
+    renderLog();
+    renderTrend();
+  }
+
+  function bind() {
+    const page = document.getElementById('page-today');
+    if (!page) return;
+
+    page.addEventListener('click', event => {
+      const pickBtn = event.target.closest('[data-pick]');
+      if (pickBtn) {
+        pickedItem = pickBtn.dataset.pick;
+        renderEntry();
+        return;
+      }
+      const addBtn = event.target.closest('[data-add]');
+      if (addBtn) {
+        add(addBtn.dataset.add, Number(addBtn.dataset.qty));
+        return;
+      }
+      const delBtn = event.target.closest('[data-remove]');
+      if (delBtn) {
+        removeItem(delBtn.dataset.remove);
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (location.hash.replace('#', '') === 'today') render();
+    });
+
+    // 跨过零点时把「今天」滚到新的一天，避免页面停在前一天的账上
+    let lastDay = L.dayKey();
+    setInterval(() => {
+      const now = L.dayKey();
+      if (now !== lastDay) {
+        lastDay = now;
+        render();
+      }
+    }, 30000);
+  }
+
+  function init() {
+    entries = load();
+    bind();
+    render();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();

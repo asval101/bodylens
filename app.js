@@ -37,7 +37,7 @@
   const icon=(name)=>`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${icons[name]||icons.activity}</svg>`;
   const KEY='bodylens-user-v1', RESTORE_KEY='bodylens-restore-v1';
   const defaultState=()=>({age:'',sex:'unspecified',mode:'single',choices:[{id:'smoke',scenario:0,duration:'1 个月'}],applied:{demo:true,age:'',sex:'unspecified',mode:'single',choices:[{id:'smoke',scenario:0,duration:'1 个月'}]},tasks:[],prefs:{motion:true,depth:true},organ:'lungs',view:'front',zoom:'torso',system:'all'});
-  let state=defaultState(), storageAvailable=true, storageError='', detailTab='impact',page='explore',libraryCategory='全部',hoverOrgan=null,pathTimer=null,pathStep=0,pendingRestore=null,toastTimer=null,editingTask=null;
+  let state=defaultState(), storageAvailable=true, storageError='', detailTab='impact',page='today',libraryCategory='全部',hoverOrgan=null,pathTimer=null,pathStep=0,pendingRestore=null,toastTimer=null,editingTask=null;
   try{const raw=localStorage.getItem(KEY);if(raw){const parsed=JSON.parse(raw);if(parsed.schemaVersion!==1)throw new Error('本地数据版本不兼容');state=M.validateState(parsed.data);}}
   catch(error){storageError=error.message;storageAvailable=false;}
   const behavior=id=>D.behaviors.find(b=>b.id===id);
@@ -206,7 +206,7 @@
     applyPrefs();
   }
   function navigate(){
-    page=['explore','library','plan','settings'].includes(location.hash.slice(1))?location.hash.slice(1):'explore';
+    page=['today','explore','library','plan','settings'].includes(location.hash.slice(1))?location.hash.slice(1):'today';
     $$('.page').forEach(el=>el.hidden=el.id!==`page-${page}`);$$('[data-nav]').forEach(el=>{el.classList.toggle('active',el.dataset.nav===page);if(el.dataset.nav===page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
     $('#settings-link').setAttribute('aria-current',page==='settings'?'page':'false');
     if(page==='library')renderLibrary();if(page==='plan')renderPlan();if(page==='settings')renderSettings();

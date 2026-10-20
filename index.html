@@ -7,10 +7,14 @@
   <title>身知 BodyLens · 看见行为的回响</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="today.css">
   <script src="data/catalog.js" defer></script>
+  <script src="data/weights.js" defer></script>
+  <script src="ledger.js" defer></script>
   <script src="domain.js" defer></script>
   <script src="anatomy.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="today.js" defer></script>
   <script src="vfx.js" defer></script>
   <script src="organ-focus.js" defer></script>
 </head>
@@ -21,11 +25,34 @@
     <header class="topbar">
       <a class="brand" href="#explore" aria-label="身知首页"><span class="brand-symbol">身</span><span>身知<span class="brand-en">BODYLENS</span></span></a>
       <nav aria-label="主导航">
-        <a href="#explore" data-nav="explore">身体探索</a><a href="#library" data-nav="library">行为资料库</a><a href="#plan" data-nav="plan">今日计划<span id="nav-plan-count"></span></a>
+        <a href="#today" data-nav="today">今天</a><a href="#explore" data-nav="explore">身体探索</a><a href="#library" data-nav="library">行为资料库</a><a href="#plan" data-nav="plan">今日计划<span id="nav-plan-count"></span></a>
       </nav>
       <div class="top-actions"><span class="local-badge"><i></i><span id="save-state">本地运行</span></span><a href="#settings" class="icon-button" aria-label="数据与设置" id="settings-link"></a></div>
     </header>
     <main id="main" tabindex="-1">
+      <section id="page-today" class="page">
+        <div class="today">
+          <section class="today-hero" aria-label="今天的时间损耗">
+            <div class="eyebrow"><span class="small-line"></span> TODAY, SO FAR</div>
+            <p class="hero-label">今天，从你这里拿走的时间</p>
+            <div class="hero-figure"><span class="hero-number is-empty" id="today-number">—</span><span class="hero-unit" id="today-unit"></span></div>
+            <p class="hero-anchor" id="today-anchor" aria-live="polite"></p>
+            <p class="hero-compare" id="today-compare"></p>
+          </section>
+          <section class="today-entry" aria-label="记录今天的行为">
+            <div class="entry-head"><span>记一笔</span><span class="tiny-label">TAP TO LOG</span></div>
+            <div class="entry-chips" id="today-entry-chips" role="group" aria-label="选择行为"></div>
+            <div class="entry-qty" id="today-entry-qty" role="group" aria-label="选择数量"></div>
+          </section>
+          <section class="today-log" id="today-log" aria-label="今天的记录" aria-live="polite"></section>
+          <section class="today-trend" id="today-trend" aria-label="近七天趋势"></section>
+          <div class="storage-warn" id="today-storage-warn" role="alert" hidden></div>
+          <div class="today-footer">
+            <p class="today-note">这些时间来自人群研究的估算，不是你的体检结果，也不是对你能活多久的预测。没有可靠折算口径的行为只做记录，不给分钟数。</p>
+            <a class="today-exit" href="#explore">这些时间去了哪里 ↗</a>
+          </div>
+        </div>
+      </section>
       <section id="page-explore" class="page">
         <div class="page-heading"><div><div class="eyebrow"><span class="small-line"></span> EVERY CHOICE LEAVES A TRACE</div><h1>看见行为，<span>在身体里的回响。</span></h1><p>从一次选择开始，理解它如何影响你的身体。</p></div><button class="quiet-button" id="focus-toggle" aria-pressed="false"></button></div>
         <div class="workspace">
