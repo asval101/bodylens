@@ -1,0 +1,26 @@
+; 身知 BodyLens 的 systemd 服务定义
+; 复制到 /etc/systemd/system/bodylens.service
+; 改三处：WorkingDirectory / ExecStart / User
+
+[Unit]
+Description=BodyLens static host and AI proxy
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/opt/bodylens
+EnvironmentFile=/opt/bodylens/server/.env
+ExecStart=/usr/bin/node /opt/bodylens/server/proxy.cjs
+Restart=always
+RestartSec=3
+
+; 只允许写临时目录，代码目录只读，减少被改坏的可能
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/tmp
+
+[Install]
+WantedBy=multi-user.target
