@@ -11,6 +11,8 @@
   <script src="data/catalog.js" defer></script>
   <script src="data/weights.js" defer></script>
   <script src="ledger.js" defer></script>
+  <script src="interpret.js" defer></script>
+  <script src="ai.js" defer></script>
   <script src="domain.js" defer></script>
   <script src="anatomy.js" defer></script>
   <script src="app.js" defer></script>
@@ -45,6 +47,16 @@
             <div class="entry-qty" id="today-entry-qty" role="group" aria-label="选择数量"></div>
           </section>
           <section class="today-log" id="today-log" aria-label="今天的记录" aria-live="polite"></section>
+          <section class="today-ai" id="today-ai" aria-label="这一天的解读">
+            <div class="ai-head">
+              <span class="ai-tag" id="ai-tag">本地解读</span>
+              <button type="button" class="ai-retry" id="ai-retry" hidden>换个说法</button>
+            </div>
+            <p class="ai-lead" id="ai-lead" aria-live="polite"></p>
+            <p class="ai-body" id="ai-body" aria-live="polite"></p>
+            <p class="ai-hint" id="ai-hint" hidden></p>
+            <p class="ai-note" id="ai-note" hidden></p>
+          </section>
           <section class="today-trend" id="today-trend" aria-label="近七天趋势"></section>
           <div class="storage-warn" id="today-storage-warn" role="alert" hidden></div>
           <div class="today-footer">

@@ -6,6 +6,8 @@
 
   const W = window.BodyLensWeights;
   const L = window.BodyLensLedger;
+  const I = window.BodyLensInterpret;
+  const AI = window.BodyLensAI;
   if (!W || !L) return;
 
   const KEY = 'bodylens-ledger-v1';
@@ -201,6 +203,91 @@
       '<div class="trend-days">' + days + '</div>';
   }
 
+  /* ---------- 解读 ----------
+   * 分工是刻意的：数字永远由 ledger 算，模型只负责把数字说成人话。
+   * 所以 lead 那行永远是本地算出来的结论，模型只替换下面的正文。
+   * 在线失败、超时、没有密钥，正文都会退回本地规则文本，界面不报错。 */
+  let aiToken = 0;
+  let aiTimer = null;
+
+  function paintAI(view) {
+    const leadEl = $('#ai-lead');
+    const bodyEl = $('#ai-body');
+    const hintEl = $('#ai-hint');
+    const tagEl = $('#ai-tag');
+    const noteEl = $('#ai-note');
+    const retryEl = $('#ai-retry');
+    if (!leadEl || !bodyEl) return;
+
+    const tag = view.tag || '本地解读';
+    leadEl.textContent = view.headline || '';
+    bodyEl.textContent = view.body || '';
+    bodyEl.classList.toggle('is-live', tag === '正在读');
+
+    if (hintEl) {
+      hintEl.hidden = !view.hint;
+      hintEl.textContent = view.hint || '';
+    }
+    if (tagEl) {
+      tagEl.textContent = tag;
+      tagEl.dataset.source = tag === 'AI 解读' ? 'model' : tag === '正在读' ? 'busy' : 'local';
+    }
+    if (noteEl) {
+      noteEl.hidden = !view.note;
+      noteEl.textContent = view.note || '';
+    }
+    if (retryEl) retryEl.hidden = tag !== 'AI 解读';
+  }
+
+  function renderAI() {
+    const section = $('#today-ai');
+    if (!section || !I) return;
+
+    const today = L.dayKey();
+    const s = L.summarize(entries, today);
+    const prev = L.summarize(entries, L.shiftDay(today, -1));
+    const cmp = L.compare(s, prev);
+    const week = L.dailyTotals(entries, today, 7);
+    const base = I.local(s, cmp);
+
+    aiToken += 1;
+    const token = aiToken;
+    clearTimeout(aiTimer);
+    section.dataset.stance = base.stance;
+
+    const canModel = !!(AI && AI.available() && s.counted > 0);
+    paintAI({ headline: base.headline, body: base.detail, hint: base.hint, tag: '本地解读' });
+
+    if (!canModel) return;
+
+    const payload = I.payload(s, cmp, week);
+    aiTimer = setTimeout(() => {
+      if (token !== aiToken) return;
+      paintAI({ headline: base.headline, body: base.detail, hint: base.hint, tag: '正在读' });
+      let text = '';
+      AI.enhance(payload, {
+        onChunk(chunk) {
+          if (token !== aiToken) return;
+          text += chunk;
+          const bodyEl = $('#ai-body');
+          if (bodyEl) bodyEl.textContent = text;
+        },
+        onDone() {
+          if (token !== aiToken) return;
+          const clean = text.trim();
+          if (clean) paintAI({ headline: base.headline, body: clean, hint: base.hint, tag: 'AI 解读' });
+        },
+        onFail(error) {
+          if (token !== aiToken) return;
+          const note = error && error.temporary
+            ? '这一分钟问得太频繁，先用本地解读。'
+            : '在线增强没接上，已退回本地解读。';
+          paintAI({ headline: base.headline, body: base.detail, hint: base.hint, tag: '本地解读', note: note });
+        }
+      });
+    }, 700);
+  }
+
   function render() {
     const page = document.getElementById('page-today');
     if (!page) return;
@@ -212,6 +299,7 @@
     renderHero();
     renderEntry();
     renderLog();
+    renderAI();
     renderTrend();
   }
 
@@ -236,6 +324,14 @@
         removeItem(delBtn.dataset.remove);
       }
     });
+
+    const retryBtn = $('#ai-retry');
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        if (AI) AI.clearOffline();
+        renderAI();
+      });
+    }
 
     window.addEventListener('hashchange', () => {
       if (location.hash.replace('#', '') === 'today') render();
