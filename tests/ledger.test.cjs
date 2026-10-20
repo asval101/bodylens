@@ -198,3 +198,80 @@ test('minutesFor 是原始乘算，不含周额度；周额度只由 summarize �
   const e = [L.makeEntry('alcohol', 1, '2026-10-20', new Date('2026-10-20T21:00:00Z'))];
   assert.strictEqual(L.summarize(e, '2026-10-20').totalMinutes, 0);
 });
+
+/* ---------- 器官落点 ---------- */
+
+/* 造一个「某天几点」的时间戳。器官落点只看 date 字段，时刻不影响结果，
+   但 makeEntry 需要它来写记录时间，所以还是给一个合法值。 */
+function at(hour) {
+  return new Date('2026-10-20T' + String(hour).padStart(2, '0') + ':00:00Z');
+}
+
+test('器官落点包含「仅记录」的行为', () => {
+  // 睡眠不足没有分钟数，但它是记录过的行为，仍然落到大脑
+  const e = [L.makeEntry('shortSleep', 2, '2026-10-20', at(23))];
+  const org = L.organsFor(e, '2026-10-20');
+  assert.deepStrictEqual(org.harm, ['brain']);
+  assert.deepStrictEqual(org.gain, []);
+});
+
+test('损耗与收益不互相抵消，同一器官只算损耗', () => {
+  // 抽烟伤肺也伤心，快走在收益侧。心脏不能因为快走就从损耗里消失——
+  // 那等于在界面上暗示「走两步就把烟抽回来了」。
+  const e = [
+    L.makeEntry('smoke', 5, '2026-10-20', at(9)),
+    L.makeEntry('walk', 30, '2026-10-20', at(18))
+  ];
+  const org = L.organsFor(e, '2026-10-20');
+  assert.deepStrictEqual(org.harm, ['lungs', 'heart', 'brain', 'mouth']);
+  assert.strictEqual(org.gain.indexOf('heart'), -1, '同一器官不能同时出现在两边');
+  assert.strictEqual(org.gain.length, 0, '烟与快走影响的器官完全重叠，收益侧应为空');
+});
+
+test('收益侧独立存在时不被吞掉', () => {
+  // 屏幕时间影响心与眼，快走影响心与脑。只有心脏重叠，大脑应留在收益侧。
+  const e = [
+    L.makeEntry('sit', 2, '2026-10-20', at(10)),
+    L.makeEntry('walk', 30, '2026-10-20', at(18))
+  ];
+  const org = L.organsFor(e, '2026-10-20');
+  assert.deepStrictEqual(org.harm, ['heart', 'eyes']);
+  assert.deepStrictEqual(org.gain, ['brain']);
+});
+
+test('器官去重，不按记录条数重复', () => {
+  const e = [
+    L.makeEntry('smoke', 1, '2026-10-20', at(9)),
+    L.makeEntry('smoke', 3, '2026-10-20', at(15)),
+    L.makeEntry('smoke', 5, '2026-10-20', at(21))
+  ];
+  assert.deepStrictEqual(L.organsFor(e, '2026-10-20').harm, ['lungs', 'heart', 'brain', 'mouth']);
+});
+
+test('器官落点只看当天', () => {
+  const e = [
+    L.makeEntry('smoke', 5, '2026-10-19', at(9)),
+    L.makeEntry('alcohol', 2, '2026-10-20', at(21))
+  ];
+  const org = L.organsFor(e, '2026-10-20');
+  assert.strictEqual(org.harm.indexOf('lungs'), -1, '昨天的烟不该算在今天的人体上');
+  assert.ok(org.harm.indexOf('liver') !== -1);
+});
+
+test('没有记录时不返回器官', () => {
+  assert.deepStrictEqual(L.organsFor([], '2026-10-20'), { harm: [], gain: [] });
+  assert.deepStrictEqual(L.organsFor(null, '2026-10-20'), { harm: [], gain: [] });
+});
+
+test('权重表里每个器官 id 都能在 catalog 中找到', () => {
+  const D = require('../data/catalog.js');
+  for (const id of W.order) {
+    for (const organ of W.get(id).organs) {
+      assert.ok(D.organs[organ], id + ' 引用了不存在的器官：' + organ);
+    }
+  }
+});
+
+test('权重表的自检没有发现问题', () => {
+  assert.deepStrictEqual(W.validate(), []);
+});

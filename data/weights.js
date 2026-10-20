@@ -10,6 +10,9 @@
  *      只能经 ledger.summarize 的边际计算使用，不得直接乘数量。
  *   7. range 表示研究给出了不确定区间。有 range 的条目必须在界面上同时显示区间，
  *      不允许只给点估计——区间本身就是这条数据可信度的一部分。
+ *   8. organs 是这条行为影响到哪些器官，tone 是影响的方向（harm 损耗 / benefit 收益）。
+ *      两者都只能取 data/catalog.js 里已经登记过、且带来源的那几条关联，
+ *      不得因为「看起来合理」就新加一条——那是编证据，不是可视化。
  *
  * 证据等级含义：
  *   direction  A 多项独立研究结论一致 ｜ B 结论较一致但有前提 ｜ C 目前证据有限
@@ -94,6 +97,8 @@
       direction: 'A',
       value: 'B',
       source: 'ucl-cigarette-2024',
+      organs: ['lungs', 'heart', 'brain', 'mouth'],
+      tone: 'harm',
       presets: [1, 2, 5, 10, 20],
       line: '每支烟从你的生命里拿走约 20 分钟。',
       caveat: '群体平均值（男 17、女 22）。个体差异很大，用于累积对比，不用于推测你还能活多久。'
@@ -106,6 +111,8 @@
       value: 'B',
       source: 'lancet-alcohol-2018',
       weeklyCap: 12.5,
+      organs: ['liver', 'heart', 'brain', 'gut'],
+      tone: 'harm',
       presets: [1, 2, 3, 5],
       line: '超出每周建议量的每一杯，大约拿走 15 分钟。',
       caveat: '研究给出的是「超出每周约 12.5 标准杯之后」的边际值，所以额度内的部分不计入损耗。'
@@ -117,6 +124,8 @@
       direction: 'B',
       value: 'C',
       source: 'nhs-sleep',
+      organs: ['brain'],
+      tone: 'harm',
       presets: [1, 2, 3],
       line: '长期睡不够，影响的是白天和长期的代谢、心血管状态。',
       caveat: '成年人平均需要 7–9 小时，个体差异大；单纯晚睡不等于睡眠不足。暂不折算分钟。'
@@ -129,6 +138,8 @@
       value: 'C',
       source: 'bjsm-tv-2011',
       range: [-0.3, -44.7],
+      organs: ['heart', 'eyes'],
+      tone: 'harm',
       presets: [1, 2, 4, 8],
       line: '每看一小时屏幕，平均拿走约 22 分钟。',
       caveat: '整张表里最不确定的一条：研究给出的不确定区间是 0.3 到 44.7 分钟，相差一百多倍；而且测的是看电视时长，不能等同于全部久坐。只用于提醒，不用于任何推算。'
@@ -140,6 +151,8 @@
       direction: 'B',
       value: 'C',
       source: 'who-diet',
+      organs: ['mouth'],
+      tone: 'harm',
       presets: [1, 2, 3],
       line: '游离糖摄入与龋齿和体重增加相关。',
       caveat: '「一份」在不同产品间差异很大，暂按 50g 添加糖粗略归并，不折算分钟。'
@@ -151,6 +164,8 @@
       direction: 'A',
       value: 'C',
       source: 'who-activity',
+      organs: ['heart', 'brain'],
+      tone: 'benefit',
       presets: [15, 30, 45, 60],
       line: '规律活动是少数确定有收益的事。',
       caveat: '收益与累计活动量相关，但「走一分钟抵消多少损耗」没有可靠口径，不做抵扣。'
@@ -162,6 +177,8 @@
       direction: 'B',
       value: 'C',
       source: 'nhs-sleep',
+      organs: ['brain'],
+      tone: 'benefit',
       presets: [1],
       line: '按自己的需要睡够，是第二天状态的基础。',
       caveat: '「睡够」因人而异，暂不折算分钟。'
@@ -173,6 +190,8 @@
       direction: 'A',
       value: 'C',
       source: 'nci-tobacco',
+      organs: ['lungs', 'heart'],
+      tone: 'benefit',
       presets: [1],
       line: '每少抽一支，那段被拿走的时间就留在你这里。',
       caveat: '戒烟获益会逐步发生；这里只记录行为，不宣称器官已修复。'
@@ -210,6 +229,8 @@
       if (!rank[item.direction] || !rank[item.value]) problems.push(id + '：证据等级取值非法');
       if (rank[item.value] > rank[item.direction]) problems.push(id + '：数值等级高于方向等级');
       if (typeof item.minutes === 'number' && !item.caveat) problems.push(id + '：有数字但缺限制说明');
+      if (!Array.isArray(item.organs) || item.organs.length === 0) problems.push(id + '：缺少器官落点');
+      if (item.tone !== 'harm' && item.tone !== 'benefit') problems.push(id + '：tone 取值非法');
     }
     return problems;
   }

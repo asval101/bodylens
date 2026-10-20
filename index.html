@@ -16,6 +16,7 @@
   <script src="domain.js" defer></script>
   <script src="anatomy.js" defer></script>
   <script src="app.js" defer></script>
+  <script src="today-body.js" defer></script>
   <script src="today.js" defer></script>
   <script src="vfx.js" defer></script>
   <script src="organ-focus.js" defer></script>
@@ -35,11 +36,15 @@
       <section id="page-today" class="page">
         <div class="today">
           <section class="today-hero" aria-label="今天的时间损耗">
-            <div class="eyebrow"><span class="small-line"></span> TODAY, SO FAR</div>
-            <p class="hero-label">今天，从你这里拿走的时间</p>
-            <div class="hero-figure"><span class="hero-number is-empty" id="today-number">—</span><span class="hero-unit" id="today-unit"></span></div>
-            <p class="hero-anchor" id="today-anchor" aria-live="polite"></p>
-            <p class="hero-compare" id="today-compare"></p>
+            <div class="hero-main">
+              <div class="eyebrow"><span class="small-line"></span> TODAY, SO FAR</div>
+              <p class="hero-label">今天，从你这里拿走的时间</p>
+              <div class="hero-figure"><span class="hero-number is-empty" id="today-number">—</span><span class="hero-unit" id="today-unit"></span></div>
+              <p class="hero-anchor" id="today-anchor" aria-live="polite"></p>
+              <p class="hero-compare" id="today-compare"></p>
+              <p class="hero-organs" id="today-organs" hidden></p>
+            </div>
+            <div class="hero-body" id="today-body" aria-hidden="true"></div>
           </section>
           <section class="today-entry" aria-label="记录今天的行为">
             <div class="entry-head"><span>记一笔</span><span class="tiny-label">TAP TO LOG</span></div>

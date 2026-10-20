@@ -3,7 +3,7 @@
    其余信息（构成、趋势、器官）一律降到次级位置。 */
 
 .today{
-  max-width:640px;
+  max-width:720px;
   margin:0 auto;
   padding:42px 0 80px;
   display:flex;
@@ -45,10 +45,108 @@
 }
 
 /* ---------- 焦点一：今天的时间 ---------- */
+/* 两栏：左边是数字和人话，右边是这些时间落在了哪里。
+   人体不占额外高度，它和数字并排，避免首屏被撑长。 */
 .today-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 156px;
+  align-items:center;
+  gap:10px;
   text-align:center;
   padding-bottom:8px;
 }
+.hero-main{min-width:0}
+/* eyebrow 是 flex 容器，text-align:center 对它不起作用，
+   不单独指定的话它会贴着左栏边缘，和下面的居中文字脱节。 */
+.hero-main .eyebrow{justify-content:center}
+
+.hero-body{
+  position:relative;
+  justify-self:end;
+  align-self:center;
+  width:156px;
+  animation:fade-only 900ms var(--ease-out-expo) 260ms both;
+}
+.body-figure{
+  display:block;
+  width:100%;
+  height:auto;
+  overflow:visible;
+}
+/* 只留描边，不填充。肉色渐变是廉价感的来源，也是「半写实」最难看的那一段。 */
+.body-outline path{
+  fill:none;
+  stroke:rgba(180,186,161,.30);
+  stroke-width:1.15;
+  stroke-linejoin:round;
+  stroke-linecap:round;
+}
+
+/* 器官点默认只是一粒几乎看不见的灰点：身体在那里，但今天还没事发生。
+   被记录点亮之后才变成铜色。这是二值状态，深浅不随剂量变化——
+   因为剂量到器官损伤的换算并不存在，做出来就是编的。 */
+.organ-dot .dot-core{
+  fill:#3a494e;
+  transform-box:fill-box;
+  transform-origin:center;
+  transition:fill .45s var(--ease-out-expo), transform .45s var(--ease-out-expo);
+}
+.organ-dot .dot-ring{
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.2;
+  opacity:0;
+  transform-box:fill-box;
+  transform-origin:center;
+}
+.organ-dot.is-hit{color:var(--copper)}
+.organ-dot.is-gain{color:var(--mint)}
+.organ-dot.is-hit .dot-core,
+.organ-dot.is-gain .dot-core{transform:scale(1.22)}
+.organ-dot.is-hit .dot-core{fill:var(--copper)}
+.organ-dot.is-gain .dot-core{fill:var(--mint)}
+.organ-dot.is-flashing .dot-ring{
+  animation:dot-pulse 1.4s var(--ease-out-expo) both;
+}
+@keyframes dot-pulse{
+  0%{opacity:.85;transform:scale(1)}
+  70%{opacity:.2}
+  100%{opacity:0;transform:scale(3.4)}
+}
+
+/* 飞行粒子：从刚点的按钮出发，抛一条弧线落到器官上。
+   到达那一刻器官才亮，因果顺序不能反——反了就只是特效。 */
+.ledger-particle{
+  position:fixed;
+  left:0;top:0;
+  width:7px;height:7px;
+  margin:-3.5px 0 0 -3.5px;
+  border-radius:50%;
+  background:var(--copper);
+  box-shadow:0 0 10px rgba(230,164,140,.8);
+  pointer-events:none;
+  z-index:90;
+  will-change:transform,opacity;
+}
+.ledger-particle.is-gain{
+  background:var(--mint);
+  box-shadow:0 0 10px rgba(156,222,201,.75);
+}
+
+/* 文字版的落点：圆点本身不说明是哪个器官，这行补上名字。
+   移动端人体不显示时，它就是唯一的信息来源，所以不能省。 */
+.hero-organs{
+  margin-top:9px;
+  font-size:11.5px;
+  line-height:1.6;
+  letter-spacing:.05em;
+  color:var(--faint);
+}
+.hero-organs b{
+  font-weight:400;
+  color:var(--muted);
+}
+
 .hero-label{
   margin-top:18px;
   font-size:13px;
@@ -367,6 +465,10 @@
 
 @media(max-width:650px){
   .today{padding:34px 0 70px;gap:34px}
+  /* 窄屏不显示人体：142px 宽的人体在这个尺寸下器官点会挤成一片，
+     与其缩到看不清，不如只留文字版的落点（#today-organs）。 */
+  .today-hero{grid-template-columns:1fr}
+  .hero-body{display:none}
   .hero-label{font-size:12px}
   .hero-anchor{font-size:13.5px}
   .entry-name{flex-basis:74px;font-size:13px}
@@ -377,6 +479,9 @@
 
 @media(prefers-reduced-motion:reduce){
   .hero-number,.trend-bar{transition:none}
+  .organ-dot .dot-core{transition:none}
+  .organ-dot.is-flashing .dot-ring{animation:none}
+  .hero-body{animation:none}
   /* 系统要求减少动态时，入场退化为纯淡入：不位移、不分批延迟，
      内容一次性出现，避免「等它一个个冒出来」的焦虑感。 */
   .today > *,

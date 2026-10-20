@@ -8,6 +8,7 @@
   const L = window.BodyLensLedger;
   const I = window.BodyLensInterpret;
   const AI = window.BodyLensAI;
+  const CAT = window.BodyLensData;
   if (!W || !L) return;
 
   const KEY = 'bodylens-ledger-v1';
@@ -17,6 +18,52 @@
   let entries = [];
   let storeError = '';
   let pickedItem = 'smoke';
+  let shownTotal = null;
+
+  function prefersReduce() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+
+  /* 数字从旧值滚到新值，而不是瞬间跳。
+     瞬间跳会让人以为两个数没有关系；滚过去才看得出「这一笔加在了原来那个数上」。 */
+  function tweenNumber(el, from, to, dur) {
+    if (prefersReduce()) { el.textContent = to; return; }
+    const start = performance.now();
+    function frame(now) {
+      const t = Math.min(1, (now - start) / dur);
+      const e = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      if (t < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* 今天这些行为触及了哪些器官。规则（含「损耗不抵消收益」）在 ledger.organFor 里，
+     这里只负责翻译成名字和位置。 */
+  function organSummary() {
+    return L.organsFor(entries, L.dayKey());
+  }
+
+  function renderOrganLine() {
+    const org = organSummary();
+    if (window.TodayBody) window.TodayBody.mark(org.harm, org.gain);
+    const el = $('#today-organs');
+    if (!el) return;
+    const list = org.harm.concat(org.gain);
+    if (!list.length) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    /* 只列前四个。七个器官全铺开会让这行变成一堵字墙，
+       而且和上面的大数字抢注意力——它的作用是说明「有点的地方是哪」，
+       不是把全部清单念一遍。 */
+    const head = list.slice(0, 4);
+    const rest = list.length - head.length;
+    const names = head.map(id => (CAT && CAT.organs[id] ? CAT.organs[id].name : id)).join(' · ');
+    el.innerHTML = '涉及 <b>' + esc(names) + '</b>' + (rest > 0 ? ' 等 ' + list.length + ' 处' : '');
+    el.hidden = false;
+  }
 
   function load() {
     try {
@@ -39,7 +86,9 @@
     }
   }
 
-  function add(itemId, qty) {
+  function add(itemId, qty, fromEl) {
+    /* 先取按钮位置：render 会重建按钮 DOM，之后就拿不到了。 */
+    const rect = fromEl ? fromEl.getBoundingClientRect() : null;
     try {
       entries.push(L.makeEntry(itemId, qty));
       save();
@@ -48,7 +97,23 @@
       // 数量或行为非法时不动账本，避免脏数据进入记录
       storeError = e.message;
       render();
+      return;
     }
+
+    const item = W.get(itemId);
+    const body = window.TodayBody;
+    if (!item || !item.organs || !body) return;
+
+    if (!rect) {
+      body.pulse(item.organs, item.tone);
+      return;
+    }
+
+    /* 先熄灭再飞：render 已经把这一笔算进器官了，如果不熄灭，
+       粒子就是在已经亮着的点上空飞过，「这一笔去了那里」的因果就断了。 */
+    body.unmark(item.organs);
+    const from = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    body.fly(from, item.organs, item.tone, () => body.pulse(item.organs, item.tone));
   }
 
   function removeItem(itemId) {
@@ -75,17 +140,26 @@
       numEl.textContent = '还没开始';
       numEl.classList.add('is-empty');
       unitEl.textContent = '';
+      shownTotal = null;
       anchorEl.textContent = s.noted.length
         ? '今天记了 ' + s.noted.length + ' 项，但这些行为没有可靠的折算口径，所以这里不给分钟数。'
         : '点一下下面的行为，第一笔就记上了。';
       cmpEl.textContent = '';
+      renderOrganLine();
       return;
     }
 
     const abs = Math.abs(s.totalMinutes);
     /* 大数字只取整：21.8 这种权重累加后会出现小数，而小数在这里传递的是假精度 */
-    numEl.textContent = Math.round(abs);
+    const target = Math.round(abs);
+    if (shownTotal === null || shownTotal === target) {
+      numEl.textContent = target;
+    } else {
+      tweenNumber(numEl, shownTotal, target, 620);
+    }
+    shownTotal = target;
     unitEl.textContent = '分钟';
+    renderOrganLine();
 
     if (abs === 0) {
       /* 有记录但没有超出任何门槛，这里给正面反馈而不是留一片空 */
@@ -316,7 +390,7 @@
       }
       const addBtn = event.target.closest('[data-add]');
       if (addBtn) {
-        add(addBtn.dataset.add, Number(addBtn.dataset.qty));
+        add(addBtn.dataset.add, Number(addBtn.dataset.qty), addBtn);
         return;
       }
       const delBtn = event.target.closest('[data-remove]');
@@ -350,6 +424,9 @@
 
   function init() {
     entries = load();
+    /* 人体要在第一次 render 之前挂上，否则 renderOrganLine 没有落点可标。 */
+    const bodyEl = $('#today-body');
+    if (window.TodayBody && bodyEl) window.TodayBody.mount(bodyEl);
     bind();
     render();
   }

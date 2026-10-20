@@ -213,11 +213,38 @@
     return out;
   }
 
+  /* 某一天涉及哪些器官，损耗与收益分开。
+   *
+   * 两个刻意的决定：
+   *   1. 这里遍历 entries 而不是 summarize 的 byItem。睡眠不足、含糖饮料这类
+   *      「仅记录」的行为没有分钟数，但同样有器官落点，用 byItem 会把它们漏掉。
+   *   2. 损耗与收益不互相抵消。catalog 里明确写了「不能用运动来抵消吸烟带来的
+   *      这些风险」，所以同一个器官既被损耗又被照顾时，只算损耗。
+   *      在界面上把它们相加，等于暗示「跑两步就把烟抽回来了」。
+   */
+  function organsFor(entries, key) {
+    const harm = [];
+    const gain = [];
+    for (const e of entries || []) {
+      if (e.date !== key) continue;
+      const item = W.get(e.itemId);
+      if (!item || !item.organs) continue;
+      const bucket = item.tone === 'benefit' ? gain : harm;
+      for (const id of item.organs) {
+        if (bucket.indexOf(id) === -1) bucket.push(id);
+      }
+    }
+    for (let i = gain.length - 1; i >= 0; i--) {
+      if (harm.indexOf(gain[i]) !== -1) gain.splice(i, 1);
+    }
+    return { harm: harm, gain: gain };
+  }
+
   return {
     ANCHORS,
     dayKey, shiftDay, isDayKey, weekStart,
     makeEntry, cleanEntries,
-    summarize, compare, dailyTotals, cappedMinutes,
+    summarize, compare, dailyTotals, cappedMinutes, organsFor,
     formatMinutes, anchorText
   };
 });
