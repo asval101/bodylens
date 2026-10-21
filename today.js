@@ -310,7 +310,12 @@
       noteEl.hidden = !view.note;
       noteEl.textContent = view.note || '';
     }
-    if (retryEl) retryEl.hidden = tag !== 'AI 解读';
+    /* 失败时也要给出重试入口：AI 层一旦把「离线」记进 sessionStorage，
+       同一标签页里不会再自动尝试，没有按钮用户就只能关页面。 */
+    if (retryEl) {
+      retryEl.hidden = !(tag === 'AI 解读' || !!view.note);
+      retryEl.textContent = view.note ? '重试在线解读' : '换个说法';
+    }
   }
 
   function renderAI() {
@@ -355,7 +360,7 @@
           if (token !== aiToken) return;
           const note = error && error.temporary
             ? '这一分钟问得太频繁，先用本地解读。'
-            : '在线增强没接上，已退回本地解读。';
+            : '在线解读这次没接上，下面是本地规则版本。';
           paintAI({ headline: base.headline, body: base.detail, hint: base.hint, tag: '本地解读', note: note });
         }
       });
