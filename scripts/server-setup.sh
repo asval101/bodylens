@@ -76,6 +76,12 @@ systemctl enable "$SERVICE" >/dev/null 2>&1 || true
 systemctl restart "$SERVICE"
 
 say "6/6 配置 Nginx（先用 IP 访问，域名之后再加）"
+# 已经跑过 enable-https.sh 的机器，站点文件里有 certbot 插入的证书行。
+# 这个脚本重跑时若整段覆盖，443 就没了，站点会直接挂掉。
+NGINX_SITE=/etc/nginx/sites-available/bodyledger
+if [ -f "$NGINX_SITE" ] && grep -q 'ssl_certificate' "$NGINX_SITE"; then
+  say "检测到已启用 HTTPS，保留现有站点配置不覆盖"
+else
 cat > /etc/nginx/sites-available/bodyledger <<'NGINX'
 server {
     listen 80 default_server;
@@ -89,6 +95,7 @@ server {
         try_files $uri $uri/ /index.html;
         add_header X-Content-Type-Options nosniff always;
         add_header Referrer-Policy strict-origin-when-cross-origin always;
+        add_header Cache-Control "no-cache" always;
     }
 
     # 文本压缩：不压缩的话 CSS+JS 约 85KB，压缩后约 17KB，
@@ -99,10 +106,22 @@ server {
     gzip_min_length 512;
     gzip_types text/plain text/css application/javascript application/json image/svg+xml;
 
-    # 缓存 1 小时而不是 7 天：评委首次访问本就没有缓存，
-    # 而开发期间改完样式要立刻能看到，长缓存会让人以为没生效
-    location ~* \.(css|js|svg|png|jpg|webp|woff2)$ {
-        expires 1h;
+    # 脚本与样式走「每次校验」而不是直接命中缓存：
+    # no-cache 不是"不缓存"，是"每次带 ETag 来问一句"，没改动只回 304，
+    # 几百字节，改动了立刻拿到新文件——站点还在改的时候这个最合适。
+    # 踩过的坑：这里原本写 expires 1h，浏览器整整一小时都不回来问，
+    # 部署完刷新还是旧脚本，看着像"改了没生效"。
+    # 还要注意：命中这里的请求由 Nginx 直接读盘返回，根本不经过 Node，
+    # 所以 Node 里那句 Cache-Control 对静态文件是不生效的，必须在这里加。
+    location ~* \.(css|js)$ {
+        expires off;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # 图片与字体几乎不变，长缓存直接省掉往返
+    location ~* \.(svg|png|jpg|jpeg|webp|ico|woff2)$ {
+        expires 7d;
+        add_header Cache-Control "public, max-age=604800" always;
     }
 
     # 流式解读：必须关闭缓冲，否则整段一次吐出，"逐字出现"就没了
@@ -134,6 +153,7 @@ server {
     }
 }
 NGINX
+fi
 
 ln -sf /etc/nginx/sites-available/bodyledger /etc/nginx/sites-enabled/bodyledger
 rm -f /etc/nginx/sites-enabled/default
