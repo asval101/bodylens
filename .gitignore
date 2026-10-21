@@ -6,5 +6,6 @@ research/*.html
 research/*.txt
 .workbuddy/
 .tmpshot/
+generated-images/
 server/.env
 *.log
