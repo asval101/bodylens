@@ -47,10 +47,6 @@
         <path d="M153 384 Q141 419 147 465 L157 516 L154 570 L150 611 Q138 628 145 637 L179 638 Q186 632 180 621 L179 575 L183 521 L196 453 L200 419 Q174 415 153 384 Z" fill="${shade('skin')}"/>
         <path d="M247 384 Q259 419 253 465 L243 516 L246 570 L250 611 Q262 628 255 637 L221 638 Q214 632 220 621 L221 575 L217 521 L204 453 L200 419 Q226 415 247 384 Z" fill="${shade('skin')}"/>
       </g>
-      <g opacity=".4" fill="none" stroke-linecap="round">
-        ${lines(['M142 152 Q127 176 127 211','M130 181 Q119 207 118 235','M111 257 Q98 292 99 325','M260 152 Q273 176 273 211','M270 181 Q281 207 282 235','M289 257 Q302 292 301 325','M158 416 Q168 462 168 499','M155 430 Q154 472 163 493','M242 416 Q232 462 232 499','M245 430 Q246 472 237 493','M165 527 Q164 558 163 585','M235 527 Q236 558 237 585'],'#a4a877',1.6)}
-        ${lines(['M164 157 Q145 179 150 219','M236 157 Q255 179 250 219','M165 403 Q178 422 188 431','M235 403 Q222 422 212 431'],'#93b3c5',3)}
-      </g>
       <path d="M170 153 Q200 143 230 153 Q249 174 250 209 L246 252 Q246 264 253 292 L250 349 Q248 380 232 391 Q201 407 168 391 Q152 380 150 349 L147 292 Q154 264 154 252 L150 209 Q151 174 170 153 Z" fill="${shade('cavity')}" stroke="#9cadac" stroke-width="1.1" stroke-opacity=".6"/>
       <path d="M154 252 Q200 234 246 252" fill="none" stroke="#b28e7b" stroke-width="3" opacity=".7"/>
 
@@ -111,7 +107,6 @@
         ${lines(['M158 336 L164 336 M158 345 L165 345 M158 356 L165 355 M163 366 L169 362 M176 327 L177 321 M190 327 L191 322 M207 328 L208 323 M224 328 L224 323 M235 338 L242 338 M235 349 L242 349 M233 360 L239 362'],'#ae908b',.9)}
       </g>
 <g class="organ" data-organ="gut"><image href="assets/gut-texture.png" x="157" y="321" width="85" height="69" preserveAspectRatio="none" opacity=".9"/></g>
-      <g fill="none" stroke="#84adb7" stroke-width=".8" opacity=".42"><path d="M72 135 L72 118 L91 118 M309 118 L328 118 L328 135 M72 394 L72 410 L91 410 M309 410 L328 410 L328 394"/></g>
       <g class="impact-animation" aria-hidden="true" display="none"><path class="path-trace" d="M200 113L200 170L176 194M200 170L224 194" fill="none" stroke="#bd9267" stroke-width="1.7"/><circle class="path-marker" cx="178" cy="205" r="18" fill="none" stroke="#c8945d" stroke-width=".8"/></g>
     </svg>`;
   }

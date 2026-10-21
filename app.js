@@ -72,8 +72,18 @@
     const tip=$('#organ-tooltip');if(tip)tip.hidden=true;
     renderAnatomy();renderDetail();save();
   }
+  /* 资料库里出现过至少一次的行为关联。器官表里有一条「胃」，但 30 条行为的
+   * 影响条目里没有任何一条指向它 —— 它永远只会是「未收录关联」，点开是空的。
+   * 画面上不显示它，规则按数据来推：没有关联就不画，将来补了证据自动回来。 */
+  const LINKED=new Set();
+  for(const b of Object.values(D.behaviors))for(const e of b.effects)LINKED.add(e.organ);
+  /* 编号按同一份「有关联的器官」排，正背面一致。
+   * 不能拿 D.organs 的下标：胃还在数据里但不显示，编号会从 06 跳到 08。 */
+  const IDX=Object.keys(D.organs).filter(id=>LINKED.has(id));
+
   /* 正面看不到肾和脊柱：它们本来就在后面，硬画在正面只是错。 */
   function visibleOrgan(id){
+    if(!LINKED.has(id))return false;
     if(state.view==='back')return ['brain','lungs','kidneys','spine'].includes(id);
     return !['spine','kidneys'].includes(id);
   }
@@ -110,7 +120,7 @@
   function renderDetail(){
     const id=state.organ,o=D.organs[id],effects=M.effectsFor(appliedChoices(),id);
     const s=todaySummary(),hasToday=!!(s&&(s.counted>0||s.noted.length));
-    $('#detail-heading').innerHTML=`<div class="organ-heading"><span class="organ-index">${String(Object.keys(D.organs).indexOf(id)+1).padStart(2,'0')}</span><h2>${o.name}<span class="organ-en">${o.en}</span></h2></div><p class="organ-function">${o.function}</p>`;
+    $('#detail-heading').innerHTML=`<div class="organ-heading"><span class="organ-index">${String(IDX.indexOf(id)+1).padStart(2,'0')}</span><h2>${o.name}<span class="organ-en">${o.en}</span></h2></div><p class="organ-function">${o.function}</p>`;
     renderContext();
     $$('[data-detail]').forEach(el=>{el.setAttribute('aria-selected',el.dataset.detail===detailTab);el.tabIndex=el.dataset.detail===detailTab?0:-1;});
     $('#detail-content').setAttribute('aria-label',detailTab==='impact'?'身体影响':detailTab==='evidence'?'证据与来源':'可以怎么做');
