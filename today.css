@@ -1,11 +1,21 @@
-/* 今天的账本 —— 首屏
-   目标：一屏只回答一个问题「今天从你这里拿走了多少时间」。
-   其余信息（构成、趋势、器官）一律降到次级位置。 */
+/* 今天 —— 左栏是账，右栏是身体
+ *
+ * 一屏要回答两个连着的问题：「今天被拿走了多少」和「落在哪」。
+ * 所以它们并排，而不是两页。左边可以一直往下读（记账、解读、推演、趋势），
+ * 右边钉住不动，读到哪里身体都在旁边。
+ */
 
 .today{
-  max-width:720px;
+  max-width:1180px;
   margin:0 auto;
-  padding:42px 0 80px;
+  padding:34px 0 90px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 396px;
+  gap:50px;
+  align-items:start;
+}
+.today-main{
+  min-width:0;
   display:flex;
   flex-direction:column;
   gap:30px;
@@ -24,15 +34,19 @@
   to{opacity:1}
 }
 
-.today > *{
+.today-main > *{
   animation:rise-in var(--dur-enter) var(--ease-out-expo) both;
 }
-.today > :nth-child(1){animation-delay:40ms}
-.today > :nth-child(2){animation-delay:130ms}
-.today > :nth-child(3){animation-delay:210ms}
-.today > :nth-child(4){animation-delay:270ms}
-.today > :nth-child(5){animation-delay:320ms}
-.today > :nth-child(6){animation-delay:360ms}
+.today-main > :nth-child(1){animation-delay:40ms}
+.today-main > :nth-child(2){animation-delay:130ms}
+.today-main > :nth-child(3){animation-delay:210ms}
+.today-main > :nth-child(4){animation-delay:270ms}
+.today-main > :nth-child(5){animation-delay:320ms}
+.today-main > :nth-child(6){animation-delay:360ms}
+.today-main > :nth-child(7){animation-delay:400ms}
+.today-body-col{
+  animation:rise-in var(--dur-enter) var(--ease-out-expo) 180ms both;
+}
 
 /* 主数字单独走一条更慢的曲线：它是这一屏唯一的焦点，
    晚到一点、幅度大一点，视线自然会先落在它上面。 */
@@ -45,123 +59,14 @@
 }
 
 /* ---------- 焦点一：今天的时间 ---------- */
-/* 两栏：左边是数字和人话，右边是这些时间落在了哪里。
-   人体不占额外高度，它和数字并排，避免首屏被撑长。 */
-.today-hero{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 156px;
-  align-items:center;
-  gap:10px;
-  text-align:center;
-  padding-bottom:8px;
-}
+/* 靠左对齐，和下面的记录、解读共用一条左边界。
+   居中的大数字像海报，左对齐的像账单 —— 这一屏要的是后者。 */
+.today-hero{min-width:0}
 .hero-main{min-width:0}
-/* eyebrow 是 flex 容器，text-align:center 对它不起作用，
-   不单独指定的话它会贴着左栏边缘，和下面的居中文字脱节。 */
-.hero-main .eyebrow{justify-content:center}
-
-.hero-body{
-  position:relative;
-  justify-self:end;
-  align-self:center;
-  width:156px;
-  animation:fade-only 900ms var(--ease-out-expo) 260ms both;
-}
-.body-figure{
-  display:block;
-  width:100%;
-  height:auto;
-  overflow:visible;
-}
-/* 淡剪影 + 一圈边光，不做线稿。
- *
- * 这一版的关键数据：这一列只有 156px 宽，画布 240，缩放 0.65，
- * 人体在列里 136px。线稿在这个尺寸上没法不被审视——人眼对人形极敏感，
- * 差两个单位就被读成「画错了」，于是注意力全落在「像不像」上，
- * 而不是「今天有哪些器官被点了」。
- *
- * 退成淡剪影之后，它只承担「身体在这里」这一个信息。
- * 同一条路径，只改透明度和填充。
- *
- * 透明度跟着底色走：深色底是「浅色盖深色」，.08/.24 就够浮出来；
- * 翻成米白底之后要反过来用深绿压上去，.085/.26 是这一档。
- * 别再往上加 —— .13 的时候整个人会读成「实心绿人偶」，抢走主数字的戏。 */
-.body-outline path{
-  fill:rgba(47,122,102,.085);
-  stroke:rgba(36,98,82,.26);
-  stroke-width:1.6;
-  stroke-linejoin:round;
-  stroke-linecap:round;
-}
-
-/* 器官点默认只是一粒几乎看不见的灰点：身体在那里，但今天还没事发生。
-   被记录点亮之后才变成铜色。这是二值状态，深浅不随剂量变化——
-   因为剂量到器官损伤的换算并不存在，做出来就是编的。 */
-.organ-dot .dot-core{
-  fill:#c2bfb7;
-  transform-box:fill-box;
-  transform-origin:center;
-  transition:fill .45s var(--ease-out-expo), transform .45s var(--ease-out-expo);
-}
-.organ-dot .dot-ring{
-  fill:none;
-  stroke:currentColor;
-  stroke-width:1.2;
-  opacity:0;
-  transform-box:fill-box;
-  transform-origin:center;
-}
-.organ-dot.is-hit{color:var(--copper)}
-.organ-dot.is-gain{color:var(--mint)}
-.organ-dot.is-hit .dot-core,
-.organ-dot.is-gain .dot-core{transform:scale(1.22)}
-.organ-dot.is-hit .dot-core{fill:var(--copper)}
-.organ-dot.is-gain .dot-core{fill:var(--mint)}
-.organ-dot.is-flashing .dot-ring{
-  animation:dot-pulse 1.4s var(--ease-out-expo) both;
-}
-
-@keyframes dot-pulse{
-  0%{opacity:.85;transform:scale(1)}
-  70%{opacity:.2}
-  100%{opacity:0;transform:scale(3.4)}
-}
-
-/* 飞行粒子：从刚点的按钮出发，抛一条弧线落到器官上。
-   到达那一刻器官才亮，因果顺序不能反——反了就只是特效。 */
-.ledger-particle{
-  position:fixed;
-  left:0;top:0;
-  width:7px;height:7px;
-  margin:-3.5px 0 0 -3.5px;
-  border-radius:50%;
-  background:var(--copper);
-  box-shadow:0 0 10px rgba(134,60,32,0.8);
-  pointer-events:none;
-  z-index:90;
-  will-change:transform,opacity;
-}
-.ledger-particle.is-gain{
-  background:var(--mint);
-  box-shadow:0 0 10px rgba(42,118,94,0.75);
-}
-
-/* 文字版的落点：圆点本身不说明是哪个器官，这行补上名字。
-   移动端人体不显示时，它就是唯一的信息来源，所以不能省。 */
-.hero-organs{
-  margin-top:9px;
-  font-size:11.5px;
-  line-height:1.6;
-  letter-spacing:.05em;
-  color:var(--faint);
-}
-.hero-organs b{
-  font-weight:400;
-  color:var(--muted);
-}
+.hero-main .eyebrow{justify-content:flex-start}
 
 .hero-label{
-  margin-top:18px;
+  margin-top:16px;
   font-size:13px;
   color:var(--muted);
   letter-spacing:.06em;
@@ -169,12 +74,12 @@
 .hero-figure{
   display:flex;
   align-items:baseline;
-  justify-content:center;
+  justify-content:flex-start;
   gap:10px;
-  margin:14px 0 4px;
+  margin:12px 0 4px;
 }
 .hero-number{
-  font-size:clamp(64px,11vw,104px);
+  font-size:clamp(64px,8.4vw,104px);
   font-weight:300;
   line-height:1;
   letter-spacing:-.03em;
@@ -212,12 +117,25 @@
 }
 .hero-compare{
   min-height:22px;
-  margin-top:14px;
+  margin-top:12px;
   font-size:12.5px;
   color:var(--faint);
 }
 .hero-compare .up{color:var(--mint)}
 .hero-compare .down{color:var(--copper)}
+
+/* 文字版的落点：窄屏没有人体时，这行是唯一的信息来源，所以不能省。 */
+.hero-organs{
+  margin-top:10px;
+  font-size:11.5px;
+  line-height:1.6;
+  letter-spacing:.05em;
+  color:var(--faint);
+}
+.hero-organs b{
+  font-weight:400;
+  color:var(--muted);
+}
 
 /* ---------- 焦点二：记一笔 ---------- */
 /* 分隔线两端淡出，比一条通栏实线更少「表格感」 */
@@ -309,14 +227,6 @@
   filter:none;
 }
 .qty-btn:active{transform:scale(.96)}
-.qty-cancel{
-  border:0;
-  background:none;
-  color:var(--faint);
-  font-size:11.5px;
-  padding:7px 4px;
-}
-.qty-cancel:hover{color:var(--text);filter:none}
 
 /* ---------- 焦点三：今天记了什么 ---------- */
 .today-log{
@@ -440,7 +350,7 @@
 }
 .trend-col.is-today .trend-day{color:var(--text)}
 
-/* ---------- 页脚说明 + 出口 ---------- */
+/* ---------- 页脚说明 ---------- */
 .today-footer{
   display:flex;
   align-items:flex-start;
@@ -453,17 +363,8 @@
   font-size:11px;
   color:var(--faint);
   line-height:1.85;
-  max-width:420px;
+  max-width:460px;
 }
-.today-exit{
-  flex-shrink:0;
-  font-size:12px;
-  color:var(--muted);
-  border-bottom:1px solid #cfcdc4;
-  padding-bottom:2px;
-  white-space:nowrap;
-}
-.today-exit:hover{color:var(--mint);border-color:var(--mint)}
 
 /* ---------- 存储失败提示 ---------- */
 .storage-warn{
@@ -474,36 +375,6 @@
   font-size:12px;
   color:var(--copper);
   line-height:1.7;
-}
-
-@media(max-width:650px){
-  .today{padding:34px 0 70px;gap:34px}
-  /* 窄屏不显示人体：142px 宽的人体在这个尺寸下器官点会挤成一片，
-     与其缩到看不清，不如只留文字版的落点（#today-organs）。 */
-  .today-hero{grid-template-columns:1fr}
-  .hero-body{display:none}
-  .hero-label{font-size:12px}
-  .hero-anchor{font-size:13.5px}
-  .entry-name{flex-basis:74px;font-size:13px}
-  .qty-btn{font-size:12px;padding:7px 10px}
-  .today-footer{flex-direction:column;gap:14px}
-  .trend-bars{height:62px;gap:7px}
-}
-
-@media(prefers-reduced-motion:reduce){
-  .hero-number,.trend-bar{transition:none}
-  .organ-dot .dot-core{transition:none}
-  .organ-dot.is-flashing .dot-ring{animation:none}
-  .hero-body{animation:none}
-  /* 系统要求减少动态时，入场退化为纯淡入：不位移、不分批延迟，
-     内容一次性出现，避免「等它一个个冒出来」的焦虑感。 */
-  .today > *,
-  .hero-number,
-  .entry-chip,
-  .qty-btn{
-    animation:fade-only 180ms linear both !important;
-    animation-delay:0ms !important;
-  }
 }
 
 /* ---------- 解读区 ---------- */
@@ -597,18 +468,6 @@
   line-height:1.7;
   color:var(--faint);
 }
-@keyframes ai-blink{
-  0%,100%{opacity:.25}
-  50%{opacity:1}
-}
-@keyframes ai-caret{
-  0%,49%{opacity:1}
-  50%,100%{opacity:0}
-}
-@media(prefers-reduced-motion:reduce){
-  .ai-tag[data-source="busy"]::before,
-  .ai-body.is-live::after{animation:none}
-}
 .ai-hint{
   margin:13px 0 0;
   padding-left:11px;
@@ -617,4 +476,311 @@
   line-height:1.8;
   color:var(--text);
   max-width:42em;
+}
+
+/* ---------- 推演：如果一直这样 ----------
+ * 放在解读正下方，因为这两块回答的是同一类问题（今天怎么样 / 一直这样会怎么样），
+ * 只是尺度不同。推演给了一整张卡片，是因为它需要控制项；
+ * 而它的标题故意写得比解读小，数字写得比解读大 ——
+ * 让人先看见「一个月」，再回头看它是怎么算出来的。
+ */
+.today-forecast{
+  position:relative;
+  padding:20px 22px 18px;
+  border:1px solid #ddd7c9;
+  border-radius:14px;
+  background:linear-gradient(158deg,#fdfbf5 0%,#f7f3e9 62%,#f3eee1 100%);
+  box-shadow:0 1px 2px rgba(24,38,33,.04);
+}
+.fc-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:15px;
+}
+.fc-title{
+  font-size:13px;
+  letter-spacing:.06em;
+  color:var(--text);
+}
+.fc-controls{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 18px;
+  margin-bottom:14px;
+}
+.fc-behaviors,.fc-durations{
+  display:inline-flex;
+  border:1px solid #d5d0c2;
+  border-radius:999px;
+  padding:2px;
+  background:rgba(255,255,255,.6);
+}
+.fc-behaviors button,.fc-durations button{
+  border:0;
+  background:none;
+  color:var(--muted);
+  font-size:11.5px;
+  padding:5px 11px;
+  border-radius:999px;
+  line-height:1.3;
+  white-space:nowrap;
+  transition:color .2s ease,background .2s ease;
+}
+.fc-behaviors button:hover,.fc-durations button:hover{color:var(--text);filter:none}
+.fc-behaviors button[aria-pressed=true],
+.fc-durations button[aria-pressed=true]{
+  background:#fff;
+  color:var(--text);
+  box-shadow:0 1px 3px rgba(24,38,33,.1);
+}
+.fc-qty{
+  display:inline-flex;
+  align-items:baseline;
+  gap:6px;
+  font-size:11.5px;
+  color:var(--faint);
+  letter-spacing:.04em;
+}
+.fc-qty button{
+  width:24px;height:24px;
+  border:1px solid #d5d0c2;
+  background:#fff;
+  border-radius:50%;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1;
+  padding:0;
+  align-self:center;
+}
+.fc-qty button:hover{color:var(--text);border-color:var(--muted);filter:none}
+.fc-qty b{
+  font-size:16px;
+  font-weight:500;
+  color:var(--text);
+  font-variant-numeric:tabular-nums;
+  min-width:18px;
+  text-align:center;
+}
+.fc-qty i{font-style:normal;color:var(--faint);font-size:11px}
+
+.fc-result{min-width:0}
+.fc-figure-wrap{display:flex;align-items:baseline;gap:8px}
+.fc-figure{
+  font-size:clamp(36px,4.4vw,48px);
+  font-weight:300;
+  line-height:1;
+  letter-spacing:-.02em;
+  color:var(--copper);
+  font-variant-numeric:tabular-nums;
+}
+/* 有益行为（快走）的推演不该用警示色，否则颜色在替数据下结论。 */
+.today-forecast[data-tone=benefit] .fc-figure{color:var(--mint)}
+.fc-unit{
+  font-size:12px;
+  color:var(--faint);
+  letter-spacing:.12em;
+}
+.fc-analogy{
+  margin:8px 0 0;
+  font-size:13px;
+  color:var(--text);
+  letter-spacing:.01em;
+}
+.fc-line{
+  margin:7px 0 0;
+  font-size:12.5px;
+  line-height:1.75;
+  color:var(--muted);
+}
+.fc-line b{font-weight:400;color:var(--text)}
+.fc-note{
+  margin:14px 0 0;
+  padding-top:11px;
+  border-top:1px solid rgba(213,208,196,.7);
+  font-size:10.5px;
+  line-height:1.75;
+  color:var(--faint);
+}
+
+/* ---------- 右栏：今天的身体 ---------- */
+/* 粘住不动的是一整根柱子，不是人体本身：人体下面紧接着就是它的详情，
+   两者必须一起出现在视口里，否则「点了没反应」会比「点不准」更让人困惑。 */
+.today-body-col{
+  position:sticky;
+  top:92px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-width:0;
+  max-height:calc(100vh - 116px);
+}
+.today-body-col .body-stage{
+  flex:0 0 auto;
+  border:1px solid #ddd8cb;
+  border-radius:14px;
+  overflow:hidden;
+  background:radial-gradient(ellipse at 50% 38%,#f5f3ed 0%,#ece9e1 58%,#e4e1d8 100%);
+}
+.today-body-col .anatomy-scene{
+  height:clamp(340px,46vh,450px);
+}
+.today-body-col .stage-top{
+  padding:13px 15px 6px;
+}
+.stage-tools{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+/* 图例和「点不准」并成一行：这两件事是同一层的（怎么看这个人体），
+   分成两行白吃掉 34px，而详情卡正是最缺高度的地方。 */
+.today-body-col .stage-bottom{
+  padding:6px 15px 10px;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+}
+.today-body-col .path-caption{
+  display:none;
+}
+/* 进入器官聚焦后，人体已经被替换成放大的器官，
+   底下那排图例和「点不准」就变成了噪音 —— 收起来，别和聚焦层抢地方。 */
+.has-organ-focus .today-body-col .stage-bottom{
+  opacity:0;
+  pointer-events:none;
+}
+
+/* 点不准时的兜底：折叠成一个链接，需要时才展开。
+   人体点选对键盘和读屏用户不可用，所以这条路必须留着，但不能一直占地方。 */
+.picker-fold{
+  position:relative;
+  font-size:11px;
+}
+.picker-fold>summary{
+  list-style:none;
+  cursor:pointer;
+  color:var(--faint);
+  letter-spacing:.03em;
+  white-space:nowrap;
+  padding:2px 0;
+}
+.picker-fold>summary::-webkit-details-marker{display:none}
+.picker-fold>summary::after{content:" ＋";color:#b3ada0}
+.picker-fold[open]>summary::after{content:" −"}
+.picker-fold>summary:hover{color:var(--muted)}
+/* 展开时浮在人体上面，不把下面那张卡往外挤。 */
+.today-body-col .organ-picker{
+  position:absolute;
+  right:0;
+  bottom:24px;
+  z-index:6;
+  width:280px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:11px 12px;
+  background:#fffdf8;
+  border:1px solid #ddd7c9;
+  border-radius:11px;
+  box-shadow:0 12px 26px rgba(24,38,33,.13);
+}
+.today-body-col .organ-picker button{font-size:11px;padding:4px 9px}
+
+/* 详情卡：跟着人体走，内容超出时自己滚，不把整页撑长。 */
+.today-body-col .detail-panel{
+  flex:1 1 auto;
+  min-height:250px;
+  max-height:none;
+  overflow-y:auto;
+  padding:18px 20px 20px;
+  border-radius:14px;
+  scrollbar-width:thin;
+  scrollbar-color:#b7c3bc transparent;
+}
+.today-body-col .detail-panel::-webkit-scrollbar{width:6px}
+.today-body-col .detail-panel::-webkit-scrollbar-thumb{background:#c6ccc5;border-radius:99px}
+.today-body-col .detail-panel .organ-heading h2{font-size:17px}
+.today-body-col .detail-panel .organ-function{font-size:11.5px;line-height:1.7}
+.today-body-col .detail-panel .detail-tabs{margin:14px 0 14px}
+.today-body-col .detail-panel .detail-tabs button{font-size:11.5px;padding:6px 2px}
+.today-body-col .detail-panel .impact-card h3{font-size:13.5px;line-height:1.6}
+.today-body-col .detail-panel .impact-card>p{font-size:12px;line-height:1.8}
+.today-body-col .detail-panel .impact-tag{font-size:9.5px;padding:2px 7px}
+.today-body-col .detail-panel .metric-value{font-size:30px}
+.today-body-col .detail-panel .metric-card{padding:13px}
+.today-body-col .detail-panel .metric-scope,
+.today-body-col .detail-panel .metric-limit{font-size:10.5px;line-height:1.65}
+.today-body-col .detail-panel .effect-path .path-item{font-size:11.5px}
+.today-body-col .detail-panel .context-strip{font-size:10px;padding:3px 8px}
+.today-body-col .detail-panel .context-description{font-size:11px}
+.today-body-col .detail-panel .empty-state{padding:22px 0}
+.today-body-col .detail-panel .empty-state h3{font-size:13px}
+.today-body-col .detail-panel .empty-state p{font-size:11.5px}
+.today-body-col .detail-panel .evidence-item h3{font-size:13px}
+.today-body-col .detail-panel .evidence-item p{font-size:11.5px}
+.today-body-col .detail-panel .teaching-image{max-width:100%}
+
+/* 窗口不够高时，粘性柱子会顶住不动、下半截永远看不见。
+   这种情况下退回普通流：宁可多滚两下，也不能有一块内容读不到。 */
+@media(max-height:780px),(max-width:1140px){
+  .today-body-col{position:static;max-height:none}
+  .today-body-col .detail-panel{max-height:none;overflow:visible}
+  .today-body-col .anatomy-scene{height:clamp(320px,44vh,440px)}
+}
+
+/* ---------- 窄屏：单栏 ---------- */
+@media(max-width:1140px){
+  .today{
+    grid-template-columns:minmax(0,1fr);
+    gap:34px;
+    max-width:720px;
+    padding-top:28px;
+  }
+  /* 身体排到最后：手机上首屏应该先是数字，通读一遍账本再往下看身体。 */
+  .today-body-col{order:2}
+  .today-main{order:1}
+  .today-body-col .anatomy-scene{height:clamp(360px,52vh,480px)}
+  .today-body-col .detail-panel{padding:16px 17px 18px}
+}
+
+@media(max-width:650px){
+  .today{padding:22px 0 70px;gap:28px}
+  .hero-label{font-size:12px}
+  .hero-anchor{font-size:13.5px}
+  .qty-btn{font-size:12px;padding:7px 10px}
+  .today-footer{flex-direction:column;gap:14px}
+  .trend-bars{height:62px;gap:7px}
+  .today-forecast{padding:17px 16px 15px;border-radius:12px}
+  .fc-controls{gap:9px 12px}
+  .fc-behaviors button,.fc-durations button{padding:5px 9px;font-size:11px}
+  .fc-figure{font-size:38px}
+  .today-body-col .anatomy-scene{height:380px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-number,.trend-bar{transition:none}
+  /* 系统要求减少动态时，入场退化为纯淡入：不位移、不分批延迟，
+     内容一次性出现，避免「等它一个个冒出来」的焦虑感。 */
+  .today-main > *,
+  .today-body-col,
+  .hero-number,
+  .entry-chip,
+  .qty-btn{
+    animation:fade-only 180ms linear both !important;
+    animation-delay:0ms !important;
+  }
+  .ai-tag[data-source="busy"]::before,
+  .ai-body.is-live::after{animation:none}
+}
+@keyframes ai-blink{
+  0%,100%{opacity:.25}
+  50%{opacity:1}
+}
+@keyframes ai-caret{
+  0%,49%{opacity:1}
+  50%,100%{opacity:0}
 }

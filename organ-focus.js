@@ -312,7 +312,10 @@
       close(false);
     }
   }, true);
-  $('#system').addEventListener('change', () => close(false));
+  /* 系统筛选下拉在合并成单页后已经移除。这里保留判断，
+     是为了让 organ-focus 仍然是可选的增强模块 —— 页面少了哪块都不该报错。 */
+  const systemSelect = $('#system');
+  if (systemSelect) systemSelect.addEventListener('change', () => close(false));
   window.addEventListener('hashchange', () => close(false));
   function refit() {
     if (!active) return;

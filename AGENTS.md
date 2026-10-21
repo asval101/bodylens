@@ -31,12 +31,19 @@ V0.1 已在本地可运行：四个导航入口、30 条行为、10 个器官入
 ## 3. 目录与职责
 
 ```
-index.html          # 页面骨架与静态文案
+index.html          # 页面骨架与静态文案（单页：今天 / 资料库 / 计划 / 设置）
 styles.css          # 全部样式与设计 token（:root 内；末尾有 V2 视觉层区块）
+today.css           # 今天页的两栏布局、账本区、推演卡
 vfx.js              # 视觉增强层：分层景深、指针柔光、器官聚焦、点击脉冲
 app.js              # 页面编排：器官交互、计划、持久化、恢复（已 38KB，见下方拆分红线）
+today.js            # 账本渲染 + 账本→资料库情境的数据桥（全站唯一一处转换）
+forecast.js         # 推演「如果一直这样」：同一份权重换一个时间尺度
+ledger.js           # 账本计算：折算、周额度、逐日合计、器官落点
+interpret.js        # 本地解读规则引擎（断网可用，是地基不是降级）
+ai.js               # 在线措辞增强客户端（可选，失败即退回本地）
 domain.js           # 纯函数领域规则：输入匹配、日期、组合影响、备份校验
 data/catalog.js     # 只读资料：行为、器官、影响、来源、指标、素材署名
+data/weights.js     # 时间权重的唯一真相源
 anatomy.js          # 随应用发布的人体 SVG
 assets/             # 素材与 asset-licenses.json
 tests/              # node:test 用例
@@ -52,7 +59,7 @@ docs/               # 本目录下的工程文档
 2. **不得在 `app.js` 里新增视觉动效**。新增的指针、视差、focus、脉冲一律进 `vfx.js`；`app.js` 只保留业务编排。
 3. **新增动效必须落在既有的两个开关下**。`body.no-motion` 关全部动画，`body.no-depth` 关景深位移；`prefers-reduced-motion` 等同 `no-motion`。PRD 5.4 要求「默认动效克制」，不得引入常驻闪烁或粒子。
 
-修改 `#anatomy-art`、`#organ-labels`、`.stage-grid` 的 `transform` 时特别注意：这些元素已被三层景深占用，直接写死 `transform` 会让分层失效。需要调整就改 CSS 变量（`--vfx-rx` / `--vfx-ry` / `--vfx-ax` / `--vfx-ay` / `--vfx-gx` / `--vfx-gy` / `--vfx-lx` / `--vfx-ly`）。
+修改 `#anatomy-art`、`#organ-tooltip` 的 `transform` 时特别注意：这些元素已被三层景深占用，直接写死 `transform` 会让分层失效。需要调整就改 CSS 变量（`--vfx-rx` / `--vfx-ry` / `--vfx-ax` / `--vfx-ay` / `--vfx-gx` / `--vfx-gy` / `--vfx-lx` / `--vfx-ly`）。
 
 **拆分红线**：`app.js` 不得再新增超过 150 行新功能代码。新功能（如 `plan.js`、`backup.js`、`organ-focus.js`）建成独立文件，在 `index.html` 里以 `<script>` 顺序引入，挂到 `window.BodyLens` 命名空间下。理由：单文件继续膨胀会让 AI 每次改动的上下文成本失控，也让 diff 无法评审。
 

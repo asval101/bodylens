@@ -28,11 +28,14 @@
     }
     return result;
   }
+  /* 字段宽容度说明：合并成一页之后，年龄 / 性别 / 情境选择 / 结果快照这四组字段
+   * 已经不再参与任何计算（年龄只曾用于一句说明文案）。为了仍能恢复旧备份，
+   * 它们「存在就校验、不存在就跳过」，但不会再被写回 state。 */
   function validateState(raw,allowUnknown=true){
     if(!raw||typeof raw!=='object'||Array.isArray(raw))throw new Error('用户数据格式不正确');
-    if(typeof raw.age!=='string'||(raw.age!==''&&!validAge(raw.age)))throw new Error('备份中的年龄无效');
-    if(!['male','female','unspecified'].includes(raw.sex))throw new Error('性别字段无效');
-    if(!['single','combined'].includes(raw.mode))throw new Error('分析模式无效');
+    if(raw.age!==undefined&&(typeof raw.age!=='string'||(raw.age!==''&&!validAge(raw.age))))throw new Error('备份中的年龄无效');
+    if(raw.sex!==undefined&&!['male','female','unspecified'].includes(raw.sex))throw new Error('性别字段无效');
+    if(raw.mode!==undefined&&!['single','combined'].includes(raw.mode))throw new Error('分析模式无效');
     if(!Array.isArray(raw.tasks)||raw.tasks.length>10000)throw new Error('计划数据格式不正确');
     const seen=new Set();
     const tasks=raw.tasks.map(t=>{
@@ -40,19 +43,11 @@
       if(t.behavior!==null&&typeof t.behavior!=='string')throw new Error('计划关联字段无效');
       seen.add(t.id);return {id:t.id,title:t.title,note:t.note,done:t.done,date:t.date,behavior:t.behavior,createdAt:t.createdAt,updatedAt:t.updatedAt};
     });
-    const choices=cleanChoices(raw.choices,allowUnknown);
-    if(raw.mode==='single'&&choices.length>1)throw new Error('单项模式存在多项行为');
-    let applied=null;
-    if(raw.applied!==null){
-      const a=raw.applied;
-      if(!a||typeof a.demo!=='boolean'||!['male','female','unspecified'].includes(a.sex)||typeof a.age!=='string'||(!a.demo&&!validAge(a.age))||!['single','combined'].includes(a.mode))throw new Error('结果引用无效');
-      const selected=cleanChoices(a.choices,allowUnknown);
-      if(a.mode==='single'&&selected.length>1)throw new Error('单项结果包含多项行为');
-      applied={demo:a.demo,age:a.age,sex:a.sex,mode:a.mode,choices:selected};
-    }
+    cleanChoices(Array.isArray(raw.choices)?raw.choices:[],allowUnknown);
     if(!raw.prefs||typeof raw.prefs.motion!=='boolean'||typeof raw.prefs.depth!=='boolean')throw new Error('显示偏好无效');
-    if(!['front','back'].includes(raw.view)||!['full','torso'].includes(raw.zoom)||!Object.hasOwn(D.organs,raw.organ)||!['all',...Object.values(D.organs).map(o=>o.system)].includes(raw.system))throw new Error('人体视图字段无效');
-    return {age:String(raw.age),sex:raw.sex,mode:raw.mode,choices,applied,tasks,prefs:{motion:raw.prefs.motion,depth:raw.prefs.depth},view:raw.view,zoom:raw.zoom,organ:raw.organ,system:raw.system};
+    const organ=Object.hasOwn(D.organs,raw.organ)?raw.organ:'lungs';
+    const view=raw.view==='back'?'back':'front';
+    return {tasks,prefs:{motion:raw.prefs.motion,depth:raw.prefs.depth},view,organ};
   }
   function parseBackup(raw){
     if(!raw||raw.schemaVersion!==1||raw.app!=='bodylens'||typeof raw.appVersion!=='string'||typeof raw.dataVersion!=='string'||typeof raw.exportedAt!=='string'||!Number.isFinite(Date.parse(raw.exportedAt))||typeof raw.timezone!=='string')throw new Error('不是受支持的身知备份，或备份版本不兼容');

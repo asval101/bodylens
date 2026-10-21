@@ -1,6 +1,10 @@
-/* 今天的账本 —— 首屏渲染层
+/* 今天的账本 —— 左栏渲染层 + 与右栏身体的数据桥
  * 只负责「读权重 → 算 → 显示」，所有计算都在 ledger.js / weights.js 里。
- * 不写死任何分钟数，不从别处复制数字。 */
+ * 不写死任何分钟数，不从别处复制数字。
+ *
+ * 合并成一页之后，这里多了一个职责：把今天的记录翻译成资料库能认的情境，
+ * 让右边的人体亮在该亮的地方。这是全站唯一的一处转换，别的模块不许再写一遍。
+ */
 (function () {
   'use strict';
 
@@ -14,6 +18,20 @@
   const KEY = 'bodylens-ledger-v1';
   const $ = sel => document.querySelector(sel);
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* 账本的行为 id → 资料库的行为 id。
+   * 两边命名不同（账本只收能折算的八项，资料库为每个行为写了一条证据），
+   * 这张表是唯一的桥。app.js 里还有一张反向的表，加新行为时两处都要登记。 */
+  const CATALOG_OF = {
+    smoke: 'smoke',
+    alcohol: 'alcohol',
+    shortSleep: 'short-sleep',
+    sit: 'sit',
+    sugar: 'sugary',
+    walk: 'walk',
+    sleep: 'enough-sleep',
+    quit: 'quit'
+  };
 
   let entries = [];
   let storeError = '';
@@ -38,15 +56,31 @@
     requestAnimationFrame(frame);
   }
 
-  /* 今天这些行为触及了哪些器官。规则（含「损耗不抵消收益」）在 ledger.organFor 里，
-     这里只负责翻译成名字和位置。 */
+  /* ---------- 给右栏身体用的两个接口 ---------- */
+  function todaySummary() {
+    return L.summarize(entries, L.dayKey());
+  }
+
+  /* 今天的记录 → 资料库情境。同一个行为记两次只取一次，器官不需要亮两遍。 */
+  function scenario() {
+    const today = L.dayKey();
+    const ids = [];
+    for (const e of entries) {
+      if (e.date === today && !ids.includes(e.itemId)) ids.push(e.itemId);
+    }
+    return ids
+      .map(id => CATALOG_OF[id])
+      .filter(Boolean)
+      .map(id => ({ id: id, scenario: 0, duration: '今天 / 单次' }));
+  }
+
   function organSummary() {
     return L.organsFor(entries, L.dayKey());
   }
 
+  /* 文字版的落点：窄屏没有人体时，这行是唯一的信息来源，所以不能省。 */
   function renderOrganLine() {
     const org = organSummary();
-    if (window.TodayBody) window.TodayBody.mark(org.harm, org.gain);
     const el = $('#today-organs');
     if (!el) return;
     const list = org.harm.concat(org.gain);
@@ -86,9 +120,7 @@
     }
   }
 
-  function add(itemId, qty, fromEl) {
-    /* 先取按钮位置：render 会重建按钮 DOM，之后就拿不到了。 */
-    const rect = fromEl ? fromEl.getBoundingClientRect() : null;
+  function add(itemId, qty) {
     try {
       entries.push(L.makeEntry(itemId, qty));
       save();
@@ -97,23 +129,7 @@
       // 数量或行为非法时不动账本，避免脏数据进入记录
       storeError = e.message;
       render();
-      return;
     }
-
-    const item = W.get(itemId);
-    const body = window.TodayBody;
-    if (!item || !item.organs || !body) return;
-
-    if (!rect) {
-      body.pulse(item.organs, item.tone);
-      return;
-    }
-
-    /* 先熄灭再飞：render 已经把这一笔算进器官了，如果不熄灭，
-       粒子就是在已经亮着的点上空飞过，「这一笔去了那里」的因果就断了。 */
-    body.unmark(item.organs);
-    const from = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-    body.fly(from, item.organs, item.tone, () => body.pulse(item.organs, item.tone));
   }
 
   function removeItem(itemId) {
@@ -376,6 +392,14 @@
     }, 700);
   }
 
+  /* 记录一变，右栏就得跟着变。autoFocus 只在「从空到有」时传 true。 */
+  function notifyBody() {
+    const api = window.BodyLensBody;
+    if (!api || typeof api.refresh !== 'function') return;
+    const s = L.summarize(entries, L.dayKey());
+    api.refresh(s.counted > 0 || s.noted.length > 0);
+  }
+
   function render() {
     const page = document.getElementById('page-today');
     if (!page) return;
@@ -389,6 +413,8 @@
     renderLog();
     renderAI();
     renderTrend();
+    notifyBody();
+    if (window.BodyLensForecast) window.BodyLensForecast.render(entries);
   }
 
   function bind() {
@@ -404,7 +430,7 @@
       }
       const addBtn = event.target.closest('[data-add]');
       if (addBtn) {
-        add(addBtn.dataset.add, Number(addBtn.dataset.qty), addBtn);
+        add(addBtn.dataset.add, Number(addBtn.dataset.qty));
         return;
       }
       const delBtn = event.target.closest('[data-remove]');
@@ -436,11 +462,20 @@
     }, 30000);
   }
 
+  /* 资料库的「记一笔」跳过来时用它预选行为。 */
+  window.BodyLensToday = {
+    scenario: scenario,
+    summary: todaySummary,
+    pick(itemId) {
+      if (!W.get(itemId)) return;
+      pickedItem = itemId;
+      renderEntry();
+      $('#today-entry-qty') && $('#today-entry-qty').scrollIntoView({ behavior: prefersReduce() ? 'instant' : 'smooth', block: 'center' });
+    }
+  };
+
   function init() {
     entries = load();
-    /* 人体要在第一次 render 之前挂上，否则 renderOrganLine 没有落点可标。 */
-    const bodyEl = $('#today-body');
-    if (window.TodayBody && bodyEl) window.TodayBody.mount(bodyEl);
     bind();
     render();
   }

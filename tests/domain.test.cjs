@@ -23,10 +23,13 @@ test('成年人年龄约束和真实本地日期校验',()=>{
   assert.equal(M.isDate('2026-02-30'),false);assert.equal(M.isDate('2024-02-29'),true);
   assert.equal(M.localDate(new Date(2026,9,17,0,1)),'2026-10-17');
 });
-test('备份往返保留日期、纯文本和未知关联任务；未知分析行为丢弃',()=>{
+test('备份往返保留日期、纯文本和未知关联任务；旧版情境字段不再写回',()=>{
   const raw=backup();raw.data.choices.push({id:'old-removed',scenario:0,duration:'1 个月'});
   const clean=M.parseBackup(JSON.parse(JSON.stringify(raw)));
-  assert.equal(clean.tasks[0].date,'2026-10-17');assert.equal(clean.tasks[0].behavior,'unavailable-old-behavior');assert.equal(clean.tasks[0].title,'<script>alert(1)</script>');assert.equal(clean.choices.length,2);
+  assert.equal(clean.tasks[0].date,'2026-10-17');assert.equal(clean.tasks[0].behavior,'unavailable-old-behavior');assert.equal(clean.tasks[0].title,'<script>alert(1)</script>');
+  /* 合并成一页之后，年龄/性别/情境/结果快照不再参与计算，也不该被写回 state。
+     旧备份照样能恢复 —— 这是为了让用户几周前导出的文件还能用。 */
+  assert.equal(clean.choices,undefined);assert.equal(clean.applied,undefined);assert.equal(clean.mode,undefined);
 });
 test('不兼容版本、坏字段、错误日期与重复任务拒绝导入',()=>{
   let raw=backup();raw.schemaVersion=2;assert.throws(()=>M.parseBackup(raw));
@@ -34,7 +37,10 @@ test('不兼容版本、坏字段、错误日期与重复任务拒绝导入',()=
   raw=backup();raw.data.tasks[0].date='2026-02-30';assert.throws(()=>M.parseBackup(raw));
   raw=backup();raw.data.tasks.push({...raw.data.tasks[0]});assert.throws(()=>M.parseBackup(raw));
   raw=backup();raw.data.choices[0].scenario=900;assert.throws(()=>M.parseBackup(raw));
-  raw=backup();raw.data.mode='single';assert.throws(()=>M.parseBackup(raw));
+  raw=backup();delete raw.data.prefs;assert.throws(()=>M.parseBackup(raw));
+  /* 器官字段被写坏时退回「肺」而不是整份备份拒收：
+     用户要恢复的是记录，不是一个视图偏好。 */
+  raw=backup();raw.data.organ='不存在';assert.equal(M.parseBackup(raw).organ,'lungs');
 });
 test('资料映射有效，七类至少各两项，总数至少30',()=>{
   assert.ok(D.behaviors.length>=30);
