@@ -19,9 +19,18 @@ server {
     }
 
     # 带版本号的静态资源可以放心长缓存
+    # 文本压缩：不压缩的话 CSS+JS 约 85KB，压缩后约 17KB，
+    # 在国际线路上这个差别直接体现在首屏快慢
+    gzip on;
+    gzip_vary on;
+    gzip_comp_level 6;
+    gzip_min_length 512;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+
+    # 缓存 1 小时而不是 7 天：评委首次访问本就没有缓存，
+    # 而开发期间改完样式要立刻能看到，长缓存会让人以为没生效
     location ~* \.(css|js|svg|png|jpg|webp|woff2)$ {
-        expires 7d;
-        add_header Cache-Control "public, max-age=604800";
+        expires 1h;
     }
 
     # 解读接口：必须关掉缓冲，否则流式会一次性吐完，
@@ -40,8 +49,15 @@ server {
         chunked_transfer_encoding on;
     }
 
-    # 不要把服务端配置和源码目录暴露出去
-    location ~ ^/(server|tests|scripts|\.git)/ {
+    # 不对外暴露源码、内部文档与配置
+    # 只放行 index.html / *.css / *.js / data/ / assets/，其余目录一律 404
+    location ~ ^/(server|tests|scripts|docs|research|design-lab|artwork|\.git|\.workbuddy)(/|$) {
+        deny all;
+        return 404;
+    }
+
+    # 根目录的说明文档与包描述也不该被访问
+    location ~* ^/[^/]*\.(md|json|sh|cjs|yml|yaml|env)$ {
         deny all;
         return 404;
     }
