@@ -16,16 +16,16 @@
     'nhs-hands': {org:'英国国民保健署 NHS',title:'How to wash your hands',url:'https://www.nhs.uk/live-well/best-way-to-wash-your-hands/',year:'公开科普资料',scope:'洗手、感染传播与日常预防的一般建议。'}
   };
   const organs = {
-    brain: {name:'大脑',en:'BRAIN',system:'nervous',function:'处理信息、调节注意与记忆，也参与睡眠和情绪调节。',view:'front',anchor:[200,55]},
-    eyes: {name:'眼睛',en:'EYES',system:'sensory',function:'感知光线并形成视觉信息；泪膜帮助保护眼表。',view:'front',anchor:[217,83]},
-    mouth: {name:'口腔',en:'ORAL CAVITY',system:'sensory',function:'参与咀嚼、发音及吞咽，牙齿和牙龈需要日常清洁。',view:'front',anchor:[200,103]},
-    lungs: {name:'肺部',en:'LUNGS',system:'respiratory',function:'通过肺泡完成气体交换，把氧气送入血液，排出二氧化碳。',view:'front',anchor:[177,197]},
-    heart: {name:'心脏',en:'HEART',system:'circulatory',function:'持续泵送血液，为全身组织输送氧气与营养。',view:'front',anchor:[214,212]},
-    liver: {name:'肝脏',en:'LIVER',system:'digestive',function:'参与营养代谢、物质转化与胆汁生成。',view:'front',anchor:[176,265]},
-    stomach: {name:'胃',en:'STOMACH',system:'digestive',function:'暂时储存食物，并通过胃液和运动参与初步消化。',view:'front',anchor:[231,294]},
-    gut: {name:'肠道',en:'INTESTINES',system:'digestive',function:'小肠吸收大部分营养，大肠参与水分吸收与粪便形成。',view:'front',anchor:[194,350]},
-    kidneys: {name:'肾脏',en:'KIDNEYS',system:'urinary',function:'过滤血液、形成尿液，参与体液和电解质平衡。',view:'back',anchor:[167,310]},
-    spine: {name:'脊柱与肌肉',en:'SPINE & MUSCLES',system:'musculoskeletal',function:'支撑身体、保护脊髓，并与肌肉共同完成运动。',view:'back',anchor:[200,238]}
+    brain: {name:'大脑',en:'BRAIN',system:'nervous',function:'处理信息、调节注意与记忆，也参与睡眠和情绪调节。',view:'front',anchor:[200,58]},
+    eyes: {name:'眼睛',en:'EYES',system:'sensory',function:'感知光线并形成视觉信息；泪膜帮助保护眼表。',view:'front',anchor:[214,80]},
+    mouth: {name:'口腔',en:'ORAL CAVITY',system:'sensory',function:'参与咀嚼、发音及吞咽，牙齿和牙龈需要日常清洁。',view:'front',anchor:[200,98]},
+    lungs: {name:'肺部',en:'LUNGS',system:'respiratory',function:'通过肺泡完成气体交换，把氧气送入血液，排出二氧化碳。',view:'front',anchor:[181,188]},
+    heart: {name:'心脏',en:'HEART',system:'circulatory',function:'持续泵送血液，为全身组织输送氧气与营养。',view:'front',anchor:[212,200]},
+    liver: {name:'肝脏',en:'LIVER',system:'digestive',function:'参与营养代谢、物质转化与胆汁生成。',view:'front',anchor:[181,232]},
+    stomach: {name:'胃',en:'STOMACH',system:'digestive',function:'暂时储存食物，并通过胃液和运动参与初步消化。',view:'front',anchor:[220,250]},
+    gut: {name:'肠道',en:'INTESTINES',system:'digestive',function:'小肠吸收大部分营养，大肠参与水分吸收与粪便形成。',view:'front',anchor:[198,292]},
+    kidneys: {name:'肾脏',en:'KIDNEYS',system:'urinary',function:'过滤血液、形成尿液，参与体液和电解质平衡。',view:'back',anchor:[172,268]},
+    spine: {name:'脊柱与肌肉',en:'SPINE & MUSCLES',system:'musculoskeletal',function:'支撑身体、保护脊髓，并与肌肉共同完成运动。',view:'back',anchor:[200,214]}
   };
   const categories = ['饮食饮水','睡眠作息','运动','久坐','用眼','烟酒','日常清洁'];
   const E = (organ,type,title,text,source) => ({organ,type,title,text,source});

@@ -73,11 +73,15 @@
   height:auto;
   overflow:visible;
 }
-/* 只留描边，不填充。肉色渐变是廉价感的来源，也是「半写实」最难看的那一段。 */
+/* 只留描边，不填充。肉色渐变是廉价感的来源，也是「半写实」最难看的那一段。
+ *
+ * 透明度从 .30 提到 .60、线宽从 1.15 提到 1.5：人体只有 156px 宽、画布 400，
+ * 缩放 0.39，原来的线实际画出来只有 0.45 像素、三成不透明度，等于没画。
+ * 结果是右边那 7 个器官光点在亮，却看不出它们挂在谁身上。 */
 .body-outline path{
   fill:none;
-  stroke:rgba(180,186,161,.30);
-  stroke-width:1.15;
+  stroke:rgba(180,186,161,.60);
+  stroke-width:1.5;
   stroke-linejoin:round;
   stroke-linecap:round;
 }
