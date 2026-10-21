@@ -31,6 +31,8 @@ const AI_KEY = (process.env.AI_API_KEY || '').trim();
 const AI_BASE = (process.env.AI_BASE_URL || 'https://api.deepseek.com').replace(/\/+$/, '');
 const AI_MODEL = process.env.AI_MODEL || 'deepseek-chat';
 
+const { chatEndpoint } = require('./endpoint.cjs');
+
 const MAX_BODY = 8 * 1024;
 const RATE_WINDOW_MS = 60 * 1000;
 const RATE_MAX = 12;
@@ -152,13 +154,26 @@ function validate(raw) {
 
 const SYSTEM = [
   '你是一个健康科普产品里的账本解读员，读者是 18 到 30 岁的普通人。',
-  '严格规则：',
-  '1. 只能使用给定数字，不得自行推算、换算或引入任何新的医学数字。',
-  '2. 不做诊断，不建议就医，不预测寿命，不使用「你患病的风险是」。',
-  '3. 语气克制，像朋友把账单平静地念一遍。不用感叹号，不训人，不制造恐慌。',
-  '4. 输出 2 到 3 句，总长不超过 90 个汉字。第一句给结论，第二句说清主要来源，第三句给一个很小的、今天就能做的动作。',
-  '5. 如果有条目在额度内、或原始区间很宽、或没有折算口径，必须用一句话说明它为什么不算，不许隐去。',
-  '6. 直接输出正文。不要标题、不要 Markdown、不要列表、不要引号包裹。'
+  '你会收到一份已经按公开研究折算好的今日账本，你只负责把它念成人话。',
+  '',
+  '硬规则（违反任何一条都算错）：',
+  '1. 数字只能原样引用输入里的，不得相加、换算、估算，也不得引入任何新的医学数字。',
+  '2. 不得新增输入里没有的健康结论或建议。「有助于恢复」「对身体好」「会损伤」这类判断不许自己加。',
+  '3. 证据等级必须原样说「方向和数值证据都是 N 级」，不许改写成「中等」「较强」「一般」这类主观词。',
+  '4. 只要有「只记录、不折算」的条目，就必须点出其中至少一个的名字，并说明它没有可靠的折算口径。',
+  '5. 不做诊断，不建议就医，不预测寿命，不出现「患病风险是」这类表述。',
+  '6. 语气克制，像朋友把账单平静念一遍。不用感叹号，不训人，不制造恐慌。',
+  '',
+  '结构（四句，总共不超过 110 个汉字）：',
+  '第一句：今天合计多少分钟，比昨天多还是少（看输入里的「今天比昨天」那一行，正数=损耗更少，负数=损耗更多）。',
+  '第二句：点名分钟数最大的那一条，并原样引用它的证据等级。',
+  '第三句：点一个「只记录、不折算」的条目，说明它没有可靠口径。',
+  '第四句：一个今天就能做、且很小的动作。不许是「戒烟」「戒酒」这种大口号。',
+  '',
+  '示例输入：香烟 1 支 -20 分钟；合计 -20；昨天 -40；今天比昨天 +20（损耗更少）；睡眠 7 小时只记录不折算。',
+  '示例输出：今天合计 -20 分钟，比昨天少损耗 20 分钟。这 20 分钟全部来自 1 支烟，方向和数值证据都是 3 级。睡眠记了 7 小时，目前没有可靠的折算口径，不计入。今晚可以比平时早 20 分钟放下手机。',
+  '',
+  '直接输出正文。不要标题、不要 Markdown、不要列表、不要引号。'
 ].join('\n');
 
 function buildPrompt(p) {
@@ -184,9 +199,11 @@ function buildPrompt(p) {
     for (const item of p.noted) lines.push('- ' + item.name + ' ' + item.qty + ' ' + item.unit);
   }
 
-  lines.push('今日合计：' + p.totalMinutes + ' 分钟。');
+  lines.push('今日合计：' + p.totalMinutes + ' 分钟（负数是净损耗，正数是净收益）。');
   if (p.yesterdayMinutes !== null) {
-    lines.push('昨天合计：' + p.yesterdayMinutes + ' 分钟。变化：' + (p.delta > 0 ? '+' : '') + p.delta + ' 分钟。');
+    lines.push('昨天合计：' + p.yesterdayMinutes + ' 分钟。');
+    const word = p.delta > 0 ? '损耗更少' : (p.delta < 0 ? '损耗更多' : '持平');
+    lines.push('今天比昨天：' + (p.delta > 0 ? '+' : '') + p.delta + ' 分钟（' + word + '）。');
   } else {
     lines.push('这是第一次记录，没有昨天的对照。');
   }
@@ -194,7 +211,7 @@ function buildPrompt(p) {
     lines.push('近七天逐日合计（从早到晚）：' + p.weekTotals.join('、') + ' 分钟。');
   }
 
-  lines.push('请按规则写 2 到 3 句解读。');
+  lines.push('请按规则写四句解读。');
   return lines.join('\n');
 }
 
@@ -212,7 +229,7 @@ function pickMode(name) {
 /* ---------- 上游调用 ---------- */
 
 async function callModel(payload, mode, onDelta) {
-  const response = await fetch(AI_BASE + '/v1/chat/completions', {
+  const response = await fetch(chatEndpoint(AI_BASE), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -221,7 +238,7 @@ async function callModel(payload, mode, onDelta) {
     body: JSON.stringify({
       model: AI_MODEL,
       stream: true,
-      temperature: 0.6,
+      temperature: 0.3,
       max_tokens: 260,
       messages: [
         { role: 'system', content: mode.system },

@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node scripts/serve.cjs",
     "serve": "node server/proxy.cjs",
-    "test": "node --test tests/domain.test.cjs tests/ledger.test.cjs tests/organ-focus.test.cjs tests/interpret.test.cjs"
+    "test": "node --test tests/domain.test.cjs tests/ledger.test.cjs tests/organ-focus.test.cjs tests/interpret.test.cjs tests/endpoint.test.cjs"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }
