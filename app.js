@@ -106,7 +106,6 @@
       el.classList.toggle('filtered',!allowed);
     });
     const posterior=$('.posterior-structures',svg);if(posterior)posterior.setAttribute('display',state.view==='back'?'':'none');
-    const face=$('.face-contours',svg);if(face)face.style.display=state.view==='back'?'none':'';
     $$('[data-view]').forEach(el=>el.setAttribute('aria-pressed',el.dataset.view===state.view));
     const s=todaySummary();
     const hasToday=!!(s&&(s.counted>0||s.noted.length));
