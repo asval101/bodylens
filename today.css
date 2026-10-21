@@ -112,6 +112,27 @@
 .organ-dot.is-flashing .dot-ring{
   animation:dot-pulse 1.4s var(--ease-out-expo) both;
 }
+
+/* 器官标注：只给点亮的器官出场，名字排在身体两侧，不画引线。
+   字号用 viewBox 单位（26），在 156px 的实际显示里约 10px——
+   再小就糊，再大就会压到旁边的正文。 */
+.body-labels .label-text{
+  fill:currentColor;
+  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  font-size:26px;
+  letter-spacing:.04em;
+  dominant-baseline:middle;
+}
+.body-label.is-hit{color:var(--copper)}
+.body-label.is-gain{color:var(--mint)}
+.body-label{
+  opacity:0;
+  animation:label-in 420ms var(--ease-out-expo) forwards;
+}
+@keyframes label-in{
+  from{opacity:0}
+  to{opacity:.92}
+}
 @keyframes dot-pulse{
   0%{opacity:.85;transform:scale(1)}
   70%{opacity:.2}
