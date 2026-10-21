@@ -14,23 +14,47 @@
   const TOTAL_TIMEOUT = 25000;
   const FAIL_KEY = 'bodylens-ai-offline';
 
-  /* 本次会话中失败过就不再自动尝试，避免每次录入都白等 8 秒。 */
+  /* 失败后冷却一段时间再自动尝试，别让每次录入都白等 8 秒。
+   *
+   * 原先是「本会话失败过就永不再试」，把标记存成 '1'。这个设计有个死角：
+   * 一次失败（比如那会儿服务端还没配密钥）会让整个标签页永久停在本地解读，
+   * 而且因为根本没发起请求，连失败回调都不会走，用户看不到任何提示。
+   * 改成记时间戳：一分钟内不打扰，超过就自动重来。 */
+  const COOLDOWN_MS = 60 * 1000;
+
+  function lastFailAt() {
+    try {
+      const raw = sessionStorage.getItem(FAIL_KEY);
+      if (!raw) return 0;
+      const at = Number(raw);
+      /* 旧版本存的是 '1'，解析出来是 1（1970 年），自然视为已过期 */
+      return Number.isFinite(at) && at > 1000 ? at : 0;
+    } catch (e) { return 0; }
+  }
+
   function markedOffline() {
-    try { return sessionStorage.getItem(FAIL_KEY) === '1'; } catch (e) { return false; }
+    const at = lastFailAt();
+    return at > 0 && Date.now() - at < COOLDOWN_MS;
   }
 
   function markOffline() {
-    try { sessionStorage.setItem(FAIL_KEY, '1'); } catch (e) { /* 忽略 */ }
+    try { sessionStorage.setItem(FAIL_KEY, String(Date.now())); } catch (e) { /* 忽略 */ }
   }
 
   function clearOffline() {
     try { sessionStorage.removeItem(FAIL_KEY); } catch (e) { /* 忽略 */ }
   }
 
+  /* 给界面一个理由，才知道该不该提示"可以重试"。 */
+  function reason() {
+    if (typeof fetch !== 'function') return 'unsupported';
+    if (location.protocol === 'file:') return 'offline-file';
+    if (markedOffline()) return 'cooling';
+    return 'ok';
+  }
+
   function available() {
-    if (typeof fetch !== 'function') return false;
-    if (location.protocol === 'file:') return false;
-    return !markedOffline();
+    return reason() === 'ok';
   }
 
   /* 逐块解析 SSE。服务端每行发 `data: {"t":"..."}`，结束发 `data: [DONE]`。 */
@@ -110,5 +134,5 @@
       });
   }
 
-  window.BodyLensAI = { enhance, available, clearOffline };
+  window.BodyLensAI = { enhance, available, reason, clearOffline };
 })();

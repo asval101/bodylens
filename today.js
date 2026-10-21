@@ -335,7 +335,16 @@
     section.dataset.stance = base.stance;
 
     const canModel = !!(AI && AI.available() && s.counted > 0);
-    paintAI({ headline: base.headline, body: base.detail, hint: base.hint, tag: '本地解读' });
+    /* 冷却期也要说清楚。不解释的话，用户只会看到"怎么一直是本地解读"，
+       误以为在线功能压根没接上——实际上只是刚才失败过、需要等一下或手动重试。 */
+    const cooling = !!(AI && s.counted > 0 && AI.reason && AI.reason() === 'cooling');
+    paintAI({
+      headline: base.headline,
+      body: base.detail,
+      hint: base.hint,
+      tag: '本地解读',
+      note: cooling ? '在线解读刚才没接上，先给本地版本。点右侧可以立刻重试。' : ''
+    });
 
     if (!canModel) return;
 
