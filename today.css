@@ -73,15 +73,20 @@
   height:auto;
   overflow:visible;
 }
-/* 只留描边，不填充。肉色渐变是廉价感的来源，也是「半写实」最难看的那一段。
+/* 淡剪影 + 一圈边光，不做线稿。
  *
- * 透明度从 .30 提到 .60、线宽从 1.15 提到 1.5：人体只有 156px 宽、画布 400，
- * 缩放 0.39，原来的线实际画出来只有 0.45 像素、三成不透明度，等于没画。
- * 结果是右边那 7 个器官光点在亮，却看不出它们挂在谁身上。 */
+ * 这一版的关键数据：这一列只有 156px 宽，画布 240，缩放 0.65，
+ * 人体在列里 136px。线稿在这个尺寸上没法不被审视——人眼对人形极敏感，
+ * 差两个单位就被读成「画错了」，于是注意力全落在「像不像」上，
+ * 而不是「今天有哪些器官被点了」。
+ *
+ * 退成淡剪影之后，它只承担「身体在这里」这一个信息。
+ * 同一条路径，只改透明度和填充：试过 .06/.20（太淡，看不出是人）、
+ * .12 往上（又回到抢注意力）。.08/.24 是这一档。 */
 .body-outline path{
-  fill:none;
-  stroke:rgba(180,186,161,.60);
-  stroke-width:1.5;
+  fill:rgba(186,214,203,.08);
+  stroke:rgba(190,218,206,.24);
+  stroke-width:1.6;
   stroke-linejoin:round;
   stroke-linecap:round;
 }
@@ -113,26 +118,6 @@
   animation:dot-pulse 1.4s var(--ease-out-expo) both;
 }
 
-/* 器官标注：只给点亮的器官出场，名字排在身体两侧，不画引线。
-   字号用 viewBox 单位（26），在 156px 的实际显示里约 10px——
-   再小就糊，再大就会压到旁边的正文。 */
-.body-labels .label-text{
-  fill:currentColor;
-  font-family:"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
-  font-size:26px;
-  letter-spacing:.04em;
-  dominant-baseline:middle;
-}
-.body-label.is-hit{color:var(--copper)}
-.body-label.is-gain{color:var(--mint)}
-.body-label{
-  opacity:0;
-  animation:label-in 420ms var(--ease-out-expo) forwards;
-}
-@keyframes label-in{
-  from{opacity:0}
-  to{opacity:.92}
-}
 @keyframes dot-pulse{
   0%{opacity:.85;transform:scale(1)}
   70%{opacity:.2}
