@@ -84,11 +84,17 @@
   /* 正面看不到肾和脊柱：它们本来就在后面，硬画在正面只是错。 */
   function visibleOrgan(id){
     if(!LINKED.has(id))return false;
+    /* 人体上没画出来的器官（眼睛已删掉）列表里也不出现，
+       否则点它人体毫无反应，看着像坏了。 */
+    const human=$('.human');
+    if(human&&!$(`[data-organ="${id}"]`,human))return false;
     if(state.view==='back')return ['brain','lungs','kidneys','spine'].includes(id);
     return !['spine','kidneys'].includes(id);
   }
   function renderAnatomy(){
     const svg=$('.human');if(!svg)return;
+    /* 旧存档里可能选着一个已经画不出来的器官，回退到肺 */
+    if(!$(`[data-organ="${state.organ}"]`,svg))state.organ='lungs';
     svg.setAttribute('viewBox','65 8 270 415');
     svg.setAttribute('aria-label',`${state.view==='front'?'正面':'背面'}解剖示意，点击器官查看今天的影响`);
     const effects=M.effectsFor(appliedChoices());
