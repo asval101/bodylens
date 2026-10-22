@@ -64,6 +64,14 @@
       population: '一般成年人',
       note: '成年人平均需要 7–9 小时睡眠，个体需求不同。长期睡眠不足与代谢、心血管及心理健康风险相关，原文未给出按小时折算寿命的口径。'
     },
+    'jogh-sleep-2024': {
+      org: '清华大学 & 哈佛大学 · Journal of Global Health',
+      title: 'Years of life lost due to insufficient sleep and associated economic burden in China from 2010–18',
+      journal: 'Journal of Global Health',
+      year: '2024-04-05',
+      population: '中国家庭追踪调查（CFPS）20 岁及以上成年人，2010 / 2014 / 2018 三轮，每轮样本 28,618–31,393 人',
+      note: '短睡眠（≤6 小时/天）对比每天 6–9 小时的参照组：20–64 岁全因死亡率 RR = 1.12（95% CI 1.06–1.18），65 岁以上 RR = 1.07。个体寿命损失（YLL）20–24 岁约为男性 0.94 年、女性 0.73 年。本产品「每少睡 1 小时约 11 分钟」是依据该 YLL 折算到 60 年得出的推算值，不是原文直接给出的结论句；区间 5–17 分钟由 RR 的 95% 置信区间线性折算。'
+    },
     'who-activity': {
       org: '世界卫生组织 WHO',
       title: 'Physical activity — Fact sheet',
@@ -119,16 +127,18 @@
     },
     shortSleep: {
       name: '睡眠不足',
-      unit: '小时（缺）',
-      minutes: null,
+      unit: '小时',
+      minutes: -11,
       direction: 'B',
       value: 'C',
-      source: 'nhs-sleep',
+      source: 'jogh-sleep-2024',
+      range: [-5, -17],
       organs: ['brain'],
       tone: 'harm',
       presets: [1, 2, 3],
+      hint: '推算值 · 长期少睡才成立',
       line: '长期睡不够，影响的是白天和长期的代谢、心血管状态。',
-      caveat: '成年人平均需要 7–9 小时，个体差异大；单纯晚睡不等于睡眠不足。暂不折算分钟。'
+      caveat: '这是推算值，不是原文直接给的数字：按 20–24 岁人群寿命损失约 0.94 年、持续 60 年折算，约合每天 22 分钟，即每少睡 1 小时约 11 分钟，区间 5–17 分钟。三个前提——一是只在长期维持时成立，偶发熬夜不适用；二是睡眠与死亡率呈 U 型关系，每天超过 9 小时风险同样上升；三是原研究为观察性，未证明因果。'
     },
     sit: {
       name: '屏幕时间',

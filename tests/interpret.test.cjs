@@ -40,11 +40,11 @@ test('没有记录时给出可执行的下一步，而不是空白', () => {
 /* ---------- 只有方向、没有数字 ---------- */
 
 test('只有不可折算条目时不编数字', () => {
-  const entries = [L.makeEntry('shortSleep', 1, '2026-10-20', at(23))];
+  const entries = [L.makeEntry('sugar', 1, '2026-10-20', at(23))];
   const r = day(entries, '2026-10-20');
   const out = I.local(r.s, r.cmp);
   assert.match(out.headline, /不折算成分钟/);
-  assert.match(out.detail, /睡眠不足/);
+  assert.match(out.detail, /含糖饮料/);
   assert.doesNotMatch(out.detail, /\d+\s*分钟/);
 });
 
@@ -142,7 +142,7 @@ test('没有可用建议时返回空串，而不是占位文字', () => {
 test('载荷只含白名单字段，不夹带任何自由文本', () => {
   const entries = [
     L.makeEntry('smoke', 3, '2026-10-20', at(9)),
-    L.makeEntry('shortSleep', 1, '2026-10-20', at(23))
+    L.makeEntry('sugar', 1, '2026-10-20', at(23))
   ];
   const r = day(entries, '2026-10-20');
   const p = I.payload(r.s, r.cmp, r.week);
@@ -150,7 +150,7 @@ test('载荷只含白名单字段，不夹带任何自由文本', () => {
   assert.strictEqual(typeof p.totalMinutes, 'number');
   assert.strictEqual(p.items[0].name, '香烟');
   assert.strictEqual(p.items[0].direction, 'A');
-  assert.strictEqual(p.noted[0].name, '睡眠不足');
+  assert.strictEqual(p.noted[0].name, '含糖饮料');
   assert.strictEqual(p.weekTotals.length, 7);
   const json = JSON.stringify(p);
   assert.doesNotMatch(json, /prompt|instruction|忽略/);

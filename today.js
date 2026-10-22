@@ -216,9 +216,10 @@
     }).join('');
 
     const item = W.get(pickedItem);
+    const hintText = item.hint || (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记录，不折算分钟');
     qtyBox.innerHTML = item.presets.map((n, i) =>
       '<button type="button" class="qty-btn" style="--i:' + i + '" data-add="' + pickedItem + '" data-qty="' + n + '">' + n + ' ' + esc(item.unit) + '</button>'
-    ).join('') + '<span class="qty-hint">' + (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记方向，不折算') + '</span>';
+    ).join('') + '<span class="qty-hint">' + esc(hintText) + '</span>';
   }
 
   /* ---------- 焦点三：今天记了什么 ---------- */

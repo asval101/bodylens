@@ -25,7 +25,8 @@ test('有出处的行为能算出分钟，无口径的返回 null 而不是 0', 
   assert.strictEqual(W.minutesFor('smoke', 1), -20);
   assert.strictEqual(W.minutesFor('smoke', 10), -200);
   assert.strictEqual(W.minutesFor('alcohol', 3), -45);
-  assert.strictEqual(W.minutesFor('shortSleep', 2), null);
+  assert.strictEqual(W.minutesFor('shortSleep', 2), -22);
+  assert.strictEqual(W.minutesFor('sugar', 2), null);
   assert.strictEqual(W.minutesFor('sleep', 1), null);
 });
 
@@ -43,13 +44,13 @@ test('记录不冗余存储分钟，改权重后自动同步', () => {
 test('汇总把有数字与只有方向的分开统计', () => {
   const entries = [
     L.makeEntry('smoke', 3, '2026-10-20', new Date('2026-10-20T09:00:00Z')),
-    L.makeEntry('shortSleep', 2, '2026-10-20', new Date('2026-10-20T22:00:00Z'))
+    L.makeEntry('sugar', 2, '2026-10-20', new Date('2026-10-20T22:00:00Z'))
   ];
   const s = L.summarize(entries, '2026-10-20');
   assert.strictEqual(s.totalMinutes, -60);
   assert.strictEqual(s.counted, 1);
   assert.strictEqual(s.noted.length, 1);
-  assert.strictEqual(s.noted[0].itemId, 'shortSleep');
+  assert.strictEqual(s.noted[0].itemId, 'sugar');
   assert.strictEqual(s.byItem.length, 1);
   assert.strictEqual(s.byItem[0].qty, 3);
 });
