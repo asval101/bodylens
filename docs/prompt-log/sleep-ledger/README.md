@@ -4,7 +4,18 @@
 - 对应提交：`346c812`
 - 涉及文件：`data/weights.js`、`today.js`、`forecast.js`、`tests/ledger.test.cjs`、`tests/interpret.test.cjs`
 - 验证：80 项测试全过；线上 `body-ledger.com` 三个文件 `md5sum` 与本地一致
-- 原始证据：见 [`SHOTLIST.md`](./SHOTLIST.md)（本节由人工截图补齐）
+
+## 0. 原始证据
+
+| 形式 | 位置 | 说明 |
+| --- | --- | --- |
+| 在线原文 | https://www.workbuddy.link/p/dOnDTHavhbsBWY3TQIfNqd | 公开分享页，匿名可访问、无需登录 |
+| 图文归档 | [share-2026-10-22-full.png](./share-2026-10-22-full.png) | 1440×5444，逐段滚动拼接，保留页面原貌 |
+| 全文抽取 | [share-2026-10-22.txt](./share-2026-10-22.txt) | 页面正文原样抽取，未改写 |
+| 关键节点截图清单 | [SHOTLIST.md](./SHOTLIST.md) | 若要单独截取某一步，照这份清单 |
+
+会话自带时间戳，四轮对话依次为 **20:23 / 20:26 / 20:28 / 20:39**（2026-10-22），
+与下文第 1–5 节的分段完全对应。这是本链能「证明顺序」的关键——不是事后整理出来的。
 
 ## 1. 初始意图（用户原文，未改写）
 
