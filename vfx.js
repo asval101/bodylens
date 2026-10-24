@@ -154,6 +154,134 @@
     }, 950);
   });
 
+  /* ---------- 行为 → 器官：粒子飞过去，告诉眼睛「这一笔落在哪」 ----------
+     与业务无关，只读 DOM：点完数量后 today.js 已同步刷新过人体，
+     所以这里读「没有 no-impact 类的可见器官」就是本次受影响的器官。
+     没有可用记录时所有器官都带 no-impact，自然不播。 */
+  var flightLayer = null;
+  function layer() {
+    if (flightLayer && flightLayer.parentNode) return flightLayer;
+    flightLayer = document.createElement('div');
+    flightLayer.className = 'vfx-flight-layer';
+    flightLayer.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(flightLayer);
+    return flightLayer;
+  }
+
+  function litOrgans() {
+    var out = [];
+    var nodes = art.querySelectorAll('.organ');
+    for (var i = 0; i < nodes.length; i++) {
+      var el = nodes[i];
+      if (el.style.display === 'none') continue;
+      if (el.classList.contains('no-impact')) continue;
+      out.push(el);
+    }
+    return out;
+  }
+
+  /* 二次贝塞尔：让粒子走弧线而不是直线，直线看起来像连线图 */
+  function seed(from, to, bow, index, total) {
+    var p = document.createElement('span');
+    p.className = 'vfx-seed';
+    p.style.width = p.style.height = (index % 3 === 0 ? 6 : 4) + 'px';
+    p.style.marginLeft = p.style.marginTop = (-(index % 3 === 0 ? 3 : 2)) + 'px';
+    p.style.opacity = '0';
+    layer().appendChild(p);
+
+    var mx = (from.x + to.x) / 2;
+    var my = (from.y + to.y) / 2;
+    var dx = to.x - from.x, dy = to.y - from.y;
+    var len = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    /* 法线方向偏移，正负交替，形成一束散开的粒子 */
+    var nx = -dy / len, ny = dx / len;
+    var side = (index % 2 ? 1 : -1) * bow;
+    var cx = mx + nx * side;
+    var cy = my + ny * side;
+
+    var dur = 760 + (index % 4) * 70;
+    var delay = (index % total) * 55;
+    var t0 = null;
+
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var raw = (ts - t0 - delay) / dur;
+      if (raw < 0) { requestAnimationFrame(step); return; }
+      var t = raw > 1 ? 1 : raw;
+      var e = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;  /* easeInOutQuad */
+      var u = 1 - e;
+      var x = u * u * from.x + 2 * u * e * cx + e * e * to.x;
+      var y = u * u * from.y + 2 * u * e * cy + e * e * to.y;
+      p.style.transform = 'translate3d(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px,0)';
+      p.style.opacity = t < 0.12 ? (t / 0.12 * 0.9).toFixed(2)
+        : t > 0.82 ? ((1 - t) / 0.18 * 0.9).toFixed(2) : '0.9';
+      if (t < 1) { requestAnimationFrame(step); return; }
+      if (p.parentNode) p.parentNode.removeChild(p);
+    }
+    requestAnimationFrame(step);
+  }
+
+  function hitRing(organ, x, y) {
+    var ring = document.createElement('span');
+    ring.className = 'vfx-hit';
+    ring.setAttribute('aria-hidden', 'true');
+    ring.style.left = x.toFixed(0) + 'px';
+    ring.style.top = y.toFixed(0) + 'px';
+    layer().appendChild(ring);
+    window.setTimeout(function () {
+      if (ring.parentNode) ring.parentNode.removeChild(ring);
+    }, 720);
+
+    /* 落点上的器官自己也亮一下，再回落到「受影响」的常态 */
+    if (!organ || !organ.classList) return;
+    organ.classList.remove('vfx-land');
+    void organ.offsetWidth;
+    organ.classList.add('vfx-land');
+    window.setTimeout(function () { organ.classList.remove('vfx-land'); }, 720);
+  }
+
+  function flyTo(from) {
+    if (!motionOn()) return;
+    var organs = litOrgans();
+    if (!organs.length) return;
+    /* 最多 4 个落点：再多就成了一团噪点，反而看不清落在哪 */
+    if (organs.length > 4) organs = organs.slice(0, 4);
+
+    for (var i = 0; i < organs.length; i++) {
+      var box = organs[i].getBoundingClientRect();
+      if (!box.width && !box.height) continue;
+      var to = { x: box.left + box.width / 2, y: box.top + box.height / 2 };
+      var bow = Math.min(72, Math.max(26, Math.abs(to.y - from.y) * 0.14));
+      var count = 3 + (i % 2);
+      for (var k = 0; k < count; k++) seed(from, to, bow, k, count);
+      (function (organ, tx, ty) {
+        window.setTimeout(function () { hitRing(organ, tx, ty); }, 800);
+      })(organs[i], to.x, to.y);
+    }
+  }
+
+  /* 数量按钮是「这笔真的记上了」的那一刻；行为 chip 只换选择，不动账本，不播。
+     必须用捕获阶段：today.js 的 add() 会重渲染数量按钮，冒泡到这里时按钮已脱离文档，
+     再量 getBoundingClientRect() 只会拿到 0，粒子就会从屏幕左上角飞出来。 */
+  document.addEventListener('click', function (event) {
+    var btn = event.target.closest ? event.target.closest('[data-add]') : null;
+    if (!btn) return;
+    var qty = btn.dataset.qty;
+    var r = btn.getBoundingClientRect();          /* 此刻按钮还在文档里，先量一份备用 */
+    var fx = r.left + r.width / 2;
+    var fy = r.top + r.height / 2;
+    requestAnimationFrame(function () {           /* 等一轮：业务层已刷新完账本与人体 */
+      var list = document.querySelectorAll('#today-entry-qty [data-add]');
+      for (var i = 0; i < list.length; i++) {
+        if (list[i].dataset.qty !== qty) continue;
+        var now = list[i].getBoundingClientRect();  /* 记账后按钮会下移，取它现在的位置 */
+        if (now.width) { fx = now.left + now.width / 2; fy = now.top + now.height / 2; }
+        break;
+      }
+      flyTo({ x: fx, y: fy });
+    });
+  }, true);
+
   /* ---------- 详情区换内容时重新入场 ---------- */
   var detail = document.getElementById('detail-content');
   if (detail && window.MutationObserver) {

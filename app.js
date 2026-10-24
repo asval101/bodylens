@@ -84,8 +84,8 @@
   /* 正面看不到肾和脊柱：它们本来就在后面，硬画在正面只是错。 */
   function visibleOrgan(id){
     if(!LINKED.has(id))return false;
-    /* 人体上没画出来的器官（眼睛已删掉）列表里也不出现，
-       否则点它人体毫无反应，看着像坏了。 */
+    /* 兜底：数据里提到、但人体上真的没画出来的器官，列表里也不出现，
+       否则点它人体毫无反应，看着像坏了。眼睛曾经就是这样漏掉的，现已补上图形。 */
     const human=$('.human');
     if(human&&!$(`[data-organ="${id}"]`,human))return false;
     if(state.view==='back')return ['brain','lungs','kidneys','spine'].includes(id);
@@ -101,8 +101,13 @@
     $$('.organ',svg).forEach(el=>{
       const id=el.dataset.organ,allowed=visibleOrgan(id);
       el.style.display=allowed?'':'none';
+      const hit=effects.filter(e=>e.organ===id);
       el.classList.toggle('selected',id===state.organ);
-      el.classList.toggle('no-impact',!effects.some(e=>e.organ===id));
+      el.classList.toggle('no-impact',hit.length===0);
+      /* 「这次记账落在它身上」和「我正在看它」是两件事。只靠 selected 的话，
+         自动聚焦只会亮一个器官，其余被影响的器官在画面上看不出区别。 */
+      el.classList.toggle('impacted',hit.length>0);
+      el.classList.toggle('tone-benefit',hit.length>0&&hit.every(e=>e.type==='benefit'));
       el.classList.toggle('filtered',!allowed);
     });
     const posterior=$('.posterior-structures',svg);if(posterior)posterior.setAttribute('display',state.view==='back'?'':'none');
