@@ -57,14 +57,14 @@
 .anatomy-scene.vfx-focus .human .organ:not(.vfx-hot){opacity:.4}/* 点击脉冲：从命中点向外扩散的一圈光，交代“这一下点中了” */
 .vfx-ripple{position:absolute;width:170px;height:170px;margin:-85px 0 0 -85px;border-radius:50%;
   border:1px solid rgba(42,118,94,0.55);pointer-events:none;z-index:8;
-  animation:vfx-ripple .9s var(--vfx-ease) forwards}@keyframes vfx-ripple{0%{opacity:.85;transform:scale(.16)}100%{opacity:0;transform:scale(1)}}/* 行为→器官：点下数量后，一束粒子沿弧线飞向本次受影响的器官，落点补一圈细环。
-   挂在 body 上的 fixed 层，避免被人体舞台的 overflow 裁掉；只做视觉，不接鼠标。 */
+  animation:vfx-ripple .9s var(--vfx-ease) forwards}@keyframes vfx-ripple{0%{opacity:.85;transform:scale(.16)}100%{opacity:0;transform:scale(1)}}/* 行为→器官：点下数量后，一束粒子沿弧线飞向本次受影响的器官。
+   挂在 body 上的 fixed 层，避免被人体舞台的 overflow 裁掉；只做视觉，不接鼠标。
+   落点不再画环：器官形状差异太大（心脏 34×62、大脑横宽、眼睛 26×8），
+   同一个圆套上去必然有一半浮在外面，在头上就变成一个圈住颅骨的绿环。
+   到达的反馈交给器官自身那一闪（.vfx-land）。 */
 .vfx-flight-layer{position:fixed;inset:0;pointer-events:none;z-index:9}
 .vfx-seed{position:absolute;left:0;top:0;border-radius:50%;background:#2a765e;
   box-shadow:0 0 6px rgba(42,118,94,0.55);will-change:transform,opacity}
-.vfx-hit{position:absolute;width:76px;height:76px;margin:-38px 0 0 -38px;border-radius:50%;
-  border:1px solid rgba(42,118,94,0.5);animation:vfx-hit .7s var(--vfx-ease) forwards}
-@keyframes vfx-hit{0%{opacity:.7;transform:scale(.28)}100%{opacity:0;transform:scale(1.18)}}
 /* ---------- 6. 控件微交互 ---------- */
 .primary-button{position:relative;overflow:hidden;background:linear-gradient(162deg,#135c3e,#358169 54%,#519e89);
   color:#ebe9e5;border-color:rgba(16,92,64,0.5);
@@ -100,8 +100,10 @@ body.no-motion *,body.no-motion *::before,body.no-motion *::after{
 /* 粒子落点的那一下：器官自己亮一下再回落，只持续 0.7 秒。
    用 animation 而不是加类改 filter，是为了让它会「结束」，不留下永久的高亮。 */
 .human .organ.vfx-land{animation:vfx-land .7s var(--vfx-ease)}
+/* 只推亮度与饱和，不换色相：换成松绿的话，眼睛这类小器官会闪出一层绿，
+   和「不利影响＝陶土」的语言对不上，看起来像另一种状态。 */
 @keyframes vfx-land{
   0%{filter:drop-shadow(0 0 2px rgba(160,74,36,0.5)) saturate(1.28) contrast(1.06)}
-  38%{filter:drop-shadow(0 0 11px rgba(42,118,94,0.66)) brightness(1.2) saturate(1.45)}
+  38%{filter:drop-shadow(0 0 5px rgba(160,74,36,0.55)) saturate(1.55) contrast(1.08) brightness(1.14)}
   100%{filter:drop-shadow(0 0 2px rgba(160,74,36,0.5)) saturate(1.28) contrast(1.06)}
 }

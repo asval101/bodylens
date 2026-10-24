@@ -221,18 +221,10 @@
     requestAnimationFrame(step);
   }
 
-  function hitRing(organ, x, y) {
-    var ring = document.createElement('span');
-    ring.className = 'vfx-hit';
-    ring.setAttribute('aria-hidden', 'true');
-    ring.style.left = x.toFixed(0) + 'px';
-    ring.style.top = y.toFixed(0) + 'px';
-    layer().appendChild(ring);
-    window.setTimeout(function () {
-      if (ring.parentNode) ring.parentNode.removeChild(ring);
-    }, 720);
-
-    /* 落点上的器官自己也亮一下，再回落到「受影响」的常态 */
+  /* 粒子到达时让器官自己亮一下，再回落到「受影响」的常态。
+     这里刻意不画环：器官形状差太多（心脏 34×62、大脑横宽、眼睛 26×8），
+     同一个圆套上去必然有一半浮在器官外面，在头上会变成一个圈住颅骨的绿环。 */
+  function landOn(organ) {
     if (!organ || !organ.classList) return;
     organ.classList.remove('vfx-land');
     void organ.offsetWidth;
@@ -254,9 +246,9 @@
       var bow = Math.min(72, Math.max(26, Math.abs(to.y - from.y) * 0.14));
       var count = 3 + (i % 2);
       for (var k = 0; k < count; k++) seed(from, to, bow, k, count);
-      (function (organ, tx, ty) {
-        window.setTimeout(function () { hitRing(organ, tx, ty); }, 800);
-      })(organs[i], to.x, to.y);
+      (function (organ) {
+        window.setTimeout(function () { landOn(organ); }, 800);
+      })(organs[i]);
     }
   }
 
