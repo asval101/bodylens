@@ -17,7 +17,7 @@
   };
   const organs = {
     brain: {name:'大脑',en:'BRAIN',system:'nervous',function:'处理信息、调节注意与记忆，也参与睡眠和情绪调节。',view:'front',anchor:[200,58]},
-    eyes: {name:'眼睛',en:'EYES',system:'sensory',function:'感知光线并形成视觉信息；泪膜帮助保护眼表。',view:'front',anchor:[214,80]},
+    eyes: {name:'眼睛',en:'EYES',system:'sensory',function:'感知光线并形成视觉信息；泪膜帮助保护眼表。',view:'front',anchor:[200,86]},
     mouth: {name:'口腔',en:'ORAL CAVITY',system:'sensory',function:'参与咀嚼、发音及吞咽，牙齿和牙龈需要日常清洁。',view:'front',anchor:[200,98]},
     lungs: {name:'肺部',en:'LUNGS',system:'respiratory',function:'通过肺泡完成气体交换，把氧气送入血液，排出二氧化碳。',view:'front',anchor:[181,188]},
     heart: {name:'心脏',en:'HEART',system:'circulatory',function:'持续泵送血液，为全身组织输送氧气与营养。',view:'front',anchor:[212,200]},

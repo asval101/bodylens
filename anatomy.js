@@ -63,6 +63,16 @@
         ${lines(['M191.5 41.7Q182.9 41.7 185.9 49.2Q193.1 47.5 193.1 55.8Q184.4 54.2 182.9 59.9Q185.2 65.8 190.7 63.1Q188.3 72.5 195.3 70.6','M208.5 41.7Q217.1 41.7 214.1 49.2Q206.9 47.5 206.9 55.8Q215.6 54.2 217.1 59.9Q214.8 65.8 209.4 63.1Q211.7 72.5 204.7 70.6','M195.3 38.4Q200.9 44.3 195.3 50.1M204.7 38.4Q199.2 44.3 204.7 50.1','M194.5 59.9Q198.5 63.1 194.5 67.3M205.5 59.9Q201.5 63.1 205.5 67.3'],'#b38d94',1.15)}
       </g>
       <g class="organ" data-organ="mouth" data-front="true"><path d="M191.3 97.7C193.6 96.1 195.8 95.5 198.1 96.5Q200 97.2 201.9 96.5C204.2 95.5 206.4 96.1 208.7 97.7Q200 98.4 191.3 97.7Z" fill="#c2a49c"/><path d="M191.3 97.7Q200 98.4 208.7 97.7C206.8 101.9 193.2 101.9 191.3 97.7Z" fill="#cdb0a8"/><path d="M191.9 97.9Q195.8 98.7 198.1 97.9Q200 97.5 201.9 97.9Q204.4 98.7 208.1 97.9" fill="none" stroke="#a9837c" stroke-width=".55" stroke-linecap="round" opacity=".45"/><ellipse cx="200" cy="100.2" rx="3.4" ry=".9" fill="#dcc3bb" opacity=".45"/></g>
+      <g class="organ" data-organ="eyes" data-front="true">
+        <ellipse cx="193" cy="86.5" rx="6.4" ry="4.2" fill="transparent" pointer-events="all"/>
+        <ellipse cx="207" cy="86.5" rx="6.4" ry="4.2" fill="transparent" pointer-events="all"/>
+        <path d="M188 86.4Q193 82.3 198 86.4Q193 90.5 188 86.4Z" fill="#d9d6cd" stroke="#8d9787" stroke-opacity=".58" stroke-width=".5"/>
+        <path d="M202 86.4Q207 82.3 212 86.4Q207 90.5 202 86.4Z" fill="#d9d6cd" stroke="#8d9787" stroke-opacity=".58" stroke-width=".5"/>
+        <circle cx="193" cy="86.6" r="1.55" fill="#6f8789"/>
+        <circle cx="207" cy="86.6" r="1.55" fill="#6f8789"/>
+        <circle cx="193" cy="86.6" r=".62" fill="#4a5755"/>
+        <circle cx="207" cy="86.6" r=".62" fill="#4a5755"/>
+      </g>
       <g class="organ" data-organ="kidneys" style="fill:${shade('kidneys')}">
         <path d="M168 294 C154 288 151 307 154 321 C156 335 171 337 176 324 Q181 314 171 309 Q164 309 171 302 Z M232 294 C246 288 249 307 246 321 C244 335 229 337 224 324 Q219 314 229 309 Q236 309 229 302 Z"/>
         ${lines(['M169 298 Q160 303 161 316 Q162 327 169 328','M231 298 Q240 303 239 316 Q238 327 231 328'],'#c28269',1.4)}
