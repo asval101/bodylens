@@ -61,7 +61,7 @@
    挂在 body 上的 fixed 层，避免被人体舞台的 overflow 裁掉；只做视觉，不接鼠标。
    落点不再画环：器官形状差异太大（心脏 34×62、大脑横宽、眼睛 26×8），
    同一个圆套上去必然有一半浮在外面，在头上就变成一个圈住颅骨的绿环。
-   到达的反馈交给器官自身那一闪（.vfx-land）。 */
+   到达时在落点散开几颗小光点（vfx.js 的 burst），器官本身不动。 */
 .vfx-flight-layer{position:fixed;inset:0;pointer-events:none;z-index:9}
 .vfx-seed{position:absolute;left:0;top:0;border-radius:50%;background:#2a765e;
   box-shadow:0 0 6px rgba(42,118,94,0.55);will-change:transform,opacity}
@@ -97,13 +97,9 @@ body.no-motion *,body.no-motion *::before,body.no-motion *::after{
 .human .organ.impacted{filter:drop-shadow(0 0 2px rgba(160,74,36,0.5)) saturate(1.28) contrast(1.06)}
 .human .organ.impacted.tone-benefit{filter:drop-shadow(0 0 2px rgba(42,118,94,0.5)) saturate(1.28) contrast(1.06)}
 .human .organ.selected{filter:drop-shadow(0 0 4px rgba(143,80,33,0.467)) brightness(1.13)}
-/* 粒子落点的那一下：器官自己亮一下再回落，只持续 0.7 秒。
-   用 animation 而不是加类改 filter，是为了让它会「结束」，不留下永久的高亮。 */
-.human .organ.vfx-land{animation:vfx-land .7s var(--vfx-ease)}
-/* 只推亮度与饱和，不换色相：换成松绿的话，眼睛这类小器官会闪出一层绿，
-   和「不利影响＝陶土」的语言对不上，看起来像另一种状态。 */
-@keyframes vfx-land{
-  0%{filter:drop-shadow(0 0 2px rgba(160,74,36,0.5)) saturate(1.28) contrast(1.06)}
-  38%{filter:drop-shadow(0 0 5px rgba(160,74,36,0.55)) saturate(1.55) contrast(1.08) brightness(1.14)}
-  100%{filter:drop-shadow(0 0 2px rgba(160,74,36,0.5)) saturate(1.28) contrast(1.06)}
-}
+/* 落点回响交给了粒子自己散开的几颗光点（vfx.js 的 burst），不再动器官。
+   之前这里用 filter 让器官亮一下再回落，实测嘴唇这种小而饱和的色块上，
+   saturate(1.55) 会让 R 涨 24、B 才涨 13，读起来是「嘴变红了」；
+   改成只加 brightness，又会把嘴唇推向粉白。两种都不对——
+   器官的颜色是证据（唇色、脑的充血色都不是随便挑的），
+   动效不该为了「有反馈」去临时改写它。 */

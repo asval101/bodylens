@@ -221,16 +221,12 @@
     requestAnimationFrame(step);
   }
 
-  /* 粒子到达时让器官自己亮一下，再回落到「受影响」的常态。
-     这里刻意不画环：器官形状差太多（心脏 34×62、大脑横宽、眼睛 26×8），
-     同一个圆套上去必然有一半浮在器官外面，在头上会变成一个圈住颅骨的绿环。 */
-  function landOn(organ) {
-    if (!organ || !organ.classList) return;
-    organ.classList.remove('vfx-land');
-    void organ.offsetWidth;
-    organ.classList.add('vfx-land');
-    window.setTimeout(function () { organ.classList.remove('vfx-land'); }, 720);
-  }
+  /* 落点不放任何东西。
+     试过三种：固定尺寸的圆环（套不住形状各异的心/脑/眼）、
+     改器官 filter 让它亮一下（会被读成「这个器官变了颜色」，而且会退回去）、
+     散开的光点（深色实心点停在浅色皮肤上就是斑点，越小的器官越明显）。
+     三条路都指向同一件事：器官表面不该承载装饰。
+     器官的颜色和形状是证据本身，粒子的作用是「指」，指到了就淡出。 */
 
   function flyTo(from) {
     if (!motionOn()) return;
@@ -246,9 +242,6 @@
       var bow = Math.min(72, Math.max(26, Math.abs(to.y - from.y) * 0.14));
       var count = 3 + (i % 2);
       for (var k = 0; k < count; k++) seed(from, to, bow, k, count);
-      (function (organ) {
-        window.setTimeout(function () { landOn(organ); }, 800);
-      })(organs[i]);
     }
   }
 
