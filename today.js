@@ -22,11 +22,17 @@
   /* 账本的行为 id → 资料库的行为 id。
    * 两边命名不同（账本只收能折算的八项，资料库为每个行为写了一条证据），
    * 这张表是唯一的桥。app.js 里还有一张反向的表，加新行为时两处都要登记。 */
+  /* 权重项 → 资料库行为。这张表决定「人体上哪些器官会亮」，
+   * 必须和 weights 里那条的 organs 对得上，否则文字说涉及 A·B，人体只亮 A。
+   * sit 指向 tv-sit 而不是 sit：权重那边的证据是「看电视时长与预期寿命」
+   * （BJSM 2011），而 tv-sit 的资料同时含心脏与眼表两条，正好覆盖
+   * weights 里 sit 的 ['heart','eyes']。资料库的 sit 是「连续久坐」，
+   * 只有心血管一条，直接用它会让眼睛永远亮不起来。 */
   const CATALOG_OF = {
     smoke: 'smoke',
     alcohol: 'alcohol',
     shortSleep: 'short-sleep',
-    sit: 'sit',
+    sit: 'tv-sit',
     sugar: 'sugary',
     walk: 'walk',
     sleep: 'enough-sleep',
