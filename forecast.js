@@ -95,14 +95,21 @@
   function syncFromToday(entries) {
     if (!entries || !entries.length) return false;
     const today = L.dayKey();
-    let best = null;
+    /* 按 itemId 累加，不取单笔最大值。
+     * 今天分两次记了 1 支和 2 支，账本上是 3 支；如果这里取「最大的那一笔」，
+     * 推演会从 2 支起算 —— 同一屏上两个数对不上，而且推演还偏小了。 */
+    const sums = {};
     for (const e of entries) {
       if (e.date !== today || !W.hasNumber(e.itemId) || ELIGIBLE.indexOf(e.itemId) < 0) continue;
-      if (!best || Math.abs(e.qty) > Math.abs(best.qty)) best = e;
+      sums[e.itemId] = (sums[e.itemId] || 0) + Number(e.qty || 0);
     }
-    if (!best) return false;
-    picked = best.itemId;
-    qty = Math.max(1, Math.round(best.qty));
+    let bestId = null;
+    for (const id in sums) {
+      if (bestId === null || sums[id] > sums[bestId]) bestId = id;
+    }
+    if (bestId === null) return false;
+    picked = bestId;
+    qty = Math.max(1, Math.round(sums[bestId]));
     return true;
   }
 
@@ -112,14 +119,23 @@
    * 「香烟 每天 3 支 · 1 个月 → 30 天」。两件事同时错了：
    * 一是把一个编出来的例子当成用户的生活，二是让不抽烟的人
    * 第一次打开就以为这产品只给烟民做。宁可这张卡空着等，也不替人举例。 */
-  function renderEmpty(box) {
+  function renderEmpty(box, entries) {
     box.dataset.tone = 'idle';
+    /* 空态其实有两种，原来写成了一种：
+     * 一种是真没记过东西；另一种是记了，但那几项（快走、睡够、戒烟）
+     * 没有按天折算的公开口径，进不了推演。后者说「上面还没记过东西」，
+     * 等于告诉用户刚才那一笔没存上。 */
+    const s = entries && entries.length ? L.summarize(entries, L.dayKey()) : null;
+    const hasNotes = !!(s && (s.byItem.length + s.noted.length) > 0);
     box.innerHTML =
       '<div class="fc-head"><span class="fc-title">如果一直这样</span><span class="tiny-label">IF THIS CONTINUES</span></div>' +
-      '<p class="fc-empty-lead">这张卡还没有数字，因为还不知道你的一天是什么样。</p>' +
-      '<p class="fc-empty-body">它做的事是：把你今天的量铺成一个月、一年来算。上面还没记过东西，所以它没有起点 —— 与其编一个例子，不如等你自己说。</p>' +
+      (hasNotes
+        ? '<p class="fc-empty-lead">今天记的事已经在账上了，但推演只算吸烟、饮酒、久坐这三类。</p>' +
+          '<p class="fc-empty-body">其余行为没有「每天折合多少分钟」的公开口径，铺到一个月上就得编数 —— 那正是这张卡不愿意做的事。想看看推演长什么样，先选一项：</p>'
+        : '<p class="fc-empty-lead">这张卡还没有数字，因为还不知道你的一天是什么样。</p>' +
+          '<p class="fc-empty-body">它做的事是：把你今天的量铺成一个月、一年来算。上面还没记过东西，所以它没有起点 —— 与其编一个例子，不如等你自己说。</p>') +
       '<div class="fc-controls fc-controls-empty">' +
-        '<span class="fc-empty-or">想先看看它是怎么算的，选一项：</span>' +
+        '<span class="fc-empty-or">' + (hasNotes ? '选一项看看：' : '想先看看它是怎么算的，选一项：') + '</span>' +
         '<div class="fc-behaviors" role="group" aria-label="选择要推演的行为">' +
           ELIGIBLE.map(id => {
             const it = W.get(id);
@@ -138,7 +154,7 @@
     if (entries) fromToday = syncFromToday(entries);
 
     if (!picked) {
-      renderEmpty(box);
+      renderEmpty(box, entries);
       if (!bound) {
         box.addEventListener('click', onClick);
         bound = true;
@@ -147,7 +163,7 @@
     }
 
     const item = W.get(picked);
-    if (!item) { renderEmpty(box); return; }
+    if (!item) { renderEmpty(box, entries); return; }
     if (!qty) qty = item.presets[Math.min(1, item.presets.length - 1)];
 
     const total = accumulate(picked, qty, days());

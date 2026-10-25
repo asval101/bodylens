@@ -106,6 +106,16 @@
   color:var(--muted);
   letter-spacing:.02em;
 }
+/* 紧贴数字的一行，常驻不折叠。
+ * 「这个数是怎么来的」藏在 details 里，只有愿意点开的人才看得到它是估算；
+ * 可数字是整屏最大的东西，人先读到它、也先信它。所以这句必须一直露着。 */
+.hero-estimate{
+  margin:2px 0 8px;
+  font-size:11.5px;
+  letter-spacing:.05em;
+  color:var(--faint);
+}
+.hero-estimate[hidden]{display:none}
 /* 类比是这一屏的第二层次：数字给量，它给画面。
    所以它要比正文更亮、更大一点，否则整块只剩一个孤零零的数。 */
 .hero-anchor em{
@@ -752,8 +762,12 @@
   .today .today-hero{order:1}
   .today .today-entry{order:2}
   .today .today-log{order:3}
-  .today .today-body-col{order:4}
-  .today .today-ai{order:5}
+  .today .today-ai{order:4}
+  /* 身体排在解读和行动后面。原来身体在 4，解读在 5 —— 手机上想按下
+     那个「加入今日计划」，得先划过整块人体和器官详情。
+     现在顺序是：记一笔 → 账本 → 一句反馈 + 一个动作 → 身体 → 推演。
+     身体没有丢，只是不再挡在「我现在能做点什么」前面。 */
+  .today .today-body-col{order:5}
   .today .today-forecast{order:6}
   .today .today-trend{order:7}
   .today .storage-warn{order:8}
@@ -961,6 +975,16 @@
   background:rgba(42,118,94,.14);
   border-color:var(--mint);
   filter:none;
+}
+/* 已经收进计划的按钮：换成链接，颜色退一层。
+   它现在的作用是「去看看」，不是再邀请你收一次。 */
+.action-add.is-added,
+.action-add.is-added:hover{
+  display:inline-block;
+  text-decoration:none;
+  border-color:rgba(42,118,94,.26);
+  background:transparent;
+  color:var(--faint);
 }
 
 /* ---------- 推演卡：空态与来源标记 ----------

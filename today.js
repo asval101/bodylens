@@ -147,7 +147,13 @@
       justAdded = itemId;
       save();
       const item = W.get(itemId);
-      notice('记上了：' + item.name + ' ' + qty + ' ' + item.unit);
+      /* 说的是「这一笔记了什么」，不是「现在一共多少」。
+       * 原来只写「记上了：香烟 2 支」，连续记两次会看不出是累加还是覆盖。 */
+      const today = L.dayKey();
+      const total = entries
+        .filter(e => e.date === today && e.itemId === itemId)
+        .reduce((sum, e) => sum + Number(e.qty || 0), 0);
+      notice('新增 ' + qty + ' ' + item.unit + '，今天累计 ' + (Math.round(total * 10) / 10) + ' ' + item.unit);
       render();
     } catch (e) {
       // 数量或行为非法时不动账本，避免脏数据进入记录
@@ -170,8 +176,13 @@
     entries.splice(index, 1);
     justAdded = null;
     save();
-    notice('撤销了一笔：' + item.name + ' ' + removed.qty + ' ' + item.unit +
-      (entries.some(e => e.date === today && e.itemId === itemId) ? '，这项今天还记着别的' : ''));
+    const today2 = L.dayKey();
+    const rest = entries
+      .filter(e => e.date === today2 && e.itemId === removed.itemId)
+      .reduce((sum, e) => sum + Number(e.qty || 0), 0);
+    notice(rest > 0
+      ? '撤销了最后一笔 ' + removed.qty + ' ' + item.unit + '，今天还剩 ' + (Math.round(rest * 10) / 10) + ' ' + item.unit
+      : '撤销了最后一笔，' + item.name + ' 今天没有记录了');
     render();
   }
 
@@ -187,8 +198,13 @@
     if (!numEl) return;
 
     numEl.classList.remove('is-empty', 'is-credit');
+    /* 「这个数是怎么来的」藏在折叠里，要先点开才看得到它是估算。
+       可数字是屏幕上最大的那个东西，人先读到它、先信它。
+       所以这一行常驻，不用展开。 */
+    const estEl = $('#today-estimate');
 
     if (s.counted === 0) {
+      if (estEl) estEl.hidden = true;
       /* 只记了「快走」「睡够」这类没有折算口径的事时，原来一律显示「还没开始」——
          人明明做了一件好事，界面回他一句「还没开始」。这里改成承认它记下了。 */
       const gains = s.noted.filter(r => { const it = W.get(r.itemId); return it && it.tone === 'benefit'; });
@@ -211,6 +227,7 @@
     }
 
     const abs = Math.abs(s.totalMinutes);
+    if (estEl) estEl.hidden = false;
     /* 大数字只取整：21.8 这种权重累加后会出现小数，而小数在这里传递的是假精度 */
     const target = Math.round(abs);
     if (shownTotal === null || shownTotal === target) {
@@ -269,8 +286,11 @@
 
     const item = W.get(pickedItem);
     const hintText = item.hint || (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记录，不折算分钟');
+    /* 加号是给「点下去是加一笔」这件事看的。
+     * 原来写「2 支」，点了两次变成 3 支时人会以为按钮是「设成 2 支」，
+     * 会觉得记错了。写成 +2 支，动作和结果就一致了。 */
     qtyBox.innerHTML = item.presets.map((n, i) =>
-      '<button type="button" class="qty-btn" style="--i:' + i + '" data-add="' + pickedItem + '" data-qty="' + n + '">' + n + ' ' + esc(item.unit) + '</button>'
+      '<button type="button" class="qty-btn" style="--i:' + i + '" data-add="' + pickedItem + '" data-qty="' + n + '" title="再记 ' + n + ' ' + esc(item.unit) + '">+' + n + ' ' + esc(item.unit) + '</button>'
     ).join('') + '<span class="qty-hint">' + esc(hintText) + '</span>';
   }
 
@@ -353,7 +373,16 @@
         '</div>';
     }).join('');
 
-    box.innerHTML = '<div class="trend-head"><span>近 7 天</span><span>' + (peak > 1 ? '最高 ' + L.formatMinutes(peak) : '还没有数据') + '</span></div>' +
+    /* 「还没有数据」和「记了，但没有可折算的分钟」是两件事。
+       只记快走的人看到「还没有数据」，会以为刚才那笔没记上。
+       所以先看这几天到底有没有条目，有就承认有。 */
+    const dates = rows.map(r => r.date);
+    const notedCount = entries.filter(e => dates.indexOf(e.date) !== -1).length;
+    const trendNote = peak > 1
+      ? '最高 ' + L.formatMinutes(peak)
+      : (notedCount ? '记了 ' + notedCount + ' 项，暂无分钟数' : '还没有数据');
+
+    box.innerHTML = '<div class="trend-head"><span>近 7 天</span><span>' + trendNote + '</span></div>' +
       '<div class="trend-bars">' + bars + '</div>' +
       '<div class="trend-days">' + days + '</div>';
   }
@@ -363,6 +392,24 @@
    * 原来「加入今日计划」只藏在右边器官详情的第三个标签页里，
    * 于是解读说得再好，话和行动之间还隔着一次导航。
    * 现在把今天的记录直接翻成一条能立刻收下的小事，按钮就在这句话后面。 */
+  /* 这一项今天是不是已经在计划里。
+   * 计划存在 app.js 的 'bodylens-user-v1' 里，这里只读不写 ——
+   * 写入永远走 app.js 那一份，两个模块各存一份就等于有两个真相。 */
+  function inPlanToday(catalogId) {
+    try {
+      const raw = localStorage.getItem('bodylens-user-v1');
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      /* app.js 存的是 {schemaVersion, dataVersion, data:state}，
+       * tasks 在 data 里面。直接读 parsed.tasks 会永远是空数组。 */
+      const tasks = (parsed.data && parsed.data.tasks) || parsed.tasks || [];
+      const today = L.dayKey();
+      return tasks.some(t => t.date === today && t.behavior === catalogId);
+    } catch (e) {
+      return false;
+    }
+  }
+
   function renderActions() {
     const box = $('#today-actions');
     if (!box || !I || !I.ACTIONS) return;
@@ -372,10 +419,17 @@
     for (const row of s.byItem.concat(s.noted)) {
       if (seen.indexOf(row.itemId) !== -1) continue;
       seen.push(row.itemId);
-      const text = I.ACTIONS[row.itemId];
       const catalogId = CATALOG_OF[row.itemId];
-      if (!text || !catalogId) continue;
-      list.push({ name: row.name, text: text, catalogId: catalogId });
+      if (!catalogId) continue;
+      /* 文案必须和「加入计划」真正存进去的那句是同一句。
+       * 原来这里读的是 interpret 的 ACTIONS（「想少一点，从今天少一支开始」），
+       * 而 app.js 存的是资料库条目的 action（「为自己写下一个戒烟理由，
+       * 安排一次戒烟咨询」）—— 用户确认的是 A，落到计划里是 B。
+       * 现在就取 action 本身，看到什么就存什么。 */
+      const beh = CAT && CAT.behaviors ? CAT.behaviors.find(b => b.id === catalogId) : null;
+      const text = (beh && beh.action) || I.ACTIONS[row.itemId];
+      if (!text) continue;
+      list.push({ name: row.name, text: text, catalogId: catalogId, added: inPlanToday(catalogId) });
     }
     actionsOn = list.length > 0;
     if (!actionsOn) {
@@ -388,7 +442,12 @@
       '<div class="actions-head"><span>' + head + '</span><span class="tiny-label">ONE SMALL STEP</span></div>' +
       '<ul class="action-list">' + list.slice(0, 3).map(a =>
         '<li><p class="action-text"><span class="action-why">' + esc(a.name) + '</span>' + esc(a.text) + '</p>' +
-        '<button type="button" class="action-add" data-add-plan="' + a.catalogId + '">加入今日计划 ＋</button></li>'
+        (a.added
+          /* 已经收下的按钮不该还在邀请你收一次。改成去计划里看，
+             而不是留一个点下去只会弹「已经在计划中了」的按钮。 */
+          ? '<a class="action-add is-added" href="#plan">已在今日计划 · 去查看 ›</a>'
+          : '<button type="button" class="action-add" data-add-plan="' + a.catalogId + '">加入今日计划 ＋</button>') +
+        '</li>'
       ).join('') + '</ul>';
     box.hidden = false;
   }
@@ -543,6 +602,13 @@
       const delBtn = event.target.closest('[data-remove]');
       if (delBtn) {
         undoLast(delBtn.dataset.remove);
+        return;
+      }
+      /* 加入计划这件事由 app.js 负责存，这里只等它存完之后把按钮改成
+         「已在今日计划」。存和显示分开，但看到的状态必须是真的。 */
+      const planBtn = event.target.closest('[data-add-plan]');
+      if (planBtn) {
+        setTimeout(renderActions, 220);
       }
     });
 
