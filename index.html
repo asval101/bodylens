@@ -43,6 +43,18 @@
                 <div class="hero-figure"><span class="hero-number is-empty" id="today-number">—</span><span class="hero-unit" id="today-unit"></span></div>
                 <p class="hero-anchor" id="today-anchor" aria-live="polite"></p>
                 <p class="hero-compare" id="today-compare"></p>
+                <details class="hero-help" id="today-help">
+                  <summary>这个数是怎么来的</summary>
+                  <div class="hero-help-body">
+                    <p class="hero-help-lead"><b>它不是你的体检结果。</b>这些分钟是把你今天记下的行为，按公开研究里「每单位折合多少分钟」换算出来的估算值。</p>
+                    <ul>
+                      <li>研究给的是人群平均值。同样抽三支，人和人之间差别可能很大。</li>
+                      <li>没有可靠折算口径的行为，只记下它发生过，不给分钟。</li>
+                      <li>它不回答「你会少活多久」，也不预测任何病情。</li>
+                    </ul>
+                    <p class="hero-help-foot">想逐条核对出处，点右边人体上的器官，切到「证据与来源」。</p>
+                  </div>
+                </details>
                 <p class="hero-organs" id="today-organs" hidden></p>
               </div>
             </section>
@@ -61,6 +73,7 @@
               <p class="ai-body" id="ai-body" aria-live="polite"></p>
               <p class="ai-hint" id="ai-hint" hidden></p>
               <p class="ai-note" id="ai-note" hidden></p>
+              <div class="ai-actions" id="today-actions" hidden></div>
             </section>
             <section class="today-forecast" id="today-forecast" aria-label="如果一直这样"></section>
             <section class="today-trend" id="today-trend" aria-label="近七天趋势"></section>

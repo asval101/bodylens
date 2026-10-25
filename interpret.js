@@ -25,7 +25,9 @@
     sugar: '把含糖饮料换成水，是这类习惯里最容易改的一步。',
     walk: '今天走的这些步数已经算数了，明天保持住比加量更重要。',
     sleep: '睡眠够了这件事值得记下来，它是账本里少见的正数。',
-    noSmoke: '没抽烟的每一天都在往回拿时间，继续记着。'
+    /* 这里的 key 必须和 weights 的 itemId 对齐。原来写的是 noSmoke，
+       而权重表里那一项叫 quit，于是这条文案从来没被取到过 —— 死数据。 */
+    quit: '没抽烟的每一天都在往回拿时间，继续记着。'
   };
 
   function topItem(summary) {
@@ -90,7 +92,13 @@
     }
 
     if (summary.noted.length) {
-      parts.push(names(summary.noted) + ' 没有公开的折算口径，只记下发生。');
+      /* 只对「不利方向但没口径」的条目说这句。
+         快走、睡够这类好事由 done() 单独说，否则同一件事会被念两遍。 */
+      const harmNoted = summary.noted.filter(r => {
+        const item = W.get(r.itemId);
+        return !item || item.tone !== 'benefit';
+      });
+      if (harmNoted.length) parts.push(names(harmNoted) + ' 没有公开的折算口径，只记下发生。');
     }
 
     return parts.join('');
@@ -103,6 +111,30 @@
       if (ACTIONS[row.itemId]) return ACTIONS[row.itemId];
     }
     return '';
+  }
+
+  /* 做过的好事也要被说出来。
+     分寸在这里：只说「这件事记下了」，绝不算「抵掉了多少分钟」——
+     收益和损耗不互相抵消，这条口径不能为了鼓励而松。 */
+  function done(summary) {
+    const gains = [];
+    for (const row of summary.byItem.concat(summary.noted)) {
+      const item = W.get(row.itemId);
+      if (!item || item.tone !== 'benefit') continue;
+      gains.push(row.name + ' ' + row.qty + ' ' + row.unit);
+    }
+    if (!gains.length) return '';
+    return '今天也记下了' + gains.join('、') + '，这件事不折算成分钟，但它确实发生过。';
+  }
+
+  function splitByTone(summary) {
+    const gains = [];
+    const harms = [];
+    for (const row of summary.noted) {
+      const item = W.get(row.itemId);
+      (item && item.tone === 'benefit' ? gains : harms).push(row);
+    }
+    return { gains, harms };
   }
 
   function stance(summary) {
@@ -130,6 +162,18 @@
     }
 
     if (summary.counted === 0) {
+      const split = splitByTone(summary);
+      /* 只记了「快走」「睡够」「没抽烟」这类事时，原来的口径是「都不折算成分钟」——
+         一句正确但冷冰冰的话。做了好事的那天，开头应该是这件事本身。 */
+      if (split.gains.length && !split.harms.length) {
+        return {
+          headline: '今天记下了' + split.gains.map(r => r.name + ' ' + r.qty + ' ' + r.unit).join('、') + '。',
+          detail: '这类事没有公开的折算口径，所以上面不给分钟数。但「没有数字」不等于「没有发生」—— 这一笔已经记在账本上了。',
+          hint: ACTIONS[split.gains[0].itemId] || '',
+          stance: 'quiet',
+          source: 'local'
+        };
+      }
       return {
         headline: '今天记了 ' + summary.noted.length + ' 项，但都不折算成分钟。',
         detail: names(summary.noted) + ' 这一类，公开研究还给不出「一次折合多少分钟」的口径。所以我只记下它们发生过，不编一个数字给你。',
@@ -166,7 +210,7 @@
       ? '今天往回拿了 ' + L.formatMinutes(total) + '。'
       : '今天被拿走 ' + L.formatMinutes(Math.abs(total)) + '。';
 
-    const detail = [opening(summary, cmp), attribution(summary), caveats(summary)]
+    const detail = [opening(summary, cmp), attribution(summary), caveats(summary), done(summary)]
       .filter(Boolean)
       .join('');
 

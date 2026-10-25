@@ -736,13 +736,34 @@
 @media(max-width:1140px){
   .today{
     grid-template-columns:minmax(0,1fr);
-    gap:34px;
+    row-gap:30px;
     max-width:720px;
     padding-top:28px;
   }
-  /* 身体排到最后：手机上首屏应该先是数字，通读一遍账本再往下看身体。 */
-  .today-body-col{order:2}
-  .today-main{order:1}
+  /* 手机上的顺序是：数字 → 记录 → 记了什么 → 身体反馈 → 解读与行动 → 推演。
+   * 原来身体排在整根左栏之后，390 宽下它的顶部在 y=1436，要滑 1.7 屏才看得见 ——
+   * 也就是说「我这一笔记到哪儿了」被排在了「这个月会怎样」后面，顺序是反的。
+   * .today-main 用 display:contents 打开，里面的区块就能直接参与 .today 的排序，
+   * 不需要为了排版去改 DOM。 */
+  /* 注意：display:contents 只改变布局树，不改变 DOM 树 ——
+     所以排序只能用后代选择器，写 `.today > .today-hero` 一条都匹配不到。
+     （第一版就是这么写错的，order 全是 0，身体照样排在最后。） */
+  .today-main{display:contents}
+  .today .today-hero{order:1}
+  .today .today-entry{order:2}
+  .today .today-log{order:3}
+  .today .today-body-col{order:4}
+  .today .today-ai{order:5}
+  .today .today-forecast{order:6}
+  .today .today-trend{order:7}
+  .today .storage-warn{order:8}
+  .today .today-footer{order:9}
+  /* display:contents 之后 min-width:0 也跟着丢了，格子容易被内容顶宽 */
+  .today .today-hero,
+  .today .today-entry,
+  .today .today-log,
+  .today .today-ai,
+  .today .today-forecast{min-width:0}
   .today-body-col .anatomy-scene{height:clamp(360px,52vh,480px)}
   .today-body-col .detail-panel{padding:16px 17px 18px}
 }
@@ -759,6 +780,228 @@
   .fc-behaviors button,.fc-durations button{padding:5px 9px;font-size:11px}
   .fc-figure{font-size:38px}
   .today-body-col .anatomy-scene{height:380px}
+}
+
+/* ---------- 这个数是怎么来的 ----------
+ * 「拿走的分钟」好懂，但太容易被读成个人预测：以为它在说自己会少活多久。
+ * 所以解释入口就放在数字下面一行，点开是原文，不是弹窗 ——
+ * 需要解释的人正盯着这个数，不该让他跑去设置页找。
+ */
+.hero-help{margin-top:9px}
+.hero-help>summary{
+  list-style:none;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  width:fit-content;
+  padding:3px 0;
+  font-size:11.5px;
+  color:var(--faint);
+  letter-spacing:.04em;
+}
+.hero-help>summary::-webkit-details-marker{display:none}
+/* 问号做成一个小圆圈：它是「可以点开的东西」，不是一句正文。 */
+.hero-help>summary::before{
+  content:"?";
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:14px;
+  height:14px;
+  border:1px solid currentColor;
+  border-radius:50%;
+  font-size:9px;
+  line-height:1;
+}
+.hero-help>summary:hover{color:var(--muted)}
+.hero-help[open]>summary{color:var(--mint)}
+.hero-help-body{
+  margin-top:10px;
+  max-width:40em;
+  padding:13px 15px;
+  border-left:2px solid rgba(42,118,94,.42);
+  border-radius:0 8px 8px 0;
+  background:rgba(42,118,94,.045);
+}
+.hero-help-lead{
+  font-size:12.5px;
+  line-height:1.85;
+  color:var(--text);
+}
+.hero-help-lead b{font-weight:600}
+.hero-help-body ul{
+  margin:9px 0 0;
+  padding-left:16px;
+  font-size:11.5px;
+  line-height:1.85;
+  color:var(--muted);
+}
+.hero-help-body li+li{margin-top:3px}
+.hero-help-foot{
+  margin-top:9px;
+  font-size:11px;
+  line-height:1.7;
+  color:var(--faint);
+}
+
+/* ---------- 账本里的两条反馈 ----------
+ * 一是「刚记上/刚撤销」，二是「好事也画在账上」。
+ * 前者用一次淡出，后者用符号和颜色 —— 都不是装饰，是在回答「我刚才那一下生效了吗」。
+ */
+.log-notice{
+  padding:7px 0 9px;
+  border-bottom:1px solid rgba(42,118,94,.16);
+  font-size:11.5px;
+  line-height:1.7;
+  color:var(--mint);
+  letter-spacing:.02em;
+  animation:notice-in 320ms var(--ease-out-expo) both;
+}
+@keyframes notice-in{
+  from{opacity:0;transform:translate3d(0,-4px,0)}
+  to{opacity:1;transform:none}
+}
+/* 正向条目的符号是 ＋、颜色是松绿。原来画成「− 15 分钟」的陶土橙，
+   做了好事在账本上看着像又亏了一笔。 */
+.log-value.is-gain{color:var(--mint)}
+/* 刚记的那一行亮一下，说明这一笔落到这儿了。
+   用背景层 + 透明度，不动 background-color，避免逐帧重绘。 */
+.log-line{position:relative}
+.log-line.is-new>*{position:relative;z-index:1}
+.log-line.is-new::after{
+  content:"";
+  position:absolute;
+  inset:-1px -3px;
+  z-index:0;
+  border-radius:6px;
+  background:rgba(42,118,94,.14);
+  pointer-events:none;
+  animation:line-flash 1500ms var(--ease-out-quart) both;
+}
+@keyframes line-flash{
+  0%{opacity:1}
+  55%{opacity:.5}
+  100%{opacity:0}
+}
+/* 还没选行为时的引导语。它替掉了原来那排「2 支 / 5 支」——
+   先铺数量按钮，人会先点数字，于是记下的是我们默认挑的那一项。 */
+.qty-hint.is-lead{
+  margin-left:0;
+  font-size:12px;
+  color:var(--muted);
+  letter-spacing:.02em;
+}
+
+/* ---------- 解读下面的行动 ----------
+ * 看完一句建议，下一步不该是「去右边找第三个标签页」。
+ * 这一块把今天的记录直接翻成能收下的小事，按钮就在那句话后面。
+ */
+.ai-actions{
+  margin-top:18px;
+  padding-top:15px;
+  border-top:1px solid rgba(213,210,203,.85);
+}
+.actions-head{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:11px;
+  font-size:11.5px;
+  color:var(--muted);
+  letter-spacing:.07em;
+}
+.action-list{
+  list-style:none;
+  margin:0;
+  padding:0;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+}
+.action-list li{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding:11px 13px;
+  border:1px solid rgba(213,210,203,.95);
+  border-radius:10px;
+  background:linear-gradient(168deg,rgba(255,255,255,.92),rgba(250,249,245,.66));
+}
+.action-text{
+  flex:1;
+  min-width:0;
+  font-size:12.5px;
+  line-height:1.75;
+  color:var(--text);
+}
+/* 行为名做眉标而不是前缀：换成「久坐：每坐满一小时…」会和后半句抢重音。 */
+.action-why{
+  display:block;
+  margin-bottom:3px;
+  font-size:10px;
+  letter-spacing:.13em;
+  color:var(--faint);
+}
+.action-add{
+  flex:0 0 auto;
+  padding:7px 12px;
+  border:1px solid rgba(42,118,94,.42);
+  border-radius:999px;
+  background:rgba(42,118,94,.07);
+  color:var(--mint);
+  font-size:11.5px;
+  line-height:1.4;
+  white-space:nowrap;
+  transition:background var(--dur-fast) ease,border-color var(--dur-fast) ease;
+}
+.action-add:hover{
+  background:rgba(42,118,94,.14);
+  border-color:var(--mint);
+  filter:none;
+}
+
+/* ---------- 推演卡：空态与来源标记 ----------
+ * 空账本时这张卡不给数字，也不给例子。原来写死「香烟 每天 3 支」，
+ * 不抽烟的人第一次打开就以为这产品是给烟民做的。
+ */
+.fc-origin{
+  padding:2px 9px;
+  border:1px solid rgba(213,208,196,.95);
+  border-radius:999px;
+  font-size:10px;
+  line-height:1.5;
+  letter-spacing:.08em;
+  color:var(--faint);
+  white-space:nowrap;
+}
+.fc-origin.is-today{
+  color:var(--mint);
+  border-color:rgba(42,118,94,.38);
+}
+.fc-empty-lead{
+  font-size:14px;
+  line-height:1.8;
+  letter-spacing:.01em;
+  color:var(--text);
+}
+.fc-empty-body{
+  margin-top:8px;
+  max-width:40em;
+  font-size:12.5px;
+  line-height:1.85;
+  color:var(--muted);
+}
+.fc-controls-empty{
+  margin:16px 0 0;
+  align-items:center;
+}
+.fc-empty-or{
+  font-size:11.5px;
+  letter-spacing:.03em;
+  color:var(--faint);
 }
 
 @media(prefers-reduced-motion:reduce){

@@ -39,8 +39,8 @@
      短两个数量级，放进来等于把「一辈子的代价」说成「一年的代价」。所以仍然排除。 */
   const ELIGIBLE = ['smoke', 'alcohol', 'sit'];
 
-  let picked = 'smoke';
-  let qty = 3;
+  let picked = null;
+  let qty = null;
   let duration = 'month';
   let fromToday = false;
   let bound = false;
@@ -106,6 +106,29 @@
     return true;
   }
 
+  /* 引导态：没有记录、用户也还没选过任何行为。
+   *
+   * 原来这里写死 picked='smoke' qty=3，空账本也会渲染出
+   * 「香烟 每天 3 支 · 1 个月 → 30 天」。两件事同时错了：
+   * 一是把一个编出来的例子当成用户的生活，二是让不抽烟的人
+   * 第一次打开就以为这产品只给烟民做。宁可这张卡空着等，也不替人举例。 */
+  function renderEmpty(box) {
+    box.dataset.tone = 'idle';
+    box.innerHTML =
+      '<div class="fc-head"><span class="fc-title">如果一直这样</span><span class="tiny-label">IF THIS CONTINUES</span></div>' +
+      '<p class="fc-empty-lead">这张卡还没有数字，因为还不知道你的一天是什么样。</p>' +
+      '<p class="fc-empty-body">它做的事是：把你今天的量铺成一个月、一年来算。上面还没记过东西，所以它没有起点 —— 与其编一个例子，不如等你自己说。</p>' +
+      '<div class="fc-controls fc-controls-empty">' +
+        '<span class="fc-empty-or">想先看看它是怎么算的，选一项：</span>' +
+        '<div class="fc-behaviors" role="group" aria-label="选择要推演的行为">' +
+          ELIGIBLE.map(id => {
+            const it = W.get(id);
+            return '<button type="button" data-fc-pick="' + id + '" aria-pressed="false">' + esc(it.name) + '</button>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+
   function render(entries) {
     const box = $('#today-forecast');
     if (!box) return;
@@ -114,8 +137,18 @@
        用户在这里点加减时走的是 render()，那次不该把选择打回去。 */
     if (entries) fromToday = syncFromToday(entries);
 
+    if (!picked) {
+      renderEmpty(box);
+      if (!bound) {
+        box.addEventListener('click', onClick);
+        bound = true;
+      }
+      return;
+    }
+
     const item = W.get(picked);
-    if (!item) return;
+    if (!item) { renderEmpty(box); return; }
+    if (!qty) qty = item.presets[Math.min(1, item.presets.length - 1)];
 
     const total = accumulate(picked, qty, days());
     const f = figure(total);
@@ -128,7 +161,9 @@
     box.dataset.tone = item.tone;
 
     box.innerHTML =
-      '<div class="fc-head"><span class="fc-title">如果一直这样</span><span class="tiny-label">IF THIS CONTINUES</span></div>' +
+      '<div class="fc-head"><span class="fc-title">如果一直这样</span>' +
+        '<span class="fc-origin' + (fromToday ? ' is-today' : '') + '">' + (fromToday ? '按今天的记录' : '示例情境') + '</span>' +
+      '</div>' +
       '<div class="fc-controls">' +
         '<div class="fc-behaviors" role="group" aria-label="选择要推演的行为">' +
           ELIGIBLE.map(id => {
@@ -152,7 +187,7 @@
         '<p class="fc-line">每天 ' + qty + ' ' + esc(item.unit) + '，' + durLabel + '累计。' +
           (organs ? '主要落在 <b>' + esc(organs) + '</b>。' : '') + '</p>' +
       '</div>' +
-      '<p class="fc-note">' + (fromToday ? '起点是今天的记录 · ' : '示例情境 · ') +
+      '<p class="fc-note">' +
         esc(source.org) + (source.year ? ' ' + esc(source.year) : '') + ' 的折算口径 · 按每天相同量线性累计。' +
         '这是一个群体平均值，不是对你个人能活多久的预测；' +
         (item.weeklyCap ? '额度以内的部分不计入。' : '') +
@@ -172,7 +207,11 @@
     if (btn.dataset.fcPick) {
       picked = btn.dataset.fcPick;
       const presets = (W.get(picked) || {}).presets || [1];
-      qty = Math.min(qty, presets[presets.length - 1]);
+      /* 换行为就换一套数量档位。只有 qty 落在档位外才重置，
+         免得用户刚调好的数字被一次点击抹掉。 */
+      if (!qty || qty < presets[0] || qty > presets[presets.length - 1]) {
+        qty = presets[Math.min(1, presets.length - 1)];
+      }
       changed = true;
     }
     if (btn.dataset.fcStep) {

@@ -41,7 +41,12 @@
 
   let entries = [];
   let storeError = '';
-  let pickedItem = 'smoke';
+  /* 初始不预选任何行为。原来写死 'smoke'，第一次打开的人看到的第一个高亮就是香烟，
+     推演卡更直接写着「香烟 每天 3 支」——像是只给烟民做的。
+     选中的事应该由用户自己说，不该由我们替他决定。 */
+  let pickedItem = null;
+  /* 刚记下的那一笔，用来在账本里高亮一下。不是状态，只是「让它闪一下」的标记。 */
+  let justAdded = null;
   let shownTotal = null;
 
   function prefersReduce() {
@@ -126,10 +131,23 @@
     }
   }
 
+  /* 账本上方的一句话反馈。记账和撤销都要出声，
+     否则「点了但没反应」和「点了记错了」在界面上长得一样。 */
+  let noticeText = '';
+  let noticeTimer = null;
+  function notice(text) {
+    noticeText = text;
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => { noticeText = ''; renderLog(); }, 3600);
+  }
+
   function add(itemId, qty) {
     try {
       entries.push(L.makeEntry(itemId, qty));
+      justAdded = itemId;
       save();
+      const item = W.get(itemId);
+      notice('记上了：' + item.name + ' ' + qty + ' ' + item.unit);
       render();
     } catch (e) {
       // 数量或行为非法时不动账本，避免脏数据进入记录
@@ -138,10 +156,22 @@
     }
   }
 
-  function removeItem(itemId) {
+  /* 撤销的是**最后一笔**，不是这一项今天的全部。
+     记错了想退一步，结果整项被清掉，那等于用小错换大错。 */
+  function undoLast(itemId) {
     const today = L.dayKey();
-    entries = entries.filter(e => !(e.date === today && e.itemId === itemId));
+    let index = -1;
+    for (let i = entries.length - 1; i >= 0; i--) {
+      if (entries[i].date === today && entries[i].itemId === itemId) { index = i; break; }
+    }
+    if (index < 0) return;
+    const removed = entries[index];
+    const item = W.get(removed.itemId);
+    entries.splice(index, 1);
+    justAdded = null;
     save();
+    notice('撤销了一笔：' + item.name + ' ' + removed.qty + ' ' + item.unit +
+      (entries.some(e => e.date === today && e.itemId === itemId) ? '，这项今天还记着别的' : ''));
     render();
   }
 
@@ -159,13 +189,22 @@
     numEl.classList.remove('is-empty', 'is-credit');
 
     if (s.counted === 0) {
-      numEl.textContent = '还没开始';
+      /* 只记了「快走」「睡够」这类没有折算口径的事时，原来一律显示「还没开始」——
+         人明明做了一件好事，界面回他一句「还没开始」。这里改成承认它记下了。 */
+      const gains = s.noted.filter(r => { const it = W.get(r.itemId); return it && it.tone === 'benefit'; });
+      const harms = s.noted.filter(r => { const it = W.get(r.itemId); return !it || it.tone !== 'benefit'; });
+      numEl.textContent = s.noted.length ? '已记下 ' + s.noted.length + ' 项' : '还没开始';
       numEl.classList.add('is-empty');
       unitEl.textContent = '';
       shownTotal = null;
-      anchorEl.textContent = s.noted.length
-        ? '今天记了 ' + s.noted.length + ' 项，但这些行为没有可靠的折算口径，所以这里不给分钟数。'
-        : '点一下下面的行为，第一笔就记上了。';
+      if (gains.length) {
+        anchorEl.textContent = gains.map(r => r.name + ' ' + r.qty + ' ' + r.unit).join('、') +
+          '，记下了。这类事没有可折算的分钟数，所以上面的数字不动 —— 但它确实发生了。';
+      } else if (harms.length) {
+        anchorEl.textContent = '今天记了 ' + harms.length + ' 项，但这些行为没有可靠的折算口径，所以这里不给分钟数。';
+      } else {
+        anchorEl.textContent = '先选一件今天发生的事，再点一下数量，第一笔就记上了。';
+      }
       cmpEl.textContent = '';
       renderOrganLine();
       return;
@@ -221,6 +260,13 @@
         ' data-pick="' + id + '" aria-pressed="' + picked + '">' + esc(item.name) + '</button>';
     }).join('');
 
+    /* 没选行为时不铺数量按钮。先铺上的话，人会先点数字——
+       那一步点下去记的是我们默认挑的那一项，不是他想记的那一项。 */
+    if (!pickedItem) {
+      qtyBox.innerHTML = '<span class="qty-hint is-lead">先选上面的一件，再点数量</span>';
+      return;
+    }
+
     const item = W.get(pickedItem);
     const hintText = item.hint || (W.hasNumber(pickedItem) ? '会折算成分钟' : '只记录，不折算分钟');
     qtyBox.innerHTML = item.presets.map((n, i) =>
@@ -237,36 +283,48 @@
 
     for (const row of s.byItem) {
       const item = W.get(row.itemId);
+      /* 正向条目（快走、睡够、没抽烟）原来是跟损耗一样画成「− 15 分钟」的陶土橙，
+         做了好事在账本上长得像又亏了一笔。方向不同，符号和颜色就得不同。 */
+      const gain = !!(item && item.tone === 'benefit');
+      const sign = gain ? '＋' : '−';
       let valueHtml;
       if (row.withinCap) {
         valueHtml = '<span class="log-value qualitative">本周额度内</span>';
       } else if (item && item.range) {
         const lo = Math.round(Math.abs(item.range[0]) * row.qty);
         const hi = Math.round(Math.abs(item.range[1]) * row.qty);
-        valueHtml = '<span class="log-value has-range" title="研究给出的不确定区间">−' + Math.round(Math.abs(row.minutes)) +
+        valueHtml = '<span class="log-value has-range' + (gain ? ' is-gain' : '') + '" title="研究给出的不确定区间">' + sign + Math.round(Math.abs(row.minutes)) +
           ' <em>分钟</em><small>区间 ' + lo + '–' + hi + '</small></span>';
       } else {
-        valueHtml = '<span class="log-value">−' + Math.round(Math.abs(row.minutes)) + ' 分钟</span>';
+        valueHtml = '<span class="log-value' + (gain ? ' is-gain' : '') + '">' + sign + Math.round(Math.abs(row.minutes)) + ' 分钟</span>';
       }
-      rows.push('<div class="log-line">' +
+      rows.push('<div class="log-line' + (justAdded === row.itemId ? ' is-new' : '') + '">' +
         '<span class="who"><b>' + esc(row.name) + '</b><span>' + row.qty + ' ' + esc(row.unit) + '</span></span>' +
         valueHtml +
-        '<button type="button" class="log-del" data-remove="' + row.itemId + '" aria-label="删除今天的' + esc(row.name) + '记录">×</button>' +
+        '<button type="button" class="log-del" data-remove="' + row.itemId + '" title="撤销最后一笔 ' + esc(row.name) + '" aria-label="撤销最后一笔' + esc(row.name) + '记录">×</button>' +
         '</div>');
     }
     for (const row of s.noted) {
-      rows.push('<div class="log-line">' +
+      const it = W.get(row.itemId);
+      const gain = !!(it && it.tone === 'benefit');
+      rows.push('<div class="log-line' + (justAdded === row.itemId ? ' is-new' : '') + '">' +
         '<span class="who"><b>' + esc(row.name) + '</b><span>' + row.qty + ' ' + esc(row.unit) + '</span></span>' +
-        '<span class="log-value qualitative">仅记录</span>' +
-        '<button type="button" class="log-del" data-remove="' + row.itemId + '" aria-label="删除今天的' + esc(row.name) + '记录">×</button>' +
+        /* 「仅记录」写在快走上像在说「这笔记了也白记」。好事要被认下来，
+           但也不给分钟数——收益和损耗不互相抵消，这条不能松。 */
+        (gain
+          ? '<span class="log-value is-gain">已记下</span>'
+          : '<span class="log-value qualitative">仅记录</span>') +
+        '<button type="button" class="log-del" data-remove="' + row.itemId + '" title="撤销最后一笔 ' + esc(row.name) + '" aria-label="撤销最后一笔' + esc(row.name) + '记录">×</button>' +
         '</div>');
     }
 
+    const noticeHtml = noticeText ? '<div class="log-notice" role="status">' + esc(noticeText) + '</div>' : '';
+
     if (!rows.length) {
-      box.innerHTML = '<div class="log-empty">今天还没有记录。<br><b>先从最想改的那一件开始记。</b></div>';
+      box.innerHTML = noticeHtml + '<div class="log-empty">今天还没有记录。<br><b>先从最想改的那一件开始记。</b></div>';
       return;
     }
-    box.innerHTML = '<div class="log-head"><span>今天记了 ' + (s.byItem.length + s.noted.length) + ' 项</span><span>计入分钟</span></div>' + rows.join('');
+    box.innerHTML = noticeHtml + '<div class="log-head"><span>今天记了 ' + (s.byItem.length + s.noted.length) + ' 项</span><span>折合</span></div>' + rows.join('');
   }
 
   /* ---------- 次级：近 7 天 ---------- */
@@ -300,12 +358,49 @@
       '<div class="trend-days">' + days + '</div>';
   }
 
+  /* ---------- 解读下面的行动 ----------
+   * 「看完一句建议，接下来能做什么」不该再点两下才找到。
+   * 原来「加入今日计划」只藏在右边器官详情的第三个标签页里，
+   * 于是解读说得再好，话和行动之间还隔着一次导航。
+   * 现在把今天的记录直接翻成一条能立刻收下的小事，按钮就在这句话后面。 */
+  function renderActions() {
+    const box = $('#today-actions');
+    if (!box || !I || !I.ACTIONS) return;
+    const s = L.summarize(entries, L.dayKey());
+    const seen = [];
+    const list = [];
+    for (const row of s.byItem.concat(s.noted)) {
+      if (seen.indexOf(row.itemId) !== -1) continue;
+      seen.push(row.itemId);
+      const text = I.ACTIONS[row.itemId];
+      const catalogId = CATALOG_OF[row.itemId];
+      if (!text || !catalogId) continue;
+      list.push({ name: row.name, text: text, catalogId: catalogId });
+    }
+    actionsOn = list.length > 0;
+    if (!actionsOn) {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    const head = list.length > 1 ? '今天可以试的几件小事' : '今天可以试的一件小事';
+    box.innerHTML =
+      '<div class="actions-head"><span>' + head + '</span><span class="tiny-label">ONE SMALL STEP</span></div>' +
+      '<ul class="action-list">' + list.slice(0, 3).map(a =>
+        '<li><p class="action-text"><span class="action-why">' + esc(a.name) + '</span>' + esc(a.text) + '</p>' +
+        '<button type="button" class="action-add" data-add-plan="' + a.catalogId + '">加入今日计划 ＋</button></li>'
+      ).join('') + '</ul>';
+    box.hidden = false;
+  }
+
   /* ---------- 解读 ----------
    * 分工是刻意的：数字永远由 ledger 算，模型只负责把数字说成人话。
    * 所以 lead 那行永远是本地算出来的结论，模型只替换下面的正文。
    * 在线失败、超时、没有密钥，正文都会退回本地规则文本，界面不报错。 */
   let aiToken = 0;
   let aiTimer = null;
+  /* 行动按钮是否已经显示。paintAI 用它决定还要不要再说一句 hint。 */
+  let actionsOn = false;
 
   function paintAI(view) {
     const leadEl = $('#ai-lead');
@@ -322,8 +417,11 @@
     bodyEl.classList.toggle('is-live', tag === '正在读');
 
     if (hintEl) {
-      hintEl.hidden = !view.hint;
-      hintEl.textContent = view.hint || '';
+      /* 行动按钮已经摆在下面时，不再把同一句话念一遍 ——
+         hint 和行动区读的是同一份 ACTIONS，重复就成了啰嗦。 */
+      const show = !!view.hint && !actionsOn;
+      hintEl.hidden = !show;
+      hintEl.textContent = show ? view.hint : '';
     }
     if (tagEl) {
       tagEl.textContent = tag;
@@ -418,6 +516,8 @@
     renderHero();
     renderEntry();
     renderLog();
+    /* 先算行动，再算解读：解读里的那句建议要据此决定说不说。 */
+    renderActions();
     renderAI();
     renderTrend();
     notifyBody();
@@ -442,7 +542,7 @@
       }
       const delBtn = event.target.closest('[data-remove]');
       if (delBtn) {
-        removeItem(delBtn.dataset.remove);
+        undoLast(delBtn.dataset.remove);
       }
     });
 

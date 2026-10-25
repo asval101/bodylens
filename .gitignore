@@ -9,3 +9,6 @@ research/*.txt
 generated-images/
 server/.env
 *.log
+
+# 剪辑草稿与成片（体积大，不进仓库）
+video/*.mp4
