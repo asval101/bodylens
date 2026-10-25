@@ -67,6 +67,20 @@ test('同一行为多次录入会合并成一行', () => {
   assert.strictEqual(s.totalMinutes, -100);
 });
 
+/* 只有记录、没有折算口径的行为，也要合并。
+ * 同一天记两笔快走，原来账本上会出现两行「快走 15 分钟」，
+ * 首页还会说「已记下 2 项、快走 15 分钟、快走 15 分钟」—— 像记重了。 */
+test('没有折算口径的行为多次录入也合并成一行', () => {
+  const entries = [
+    L.makeEntry('walk', 15, '2026-10-20', new Date('2026-10-20T08:00:00Z')),
+    L.makeEntry('walk', 30, '2026-10-20', new Date('2026-10-20T18:00:00Z'))
+  ];
+  const s = L.summarize(entries, '2026-10-20');
+  assert.strictEqual(s.counted, 0);
+  assert.strictEqual(s.noted.length, 1);
+  assert.strictEqual(s.noted[0].qty, 45);
+});
+
 test('与昨日对比：负得少即为好转', () => {
   const cur = { totalMinutes: -40, counted: 1, noted: [] };
   const prev = { totalMinutes: -100, counted: 1, noted: [] };

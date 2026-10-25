@@ -124,13 +124,23 @@
     let total = 0;
     let counted = 0;
     const index = new Map();
+    /* noted 也要按 itemId 合并。原来这里直接 push，同一天记两笔快走
+       就在账本和首页各出现两行「快走 15 分钟」，读起来像记重了；
+       而能折算分钟的 byItem 早就是合并的，两边的口径就分了岔。 */
+    const notedIndex = new Map();
 
     for (const e of day) {
       const item = W.get(e.itemId);
       if (!item) continue;
       const m = item.weeklyCap ? cappedMinutes(entries, e.itemId, key) : W.minutesFor(e.itemId, e.qty);
       if (m === null) {
-        noted.push({ itemId: e.itemId, name: item.name, qty: e.qty, unit: item.unit });
+        if (notedIndex.has(e.itemId)) {
+          notedIndex.get(e.itemId).qty += e.qty;
+        } else {
+          const row = { itemId: e.itemId, name: item.name, qty: e.qty, unit: item.unit };
+          notedIndex.set(e.itemId, row);
+          noted.push(row);
+        }
         continue;
       }
       counted += 1;
