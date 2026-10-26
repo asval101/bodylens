@@ -21,7 +21,7 @@
   /* 资料库的行为 id → 账本的行为 id。
    * 两边是两套命名（资料库为每个行为写了一条证据，账本只收能折算的八项），
    * 这张表是唯一的桥，加新行为时两边都要登记。 */
-  const LEDGER_OF={'smoke':'smoke','alcohol':'alcohol','short-sleep':'shortSleep','sit':'sit','tv-sit':'sit','walk':'walk','sugary':'sugar','quit':'quit'};
+  const LEDGER_OF={'smoke':'smoke','alcohol':'alcohol','short-sleep':'shortSleep','sit':'sit','tv-sit':'sit','walk':'walk','sugary':'sugar'};
 
   const KEY='bodylens-user-v1', RESTORE_KEY='bodylens-restore-v1';
   const defaultState=()=>({tasks:[],prefs:{motion:true,depth:true},organ:'lungs',view:'front'});
@@ -185,7 +185,18 @@
   }
   function addPlan(title,associated=null){
     if(!title.trim())return;const now=new Date().toISOString(),date=M.localDate();
-    if(associated&&state.tasks.some(t=>t.date===date&&t.behavior===associated)){toast('这个行为的建议已在今日计划中，可以直接编辑它。');return;}
+    if(associated){
+      const exist=state.tasks.find(t=>t.date===date&&t.behavior===associated);
+      if(exist){
+        const next=title.trim().slice(0,120);
+        if(exist.title===next){toast('这个行为的建议已在今日计划中，可以直接编辑它。');return;}
+        /* 今天又记了几笔，建议跟着量变了。计划里那条必须跟着改，
+           否则按钮写的是新目标、计划里还是旧目标。 */
+        exist.title=next;exist.updatedAt=now;
+        save();renderPlan();toast('建议跟着今天的量变了，计划里这条已更新。');
+        return;
+      }
+    }
     state.tasks.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random().toString(16).slice(2),title:title.trim().slice(0,120),note:'',done:false,date,behavior:associated,createdAt:now,updatedAt:now});save();renderPlan();toast('已加入今日计划，今天先试这一小步。');
   }
 
@@ -290,7 +301,9 @@
       if(el.dataset.detail){resetPath();detailTab=el.dataset.detail;renderDetail();}
       if(el.hasAttribute('data-show-evidence')){detailTab='evidence';renderDetail();}
       if(el.hasAttribute('data-show-action')){detailTab='action';renderDetail();}
-      if(el.dataset.addPlan){const b=behavior(el.dataset.addPlan);addPlan(b.action,b.id);}
+      /* data-plan-title 是今天页给的自适应文案（比如「明天试 4 支，比今天少 1 支」）。
+         没带就退回资料库条目的 action —— 按钮旁边写什么，计划里就存什么。 */
+      if(el.dataset.addPlan){const b=behavior(el.dataset.addPlan);addPlan(el.dataset.planTitle||b.action,b.id);}
       if(el.dataset.category){libraryCategory=el.dataset.category;renderLibrary();}
       if(el.dataset.logBehavior){
         location.hash='today';

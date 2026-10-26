@@ -69,7 +69,12 @@ test('人体上的每个器官 id 都在资料库器官表里', () => {
 
 test('权重表的器官落点，必须存在于对应资料库行为的影响条目里', () => {
   const map = catalogOf();
-  assert.ok(Object.keys(map).length >= 8, 'CATALOG_OF 解析出来只有 ' + Object.keys(map).length + ' 条，解析可能失效了');
+  /* 原来这里写死 >= 8，只是防止「解析失效」的粗检查，账本一改数就得跟着改，
+     而且真的少掉一项链本项时它反而不会报警。改成跟账本项数精确对齐。 */
+  assert.strictEqual(
+    Object.keys(map).length, W.order.length,
+    'CATALOG_OF 应覆盖全部 ' + W.order.length + ' 项链本项，实际解析出 ' + Object.keys(map).length + ' 条'
+  );
 
   const problems = [];
   for (const id of W.order) {

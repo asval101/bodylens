@@ -35,8 +35,7 @@
     sit: 'tv-sit',
     sugar: 'sugary',
     walk: 'walk',
-    sleep: 'enough-sleep',
-    quit: 'quit'
+    sleep: 'enough-sleep'
   };
 
   let entries = [];
@@ -395,19 +394,32 @@
   /* 这一项今天是不是已经在计划里。
    * 计划存在 app.js 的 'bodylens-user-v1' 里，这里只读不写 ——
    * 写入永远走 app.js 那一份，两个模块各存一份就等于有两个真相。 */
-  function inPlanToday(catalogId) {
+  function planTaskToday(catalogId) {
     try {
       const raw = localStorage.getItem('bodylens-user-v1');
-      if (!raw) return false;
+      if (!raw) return null;
       const parsed = JSON.parse(raw);
       /* app.js 存的是 {schemaVersion, dataVersion, data:state}，
        * tasks 在 data 里面。直接读 parsed.tasks 会永远是空数组。 */
       const tasks = (parsed.data && parsed.data.tasks) || parsed.tasks || [];
       const today = L.dayKey();
-      return tasks.some(t => t.date === today && t.behavior === catalogId);
+      return tasks.find(t => t.date === today && t.behavior === catalogId) || null;
     } catch (e) {
-      return false;
+      return null;
     }
+  }
+
+  /* 建议该跟着今天的量走，而不是一句话管所有人。
+   * 一个每天抽 20 支的人，「少抽一支」等于没变；一个每天 2 支的人，
+   * 少一支就是减半。取两成、最少一支，两头都不至于离谱。
+   * 只在有记录时才算 —— 空账本没有任何量可用，不该凭空给一个数字。 */
+  function suggestFor(itemId, qty, fallback) {
+    if (itemId !== 'smoke' || !(qty > 0)) return fallback;
+    const cut = Math.max(1, Math.round(qty * 0.2));
+    const target = qty - cut;
+    return target > 0
+      ? '明天试 ' + target + ' 支，比今天少 ' + cut + ' 支'
+      : '明天试着不抽';
   }
 
   function renderActions() {
@@ -427,9 +439,15 @@
        * 安排一次戒烟咨询」）—— 用户确认的是 A，落到计划里是 B。
        * 现在就取 action 本身，看到什么就存什么。 */
       const beh = CAT && CAT.behaviors ? CAT.behaviors.find(b => b.id === catalogId) : null;
-      const text = (beh && beh.action) || I.ACTIONS[row.itemId];
-      if (!text) continue;
-      list.push({ name: row.name, text: text, catalogId: catalogId, added: inPlanToday(catalogId) });
+      const base = (beh && beh.action) || I.ACTIONS[row.itemId];
+      if (!base) continue;
+      /* 「已加入」要比到标题，不能只比行为 id。
+       * 记了 5 支时加进计划的建议是「明天试 4 支」，回头又记了 20 支，
+       * 建议变成「明天试 20 支」—— 这时计划里还是旧的那条，按钮却写着
+       * 已加入，就成了「按钮一个目标、计划另一个目标」。 */
+      const asked = suggestFor(row.itemId, row.qty, base);
+      const task = planTaskToday(catalogId);
+      list.push({ name: row.name, text: asked, catalogId: catalogId, added: !!task && task.title === asked });
     }
     actionsOn = list.length > 0;
     if (!actionsOn) {
@@ -446,7 +464,7 @@
           /* 已经收下的按钮不该还在邀请你收一次。改成去计划里看，
              而不是留一个点下去只会弹「已经在计划中了」的按钮。 */
           ? '<a class="action-add is-added" href="#plan">已在今日计划 · 去查看 ›</a>'
-          : '<button type="button" class="action-add" data-add-plan="' + a.catalogId + '">加入今日计划 ＋</button>') +
+          : '<button type="button" class="action-add" data-add-plan="' + a.catalogId + '" data-plan-title="' + esc(a.text) + '">加入今日计划 ＋</button>') +
         '</li>'
       ).join('') + '</ul>';
     box.hidden = false;

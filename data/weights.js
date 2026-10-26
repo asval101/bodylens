@@ -192,23 +192,13 @@
       presets: [1],
       line: '按自己的需要睡够，是第二天状态的基础。',
       caveat: '「睡够」因人而异，暂不折算分钟。'
-    },
-    quit: {
-      name: '没抽烟',
-      unit: '天',
-      minutes: null,
-      direction: 'A',
-      value: 'C',
-      source: 'nci-tobacco',
-      organs: ['lungs', 'heart'],
-      tone: 'benefit',
-      presets: [1],
-      line: '每少抽一支，那段被拿走的时间就留在你这里。',
-      caveat: '戒烟获益会逐步发生；这里只记录行为，不宣称器官已修复。'
     }
   };
 
-  const order = ['smoke', 'alcohol', 'shortSleep', 'sit', 'sugar', 'walk', 'sleep', 'quit'];
+  /* 「没抽烟」这一项去掉了：少抽了就等于那一支没发生，不用记；
+     整天没抽的人本来也不会来记这一笔。留着它只会让账本多一个永远不点的按钮。
+     资料库里「戒烟」条目保留 —— 那是知识条目，不是每天的记账项。 */
+  const order = ['smoke', 'alcohol', 'shortSleep', 'sit', 'sugar', 'walk', 'sleep'];
 
   /* 等级比较：A > B > C。用于校验 value 不得高于 direction。 */
   const rank = { A: 3, B: 2, C: 1 };
