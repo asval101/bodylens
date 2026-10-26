@@ -104,6 +104,11 @@ body.no-motion *,body.no-motion *::before,body.no-motion *::after{
    器官的颜色是证据（唇色、脑的充血色都不是随便挑的），
    动效不该为了「有反馈」去临时改写它。 */
 
+/* 今日计划页标题的后半句必须整体换行，不能断在「小」和「事」中间。
+   390 宽一行放不下 11 个字，让它自己折行会断在最难看的地方。
+   inline-block 让这半句作为一个单位整体掉到第二行，断点正好落在逗号后面。 */
+#page-plan h1 span{display:inline-block}
+
 /* 卡片现在整张可点。没有视觉提示的话，用户不会想到去点它。
    只用边框和阴影，不下压变形 —— 卡片身上还挂着入场动画，动 transform 容易打架。 */
 .library-card{cursor:pointer;transition:border-color .2s,box-shadow .2s}
