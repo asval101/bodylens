@@ -235,16 +235,39 @@
     ||document.body.classList.contains('no-motion');
 
   /* 开弹窗时锁住背景滚动。不能只写 overflow:hidden —— 那会把右侧滚动条整条抽掉，
-     可视宽度一下多出 15px，页面右边那组东西（导航、数据在本机、齿轮）向右跳 7.5px，
-     关掉时再跳回来，很扎眼。补一条同宽的右内边距，页面宽度就一点没变。 */
+     可视宽度一下多出 12px，页面右边那组东西（导航、数据在本机、齿轮）要往右挪，
+     关掉时再挪回来，很扎眼。补一条同宽的右内边距，页面宽度就一点没变。
+     滚动条本身没了也得补：在原位画一条一模一样的滑块（.scroll-rail），
+     位置和长度照系统那条怎么算就怎么算，像素对得上，人眼就看不见它换过。 */
+  const RAIL_INSET=4;   /* 滑块左右（以及上下）各缩进 4px，跟 CSS 里那个 border 对齐 */
+  function paintScrollRail(){
+    const rail=$('#scroll-rail');
+    if(!rail)return;
+    const de=document.documentElement;
+    const sw=Math.max(0,window.innerWidth-de.clientWidth);
+    if(!sw){rail.hidden=true;return;}   /* 悬浮式滚动条不占位（触屏、macOS），没什么可补 */
+    const ch=de.clientHeight,sh=de.scrollHeight;
+    if(sh<=ch){rail.hidden=true;return;}
+    /* Chrome 就是这么画的，实测六组：长度 = 可视高² / 内容高（四舍五入），
+       位置 = 滚动距离 / 还能滚多少 × （可视高 − 长度），位置是向下取整 ——
+       390 宽那组按四舍五入会差 1px，一像素人眼在边缘上就看得见东西挪了。 */
+    const len=Math.max(20,Math.round(ch*ch/sh));
+    const top=Math.floor(Math.min(1,window.scrollY/(sh-ch))*(ch-len));
+    rail.style.width=sw+'px';
+    rail.firstElementChild.style.top=(top+RAIL_INSET)+'px';
+    rail.firstElementChild.style.height=Math.max(4,len-RAIL_INSET*2)+'px';
+    rail.hidden=false;
+  }
   function lockPageScroll(){
     const sw=Math.max(0,window.innerWidth-document.documentElement.clientWidth);
+    paintScrollRail();                 /* 先把替身摆好，再抽掉真的，中间不留空帧 */
     document.body.style.overflow='hidden';
     if(sw>0)document.body.style.paddingRight=sw+'px';
   }
   function unlockPageScroll(){
     document.body.style.overflow='';
     document.body.style.paddingRight='';
+    const rail=$('#scroll-rail');if(rail)rail.hidden=true;
   }
 
   function updateDetailFade(){
@@ -553,6 +576,8 @@
     $('#detail-close').addEventListener('click',()=>closeDetail());
     detailSheetEl.addEventListener('scroll',updateDetailFade);
     document.addEventListener('keydown',event=>{if(event.key==='Escape'&&detailId){event.preventDefault();closeDetail();}});
+    /* 弹窗开着时改窗口大小，替身那条得跟着重新量，不然会跟系统那条对不上 */
+    window.addEventListener('resize',()=>{if(detailId)paintScrollRail();});
     $('#plan-form').addEventListener('submit',event=>{event.preventDefault();addPlan($('#plan-input').value);$('#plan-input').value='';});
     $('#plan-list').addEventListener('submit',event=>{const form=event.target.closest('[data-edit-form]');if(!form)return;event.preventDefault();const task=state.tasks.find(t=>t.id===form.dataset.editForm);if(!task)return;const data=new FormData(form);task.title=String(data.get('title')).trim().slice(0,120);task.note=String(data.get('note')).slice(0,500);task.updatedAt=new Date().toISOString();editingTask=null;save();renderPlan();});
     $('#plan-list').addEventListener('change',event=>{const id=event.target.dataset.taskToggle;if(!id)return;const task=state.tasks.find(t=>t.id===id);task.done=event.target.checked;task.updatedAt=new Date().toISOString();save();renderPlan();});

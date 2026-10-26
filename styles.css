@@ -220,3 +220,27 @@ body.no-motion *,body.no-motion *::before,body.no-motion *::after{
   .detail-scrim.is-fading{transition:opacity .26s linear!important}
   .detail-close{opacity:1}
 }
+
+/* ---------- 右侧那条滚动条 ----------
+   系统默认那条是 15px 宽、#fcfcfc 的轨道配 #8b8b8b 的滑块 —— 浅色页面上
+   右边挂着一根深灰棒子，是全页最重的一笔颜色。这里改成 12px、轨道透明、
+   滑块只留 4px 宽的半透明圆条。
+   border 会同时吃掉上下两端，所以要配 background-clip:content-box，
+   画出来的才是「长度减 8」。这条算式下面的替身也是照它写的。 */
+html::-webkit-scrollbar{width:12px}
+html::-webkit-scrollbar-track{background:transparent}
+html::-webkit-scrollbar-thumb{background:rgba(22,33,29,.16);border-radius:99px;
+  border:4px solid transparent;background-clip:content-box}
+html::-webkit-scrollbar-thumb:hover{background:rgba(22,33,29,.26);background-clip:content-box}
+/* Firefox 不认 ::-webkit-scrollbar，用标准属性给个接近的细版 */
+@supports (-moz-appearance:none){
+  html{scrollbar-width:thin;scrollbar-color:rgba(22,33,29,.3) transparent}
+}
+
+/* 弹窗开着的时候背景要锁住，一锁就得把滚动条拿掉 —— 不然它还会跟着滚。
+   拿掉之后右边那 12px 里的滑块就「啪」一下没了。所以锁定期间在原位补一条
+   一样的：位置和长度照系统那条的算法算（见 app.js 的 paintScrollRail）。
+   它压在遮罩下面（z-index 79 < 遮罩的 80），跟着背景一起变暗，
+   所以从来不会被看见「这是个替身」。 */
+.scroll-rail{position:fixed;top:0;right:0;bottom:0;z-index:79;pointer-events:none}
+.scroll-rail i{position:absolute;left:4px;width:4px;border-radius:99px;background:rgba(22,33,29,.16)}
