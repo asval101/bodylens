@@ -234,6 +234,19 @@
     ||matchMedia('(prefers-reduced-motion: reduce)').matches
     ||document.body.classList.contains('no-motion');
 
+  /* 开弹窗时锁住背景滚动。不能只写 overflow:hidden —— 那会把右侧滚动条整条抽掉，
+     可视宽度一下多出 15px，页面右边那组东西（导航、数据在本机、齿轮）向右跳 7.5px，
+     关掉时再跳回来，很扎眼。补一条同宽的右内边距，页面宽度就一点没变。 */
+  function lockPageScroll(){
+    const sw=Math.max(0,window.innerWidth-document.documentElement.clientWidth);
+    document.body.style.overflow='hidden';
+    if(sw>0)document.body.style.paddingRight=sw+'px';
+  }
+  function unlockPageScroll(){
+    document.body.style.overflow='';
+    document.body.style.paddingRight='';
+  }
+
   function updateDetailFade(){
     if(!detailSheetEl)return;
     const can=detailSheetEl.scrollHeight>detailSheetEl.clientHeight+4;
@@ -253,8 +266,12 @@
 
     detailCard=card;detailId=id;
     const r=card.getBoundingClientRect();
-    const tw=Math.min(760,innerWidth-40);
-    const maxH=Math.min(innerHeight-90,680);
+    /* 用 clientWidth 而不是 innerWidth：innerWidth 把滚动条那 15px 也算进去了，
+       拿它居中会让弹窗整体偏右半个滚动条。这两个值必须在锁滚动之前取。 */
+    const vw=document.documentElement.clientWidth;
+    const vh=document.documentElement.clientHeight;
+    const tw=Math.min(760,vw-40);
+    const maxH=Math.min(vh-90,680);
 
     detailSheetEl.innerHTML=detailHTML(b);
     detailSheetEl.scrollTop=0;
@@ -275,10 +292,10 @@
     detailEl.style.height=th+'px';
 
     card.style.visibility='hidden';
-    document.body.style.overflow='hidden';
+    lockPageScroll();
 
-    const tLeft=Math.round((innerWidth-tw)/2);
-    const tTop=Math.round((innerHeight-th)/2);
+    const tLeft=Math.round((vw-tw)/2);
+    const tTop=Math.round((vh-th)/2);
 
     /* 降级：不放大、不位移，只让白框 240ms 淡进来、字 300ms 跟着淡。
        位移和缩放才是前庭敏感的人受不了的，纯透明度是安全的。
@@ -339,7 +356,7 @@
       detailSheetEl.style.transform='';
       detailScrimEl.classList.remove('on','is-fading');
       detailScrimEl.hidden=true;
-      document.body.style.overflow='';
+      unlockPageScroll();
       if(detailCard){detailCard.style.visibility='';detailCard.style.opacity='';detailCard.style.transition='';}
       detailId=null;detailCard=null;
     };
