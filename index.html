@@ -111,6 +111,13 @@
     </main>
     <footer class="app-footer"><span>身知 BODYLENS <span class="footer-divider">/</span> 让每一次选择，更有知觉。</span><span>健康科普 · 非诊断工具 <span class="footer-divider">/</span> <a href="#settings">资料与本地数据</a></span></footer>
   </div>
+  <div class="detail-scrim" id="detail-scrim" hidden></div>
+  <div class="detail-modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
+    <button class="detail-close" id="detail-close" aria-label="关闭详情">×</button>
+    <div class="detail-sheet" id="detail-sheet" tabindex="-1"></div>
+    <div class="detail-top"></div>
+    <div class="detail-fade"></div>
+  </div>
   <div id="toast" role="status" aria-live="polite" hidden></div>
   <dialog id="restore-dialog"><form method="dialog"><div class="eyebrow">RESTORE LOCAL DATA</div><h2>确认恢复这份备份？</h2><div id="restore-summary"></div><p>现有记录将整体替换。替换前会保留本地恢复点，你也可以先导出当前记录。</p><div class="dialog-actions"><button class="quiet-button" value="cancel">取消</button><button class="quiet-button" id="export-before-restore" type="button">先导出当前数据</button><button class="primary-button" id="confirm-restore" type="button">确认恢复</button></div></form></dialog>
   <noscript><p class="noscript">请启用 JavaScript，以使用器官交互、行为分析和本地保存。</p></noscript>

@@ -165,8 +165,239 @@
     $('#library-count').textContent=`已收录 ${D.behaviors.length} 项行为 · 当前显示 ${items.length} 项 · 公开原文核对 ${D.retrieved}`;
     $('#library-grid').innerHTML=items.length?items.map(b=>{
       const ledgerId=LEDGER_OF[b.id];
-      return `<article class="library-card panel"><span class="category-name">${b.category}</span><h2>${b.name}</h2><p>${b.effects[0].title}</p><div class="organ-tags">${[...new Set(b.effects.map(e=>e.organ))].map(id=>`<span>${D.organs[id].name}</span>`).join('')}</div><span class="evidence-status">依据：${D.sources[b.effects[0].source].org}</span>${ledgerId?`<button class="quiet-button" data-log-behavior="${ledgerId}">记一笔 ＋</button>`:''}</article>`;
+      /* 整张卡可点开详情。用 article + tabindex 而不是包一层 button ——
+         卡里已经有「记一笔」按钮，button 套 button 是无效结构，屏幕阅读器会乱。
+         键盘可达性靠 tabindex="0" 加下面的 Enter / 空格监听。 */
+      return `<article class="library-card panel" data-behavior="${b.id}" tabindex="0" role="button" aria-haspopup="dialog" aria-label="展开「${escape(b.name)}」的说明"><span class="category-name">${b.category}</span><h2>${b.name}</h2><p>${b.effects[0].title}</p><div class="organ-tags">${[...new Set(b.effects.map(e=>e.organ))].map(id=>`<span>${D.organs[id].name}</span>`).join('')}</div><span class="evidence-status">依据：${D.sources[b.effects[0].source].org}</span>${ledgerId?`<button class="quiet-button" data-log-behavior="${ledgerId}">记一笔 ＋</button>`:''}</article>`;
     }).join(''):'<p class="empty-state">暂未收录匹配的行为，请更换关键词或浏览分类。</p>';
+  }
+
+  /* ---------- 资料库 · 卡片详情 ----------
+     A 版定位：这里解释的是「这个行为本身」，不是「为什么不折算成分钟」。
+     所以折算信息退到最后一行，抬头给的是这个行为在做什么。
+     数字一律从 weights 读，本文件不写死任何分钟数。 */
+  const planOf=id=>state.tasks.find(t=>t.date===M.localDate()&&t.behavior===id);
+  function detailPlanButton(b){
+    if(planOf(b.id)) return '<a class="d-act-add is-in" href="#plan">已在今日计划 · 去查看 ›</a>';
+    return `<button class="d-act-add" data-add-plan="${escape(b.id)}">加入今日计划 ＋</button>`;
+  }
+  function detailHTML(b){
+    const ledgerId=LEDGER_OF[b.id], w=ledgerId?W.get(ledgerId):null;
+    const hasNumber=!!w&&typeof w.minutes==='number';
+    const allBenefit=b.effects.every(e=>e.type==='benefit');
+    const srcOrgs=[...new Set(b.effects.map(e=>e.source).map(k=>D.sources[k]?D.sources[k].org:''))].filter(Boolean);
+
+    /* 有数字才给数字，并且必须带区间和 caveat。
+       没数字的分两类说清楚：正向行为是**刻意**不给 —— 给了就等于允许
+       「早睡抵掉一支烟」，破坏「收益和损耗不抵消」这条规矩；
+       含糖饮料这类是确实找不到可信口径。两者不能混成一句「数据不足」。 */
+    let num='';
+    if(hasNumber){
+      const sign=w.minutes>0?'+':'−';
+      const mag=n=>String(Math.round(Math.abs(n)*10)/10);
+      const range=w.range?` · 研究给出的区间是 ${sign}${mag(w.range[0])} ~ ${sign}${mag(w.range[1])} 分钟`:'';
+      num=`<div class="d-num${w.minutes>0?' is-benefit':''}"><b>每${escape(w.unit)} ${sign}${mag(w.minutes)} 分钟</b>`+
+        `<small>资料折算的估算值 · 不是你的个人预测${range}</small></div>`;
+    }
+    const conv=w?w.caveat:(allBenefit
+      ?'这是有益的事，刻意不给分钟数 —— 收益不能拿来抵扣损耗，一好一坏不互相抵账。'
+      :'不给分钟数 —— 没有找到可信的「一次折合多少」口径，只保留影响方向。');
+
+    return `<span class="d-cat">${escape(b.category)}</span>`
+      +`<h2 class="d-title" id="detail-title">${escape(b.name)}</h2>`
+      /* 不再放一句导语。catalog 里没有「这个行为是什么」的独立字段，
+         能拿的只有第一条影响的标题 —— 那句在「影响到哪儿」里会原样再出现一次，
+         同一句话隔二十像素说两遍，读起来像没加载完。少一行比重复一行好。 */
+      +num
+      +`<div class="d-sec"><h3>影响到哪儿</h3>`
+        +b.effects.map(e=>`<div class="d-organ"><span class="tag">${escape(D.organs[e.organ].name)}</span><div class="bd"><em>${escape(e.title)}</em><span>${escape(e.text)}</span></div></div>`).join('')
+      +`</div>`
+      +`<div class="d-sec"><h3>什么情况算这一项</h3><ul class="d-list">`
+        +b.scenarios.map(x=>`<li>${escape(x)}</li>`).join('')
+      +`</ul><p class="d-hint">这里写的是平时的量，不是今天这一次。</p></div>`
+      +`<div class="d-sec"><h3>可以试的一步</h3><div class="d-act"><p>${escape(b.action)}</p>${detailPlanButton(b)}</div></div>`
+      +`<div class="d-meta">`
+        +`<div class="row"><b>依据</b><span>${escape(srcOrgs.join(' / '))}</span></div>`
+        +`<div class="row"><b>适用范围</b><span>${escape(b.scope)}</span></div>`
+        +`<div class="row"><b>折算</b><span>${escape(conv)}</span></div>`
+      +`</div>`;
+  }
+
+  /* ---------- 资料库 · 详情弹窗的开关 ----------
+     位置和大小只动 transform。用 left/top/width/height 做过渡的话，
+     每一帧都要把弹窗里几十个文字节点重新排版，十几毫秒就没了 —— 看起来是掉帧。
+     关闭走 JS 逐帧写，因为「内容反向缩放」没法用两条 CSS 过渡互为倒数来表达。 */
+  let detailEl=null,detailSheetEl=null,detailScrimEl=null,detailCard=null,detailId=null,detailCloseTimer=0,detailCloseRaf=0;
+
+  /* 系统的「减少动态效果」、设置里的「交互动效」开关，任意一个关着就走降级 */
+  const noDetailMotion=()=>!state.prefs.motion
+    ||matchMedia('(prefers-reduced-motion: reduce)').matches
+    ||document.body.classList.contains('no-motion');
+
+  function updateDetailFade(){
+    if(!detailSheetEl)return;
+    const can=detailSheetEl.scrollHeight>detailSheetEl.clientHeight+4;
+    const atEnd=detailSheetEl.scrollTop+detailSheetEl.clientHeight>=detailSheetEl.scrollHeight-4;
+    detailEl.classList.toggle('can-scroll',can&&!atEnd);
+    detailEl.classList.toggle('has-above',can&&detailSheetEl.scrollTop>2);
+  }
+
+  function openDetail(card){
+    const id=card.dataset.behavior,b=behavior(id);
+    if(!b)return;
+
+    /* 上一次关闭还在收尾就被打断：撤掉定时器和帧循环，否则它会把刚打开的一起藏掉 */
+    clearTimeout(detailCloseTimer);
+    cancelAnimationFrame(detailCloseRaf);
+    if(detailCard&&detailCard!==card)detailCard.style.visibility='';
+
+    detailCard=card;detailId=id;
+    const r=card.getBoundingClientRect();
+    const tw=Math.min(760,innerWidth-40);
+    const maxH=Math.min(innerHeight-90,680);
+
+    detailSheetEl.innerHTML=detailHTML(b);
+    detailSheetEl.scrollTop=0;
+    detailSheetEl.style.transition='';
+    detailSheetEl.style.opacity='';
+    detailSheetEl.style.transform='';
+    detailEl.classList.remove('ready','can-scroll','has-above','is-fading');
+
+    /* 量高度：宽高整段只在这一次设定，之后每一帧只改 transform。
+       先挪到屏幕外量，量完立刻覆盖回卡片位置，人眼看不到中间这一帧。 */
+    detailEl.style.transition='none';
+    detailEl.style.opacity='1';
+    detailEl.style.transform='translate(-200vw,0)';
+    detailEl.style.width=tw+'px';
+    detailEl.style.height='auto';
+    detailEl.hidden=false;
+    const th=Math.min(maxH,Math.max(320,detailEl.offsetHeight));
+    detailEl.style.height=th+'px';
+
+    card.style.visibility='hidden';
+    document.body.style.overflow='hidden';
+
+    const tLeft=Math.round((innerWidth-tw)/2);
+    const tTop=Math.round((innerHeight-th)/2);
+
+    /* 降级：不放大、不位移，只让白框 240ms 淡进来、字 300ms 跟着淡。
+       位移和缩放才是前庭敏感的人受不了的，纯透明度是安全的。
+       坑：元素刚从 hidden 变可见时转场不启动，要先把 opacity:0 真画出来，
+       再在下一次机会里改目标值。 */
+    if(noDetailMotion()){
+      /* 顺序很关键，写反了就会看见「先暗一下再亮起来」（V 形）。
+         .offsetHeight 会强制立刻结算样式 —— 如果这时候 is-fading 已经加上，
+         浏览器就会把「opacity 1 → 0」当成一次真实变化，认认真真跑一遍 240ms，
+         紧接着又被下面那句拉回 1，净效果是先暗再亮。
+         所以必须：先降到 0（此时 transition 还是 none，瞬间到位）→ 强制结算 →
+         再开过渡 → 再升到 1。这样它看到的起点才是 0。 */
+      detailEl.style.transition='none';
+      detailEl.style.transform='translate('+tLeft+'px,'+tTop+'px)';
+      detailEl.style.opacity='0';
+      void detailEl.offsetHeight;
+      detailEl.classList.add('is-fading');
+      detailScrimEl.hidden=false;
+      detailScrimEl.classList.add('is-fading');
+      void detailScrimEl.offsetHeight;
+      detailScrimEl.classList.add('on');
+      requestAnimationFrame(()=>{
+        detailEl.style.opacity='1';
+        detailEl.classList.add('ready');
+        updateDetailFade();
+      });
+      return;
+    }
+
+    /* 正常：从卡片的位置和大小长到屏幕中间。
+       起点 = 卡片矩形，缩放比 = 卡片宽高 / 弹窗宽高；终点 = 居中、scale 1。
+       transform-origin 是 top left，所以 translate 填的就是可视左上角，不用算偏移。 */
+    const sx=r.width/tw,sy=r.height/th;
+    detailEl.style.transform='translate('+r.left+'px,'+r.top+'px) scale('+sx.toFixed(4)+','+sy.toFixed(4)+')';
+    void detailEl.offsetHeight;
+
+    requestAnimationFrame(()=>{
+      detailEl.style.transition='transform .46s var(--ease-out-quart)';
+      detailEl.style.transform='translate('+tLeft+'px,'+tTop+'px) scale(1,1)';
+      detailScrimEl.hidden=false;
+      requestAnimationFrame(()=>detailScrimEl.classList.add('on'));
+      /* 内容晚 110ms 进来：白框先长到八成，字再亮起来。再晚就变成「空框等字」。 */
+      setTimeout(()=>{detailEl.classList.add('ready');updateDetailFade();},110);
+    });
+  }
+
+  function closeDetail(immediate){
+    if(!detailId)return;
+    const card=detailCard;
+
+    const finish=()=>{
+      detailEl.hidden=true;
+      detailEl.classList.remove('ready','can-scroll','has-above','is-fading');
+      detailEl.style.transition='none';
+      detailEl.style.opacity='1';
+      detailSheetEl.style.transition='';
+      detailSheetEl.style.opacity='';
+      detailSheetEl.style.transform='';
+      detailScrimEl.classList.remove('on','is-fading');
+      detailScrimEl.hidden=true;
+      document.body.style.overflow='';
+      if(detailCard){detailCard.style.visibility='';detailCard.style.opacity='';detailCard.style.transition='';}
+      detailId=null;detailCard=null;
+    };
+
+    if(immediate||!detailEl){clearTimeout(detailCloseTimer);cancelAnimationFrame(detailCloseRaf);finish();return;}
+
+    /* 卡片被重新渲染过（搜过关键词、切过分类），旧引用已经不在文档里 ——
+       它的矩形是全 0，硬做动画会缩到屏幕左上角。直接收掉。 */
+    if(!card||!card.isConnected){finish();return;}
+
+    if(noDetailMotion()){
+      detailEl.classList.remove('ready','can-scroll');
+      detailScrimEl.classList.remove('on');
+      detailEl.classList.add('is-fading');
+      requestAnimationFrame(()=>{detailEl.style.opacity='0';});
+      detailCloseTimer=setTimeout(finish,210);
+      return;
+    }
+
+    /* 容器收拢：框缩回卡片，内容层同时反向放大 1/s，净结果是字一直是原尺寸，
+       只是被越来越小的框裁掉。看着是门关上，不是字被压扁。
+       底下那张卡立刻回到可见 —— 框缩到底正好和它重合，不需要淡入。
+       （也不能靠给卡片改 opacity 来淡：卡片身上有 vfx-rise 入场动画、
+          fill:both，动画优先级高于行内样式，赋了值也改不动。） */
+    const r=card.getBoundingClientRect();
+    const box=detailEl.getBoundingClientRect();
+    const mw=detailEl.offsetWidth,mh=detailEl.offsetHeight;
+    const toSX=r.width/mw,toSY=r.height/mh;
+
+    card.style.visibility='';
+    detailEl.classList.remove('can-scroll');
+    detailScrimEl.classList.remove('on');
+    detailEl.style.transition='none';
+    detailSheetEl.style.transition='none';
+
+    /* 两头慢、中间快。ease-out-quart 收尾有长尾巴 —— 一半时间走完 94%，
+       后 150ms 几乎不动，看起来是卡住再顿一下，那就是「最后有点卡」的来源。 */
+    const D=260,t0=performance.now();
+    const ease=q=>q<.5?4*q*q*q:1-Math.pow(-2*q+2,3)/2;
+    const step=now=>{
+      const q=Math.min(1,(now-t0)/D),e=ease(q);
+      const sx=1+(toSX-1)*e,sy=1+(toSY-1)*e;
+      const x=box.left+(r.left-box.left)*e,y=box.top+(r.top-box.top)*e;
+      detailEl.style.transform='translate('+x.toFixed(2)+'px,'+y.toFixed(2)+'px) scale('+sx.toFixed(4)+','+sy.toFixed(4)+')';
+      detailSheetEl.style.transform='scale('+(1/sx).toFixed(4)+','+(1/sy).toFixed(4)+')';
+      /* 面板整体化掉，不是缩成一个白框杵在那儿。字不单独淡，跟着面板一起走。 */
+      detailEl.style.opacity=e<.35?'1':String(Math.max(0,1-(e-.35)/.65));
+      if(q<1)detailCloseRaf=requestAnimationFrame(step);else finish();
+    };
+    detailCloseRaf=requestAnimationFrame(step);
+  }
+
+  /* 加了计划之后，弹窗里那个按钮要跟着变成「已在今日计划」 */
+  function refreshDetailPlanButton(){
+    if(!detailId)return;
+    const b=behavior(detailId);if(!b)return;
+    const box=detailSheetEl.querySelector('.d-act');
+    if(box)box.innerHTML=`<p>${escape(b.action)}</p>${detailPlanButton(b)}`;
   }
 
   /* ---------- 计划 ---------- */
@@ -251,6 +482,9 @@
   }
 
   function navigate(){
+    /* 弹窗里点「去查看 ›」会跳到计划页。弹窗不关掉的话 body 还锁着滚动，
+       切过去的页面也滚不到顶。 */
+    if(detailId)closeDetail(true);
     page=['today','library','plan','settings'].includes(location.hash.slice(1))?location.hash.slice(1):'today';
     $$('.page').forEach(el=>el.hidden=el.id!==`page-${page}`);
     $$('[data-nav]').forEach(el=>{el.classList.toggle('active',el.dataset.nav===page);if(el.dataset.nav===page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
@@ -285,6 +519,23 @@
     $('#settings-link').innerHTML=icon('settings');$('#library-search-icon').innerHTML=icon('search');
     $('#anatomy-art').innerHTML=window.createAnatomy('bodylens-live');
     $('#library-search').addEventListener('input',renderLibrary);
+    /* 详情弹窗：30 张卡只挂一个监听，不逐张绑。 */
+    detailEl=$('#detail-modal');detailSheetEl=$('#detail-sheet');detailScrimEl=$('#detail-scrim');
+    $('#library-grid').addEventListener('click',event=>{
+      if(event.target.closest('button'))return;          /* 「记一笔」不触发展开 */
+      const card=event.target.closest('.library-card');
+      if(card)openDetail(card);
+    });
+    $('#library-grid').addEventListener('keydown',event=>{
+      if(event.key!=='Enter'&&event.key!==' ')return;
+      const card=event.target.closest('.library-card');
+      if(!card)return;
+      event.preventDefault();openDetail(card);
+    });
+    detailScrimEl.addEventListener('click',()=>closeDetail());
+    $('#detail-close').addEventListener('click',()=>closeDetail());
+    detailSheetEl.addEventListener('scroll',updateDetailFade);
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&detailId){event.preventDefault();closeDetail();}});
     $('#plan-form').addEventListener('submit',event=>{event.preventDefault();addPlan($('#plan-input').value);$('#plan-input').value='';});
     $('#plan-list').addEventListener('submit',event=>{const form=event.target.closest('[data-edit-form]');if(!form)return;event.preventDefault();const task=state.tasks.find(t=>t.id===form.dataset.editForm);if(!task)return;const data=new FormData(form);task.title=String(data.get('title')).trim().slice(0,120);task.note=String(data.get('note')).slice(0,500);task.updatedAt=new Date().toISOString();editingTask=null;save();renderPlan();});
     $('#plan-list').addEventListener('change',event=>{const id=event.target.dataset.taskToggle;if(!id)return;const task=state.tasks.find(t=>t.id===id);task.done=event.target.checked;task.updatedAt=new Date().toISOString();save();renderPlan();});
@@ -303,7 +554,11 @@
       if(el.hasAttribute('data-show-action')){detailTab='action';renderDetail();}
       /* data-plan-title 是今天页给的自适应文案（比如「明天试 4 支，比今天少 1 支」）。
          没带就退回资料库条目的 action —— 按钮旁边写什么，计划里就存什么。 */
-      if(el.dataset.addPlan){const b=behavior(el.dataset.addPlan);addPlan(el.dataset.planTitle||b.action,b.id);}
+      if(el.dataset.addPlan){
+        const b=behavior(el.dataset.addPlan);addPlan(el.dataset.planTitle||b.action,b.id);
+        /* 弹窗里按的：同一个按钮要立刻变成「已在今日计划」，不能等重开才变 */
+        if(detailId===b.id)refreshDetailPlanButton();
+      }
       if(el.dataset.category){libraryCategory=el.dataset.category;renderLibrary();}
       if(el.dataset.logBehavior){
         location.hash='today';

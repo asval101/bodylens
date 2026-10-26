@@ -103,3 +103,115 @@ body.no-motion *,body.no-motion *::before,body.no-motion *::after{
    改成只加 brightness，又会把嘴唇推向粉白。两种都不对——
    器官的颜色是证据（唇色、脑的充血色都不是随便挑的），
    动效不该为了「有反馈」去临时改写它。 */
+
+/* 卡片现在整张可点。没有视觉提示的话，用户不会想到去点它。
+   只用边框和阴影，不下压变形 —— 卡片身上还挂着入场动画，动 transform 容易打架。 */
+.library-card{cursor:pointer;transition:border-color .2s,box-shadow .2s}
+.library-card:hover{border-color:#b9c6bd;box-shadow:0 10px 26px rgba(36,46,42,.075)}
+.library-card:focus-visible{outline:2px solid var(--mint);outline-offset:4px}
+.library-card .quiet-button{cursor:pointer}
+
+/* ===========================================================================
+   行为资料库 · 卡片详情弹窗
+
+   动效只动 transform 和 opacity。原因：位置和大小用 left/top/width/height 过渡，
+   每帧都要把弹窗里几十个文字节点重新排版一次，十几毫秒就没了，看起来是掉帧。
+   transform 走合成层，排版一次都不做。
+
+   关闭时用「容器收拢」：框缩回卡片大小，内容层同时反向放大 1/s，
+   净结果是字一直是原尺寸，只是被越来越小的框裁掉 —— 看着是门关上，
+   不是字被压扁。CSS 做不到（两条过渡没法互为倒数），所以关闭走 JS 逐帧写。
+   =========================================================================== */
+.detail-scrim{position:fixed;inset:0;z-index:80;background:rgba(22,33,29,.16);
+  opacity:0;pointer-events:none;transition:opacity .34s var(--ease-out-quart)}
+.detail-scrim.on{opacity:1;pointer-events:auto}
+/* 模糊半径固定成 5px，只让遮罩自己的透明度进出。半径要是跟着动画变，
+   等于每一帧都用不同的值把整屏重糊一遍，关闭最后那几下最容易掉帧。 */
+.detail-scrim::after{content:"";position:absolute;inset:0;backdrop-filter:blur(5px)}
+
+.detail-modal{position:fixed;z-index:81;left:0;top:0;background:#fff;border-radius:18px;overflow:hidden;
+  box-shadow:0 24px 70px rgba(22,33,29,.22);border:1px solid rgba(228,224,215,.9);
+  transform-origin:top left;will-change:transform}
+.detail-sheet{height:100%;overflow:auto;padding:32px 40px 28px;overscroll-behavior:contain;outline:none;
+  opacity:0;transform:translateY(9px);transform-origin:top left;
+  transition:opacity .26s linear,transform .38s var(--ease-out-quart)}
+.detail-modal.ready .detail-sheet{opacity:1;transform:translateY(0)}
+.detail-sheet::-webkit-scrollbar{width:8px}
+.detail-sheet::-webkit-scrollbar-track{background:transparent}
+.detail-sheet::-webkit-scrollbar-thumb{background:rgba(22,33,29,.13);border-radius:4px;border:2px solid #fff}
+.detail-sheet::-webkit-scrollbar-thumb:hover{background:rgba(22,33,29,.22)}
+/* 上下两道渐隐，读起来是「内容还在延续」。浓度压到 .88 就够 ——
+   .97 会把压在下面的小标题擦成灰白，看着像没加载出来。 */
+.detail-fade{position:absolute;left:1px;right:1px;bottom:1px;height:30px;border-radius:0 0 18px 18px;
+  background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.8));
+  pointer-events:none;opacity:0;transition:opacity .22s}
+.detail-modal.can-scroll .detail-fade{opacity:1}
+.detail-top{position:absolute;left:1px;right:1px;top:1px;height:30px;border-radius:18px 18px 0 0;
+  background:linear-gradient(to bottom,rgba(255,255,255,.92),rgba(255,255,255,0));
+  pointer-events:none;opacity:0;transition:opacity .22s}
+.detail-modal.has-above .detail-top{opacity:1}
+.detail-close{position:absolute;top:13px;right:13px;z-index:3;width:30px;height:30px;border:1px solid var(--line);
+  background:#fff;border-radius:50%;display:grid;place-items:center;font-size:16px;line-height:1;color:var(--muted);
+  opacity:0;transition:opacity .2s .1s,background .15s}
+.detail-modal.ready .detail-close{opacity:1}
+.detail-close:hover{background:#f0eee8;color:var(--text);filter:none}
+
+.d-cat{font-size:10px;color:#63876d;letter-spacing:1px}
+.d-title{font-size:23px;font-weight:600;margin:7px 0 5px;letter-spacing:.01em;padding-right:34px}
+.d-lede{font-size:14px;color:var(--muted);line-height:1.85}
+.d-num{display:inline-flex;align-items:baseline;gap:7px;margin-top:15px;padding:6px 11px;border-radius:8px;
+  background:rgba(160,74,36,.06);border:1px solid rgba(160,74,36,.16);font-size:13px;color:var(--copper)}
+.d-num b{font-size:16px;font-weight:600;white-space:nowrap}
+.d-num small{font-size:11px;color:#8a6248;line-height:1.5}
+.d-num.is-benefit{background:rgba(42,118,94,.06);border-color:rgba(42,118,94,.18);color:var(--mint)}
+.d-num.is-benefit small{color:#41695a}
+
+.d-sec{margin-top:23px}
+.d-sec h3{font-size:10.5px;font-weight:600;color:#8b968f;letter-spacing:1.5px;margin-bottom:10px}
+.d-organ{display:flex;gap:9px;margin-bottom:10px}
+.d-organ:last-child{margin-bottom:0}
+.d-organ .tag{flex:none;border:1px solid #c7c4ba;border-radius:4px;font-size:10px;color:#506d4f;
+  padding:1px 7px;height:fit-content;margin-top:2px}
+.d-organ .bd{font-size:13px;line-height:1.72;color:var(--text);min-width:0}
+.d-organ .bd em{font-style:normal;font-weight:600;display:block;margin-bottom:1px}
+.d-organ .bd span{color:var(--muted);font-size:12px;line-height:1.7;display:block}
+.d-list{list-style:none;padding:0;margin:0}
+.d-list li{font-size:13.5px;color:var(--muted);padding-left:14px;position:relative;line-height:1.9}
+.d-list li::before{content:"";position:absolute;left:0;top:.78em;width:4px;height:4px;border-radius:50%;background:#b9c6bd}
+.d-hint{margin-top:8px;font-size:11.5px;color:#9aa39d;line-height:1.7}
+.d-act{display:flex;align-items:center;gap:14px;padding:13px 15px;border-radius:10px;
+  background:rgba(42,118,94,.055);border:1px solid rgba(42,118,94,.15)}
+.d-act p{flex:1;min-width:0;font-size:14px;color:#205c49;line-height:1.7}
+.d-act-add{flex:none;border:1px solid rgba(42,118,94,.32);background:#fff;color:#1d5a47;
+  padding:7px 13px;font-size:12.5px;border-radius:8px;white-space:nowrap;display:inline-block;
+  transition:background .16s,border-color .16s,color .16s}
+.d-act-add:hover{background:rgba(42,118,94,.09);border-color:var(--mint);filter:none}
+.d-act-add.is-in{background:transparent;border-color:var(--line);color:#8b968f;cursor:default}
+.d-act-add.is-in:hover{background:rgba(42,118,94,.05);border-color:#c7c4ba;filter:none}
+.d-meta{margin-top:26px;padding-top:14px;border-top:1px solid var(--line)}
+.d-meta .row{font-size:11.5px;color:#8b968f;line-height:1.8;display:flex;gap:10px}
+.d-meta .row b{flex:none;width:56px;color:var(--muted);font-weight:600}
+
+@media(max-width:650px){
+  .detail-sheet{padding:26px 22px 22px}
+  .d-title{font-size:20px}
+  /* 窄屏放不下一行就竖排 —— 让「每支 −20 分钟」自己折行会断在「分」和「钟」中间 */
+  .d-num{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+  .d-num small{line-height:1.6}
+  .d-meta .row{flex-direction:column;gap:1px}
+  .d-meta .row b{width:auto}
+  .d-act{flex-direction:column;align-items:stretch;gap:10px}
+  .d-act-add{text-align:center;padding:9px 13px}
+}
+
+/* 减少动效：不放大、不位移，只让白框用 240ms 淡进来，字跟着 300ms 淡进来。
+   位移和缩放才是前庭敏感的人真正受不了的东西，纯透明度是安全的。
+   注意！下面这两条必须带 !important 且特异性高于文件开头那条
+   `@media(prefers-reduced-motion:reduce){*{transition:none!important}}`，
+   否则过渡会被那条全局规则吃掉 —— 弹窗会「啪」一下出现，等于没有淡入。 */
+@media(prefers-reduced-motion:reduce){
+  .detail-modal.is-fading{transition:opacity .24s linear!important}
+  .detail-modal .detail-sheet{transform:none!important}
+  .detail-scrim.is-fading{transition:opacity .26s linear!important}
+  .detail-close{opacity:1}
+}
