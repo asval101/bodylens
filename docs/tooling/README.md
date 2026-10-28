@@ -10,15 +10,19 @@
 
 ## 一、演示视频（5′50″）
 
-定稿：`video/身知BodyLens-演示视频-v3.mp4`（1920×1080 / 30fps / AAC 立体声 / 约 30MB）
+定稿：`video/身知BodyLens-演示视频-v4.mp4`（1920×1080 / 30fps / AAC 立体声 / 约 30MB）
 
-两版旧稿留着对比，内容差别都在产品段：
+旧稿都留着对比，差别只在产品段的字幕与画面：
 
 | 文件 | 时长 | 和定稿的差别 |
 | --- | --- | --- |
 | `身知BodyLens-演示视频.mp4` | 5′37″ | 第一版文案，资料库点的是「饮酒」 |
 | `身知BodyLens-演示视频-新版文案.mp4` | 5′37″ | 换了文案，画面没重录 |
-| `身知BodyLens-演示视频-v3.mp4` | 5′50″ | **定稿**：开头讲初衷、多了「AI 解读」一段、资料库点回「抽烟」 |
+| `身知BodyLens-演示视频-v3.mp4` | 5′50″ | 开头讲初衷、多了「AI 解读」一段、资料库点回「抽烟」；**第一人称口播**，31 条字幕 |
+| `身知BodyLens-演示视频-v4.mp4` | 5′50″ | **定稿**：画面与 v3 逐帧相同，换成第三人称说明稿 28 条 |
+
+**v3 → v4 只换了字，没有重录。** 产品段底板 `产品演示段-无声-v3.mp4` 是干净画面
+（无字幕、无音轨），换一份 srt 重跑第 4、5 两步即可，鼠标轨迹和页面状态一个字不动。
 
 | 段落 | 时间 | 内容 | 由什么生成 |
 | --- | --- | --- | --- |
@@ -43,13 +47,19 @@ node docs/tooling/rec-product.cjs http://127.0.0.1:4173
 node docs/tooling/build-video.cjs <帧目录> video/产品演示段-无声.mp4
 
 # 4. 字幕。先写 srt（时间码对齐 marks.json 里的 beat），再转成与画面同一套样式
-python docs/tooling/srt-to-ass.py video/产品演示段-新版字幕-v3.srt .tmpdoc/sub-product-v3.ass
+python docs/tooling/srt-to-ass.py video/产品演示段-修订字幕-v4.srt .tmpdoc/sub-product-v4.ass
 
 # 5. 烧字幕 + 配乐
 ffmpeg -i 产品演示段-无声-v3.mp4 -i music.m4a \
-  -filter_complex "[0:v]ass=sub-product-v3.ass:fontsdir=fonts,fps=30[v];[1:a]afade=t=out:st=152.5:d=4.5,volume=0.85[a]" \
-  -map [v] -map [a] -t 157 -c:v libx264 -c:a aac video/产品演示段-v3.mp4
+  -filter_complex "[0:v]ass=sub-product-v4.ass:fontsdir=fonts,fps=30[v];[1:a]afade=t=out:st=152.5:d=4.5,volume=0.85[a]" \
+  -map [v] -map [a] -t 157 -c:v libx264 -c:a aac video/产品演示段-v4.mp4
 ```
+
+**marks.json 记的是每个 beat 的结束时刻，不是开始时刻。** 排字幕要把
+「动作真正发生的那一秒」自己算出来：一次 `click()` 里有 700ms 悬停 + 按一下 + 320ms 等反应，
+所以 beat 标记往前推 2.5~5 秒才是点击落地的那一帧。v4 就是这么核对出来的——
+「输入烟」那一句原来排在 1:40，可 `烟` 的筛选结果在 1:38.3 就出来了、1:41.7 已经清空，
+照原样念会对着一片清空后的列表说「三条就出来了」，往前挪到 1:38.4 才对上。
 
 **改文案不用重录。** 画面在 `产品演示段-无声-v3.mp4` 里是干净的（无字幕、无音轨），
 换一份字幕重跑第 4、5 两步就行，两分钟出片，鼠标轨迹和页面状态一个字都不会变。
