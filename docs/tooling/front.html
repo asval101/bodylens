@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;padding:0;background:#f7f6f2;}
+  .card{
+    width:1920px;height:1080px;position:relative;overflow:hidden;
+    background:
+      radial-gradient(1200px 700px at 78% 16%, rgba(42,118,94,.055), transparent 62%),
+      radial-gradient(900px 620px at 12% 88%, rgba(160,74,36,.045), transparent 60%),
+      #f7f6f2;
+    font-family:"Microsoft YaHei","PingFang SC",sans-serif;
+    color:#16211d;
+    display:flex;align-items:center;
+  }
+  .inner{margin-left:190px;width:1180px;}
+  .rule{width:88px;height:4px;background:#16211d;margin-bottom:64px;}
+  .brand{display:flex;align-items:flex-end;gap:26px;}
+  .cn{font-size:112px;font-weight:600;letter-spacing:.12em;line-height:1;}
+  .en{font-size:34px;letter-spacing:.42em;color:#2a765e;padding-bottom:14px;}
+  .tag{
+    margin-top:52px;font-size:42px;line-height:1.85;color:#3d4a45;letter-spacing:.02em;
+  }
+  .meta{
+    margin-top:96px;padding-top:34px;border-top:1px solid #e0dcd2;
+    display:flex;gap:64px;font-size:25px;color:#737f79;letter-spacing:.06em;
+  }
+  .meta b{color:#16211d;font-weight:500;}
+  .dots{position:absolute;right:190px;bottom:150px;display:flex;gap:14px;}
+  .dots i{width:10px;height:10px;border-radius:50%;background:#cfd6d1;display:block;}
+  .dots i:first-child{background:#2a765e;}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="inner">
+      <div class="rule"></div>
+      <div class="brand">
+        <div class="cn">身知</div>
+        <div class="en">BODY LENS</div>
+      </div>
+      <div class="tag">把今天从你身上拿走的时间，记在账上。</div>
+      <div class="meta">
+        <span>在线演示 <b>body-ledger.com</b></span>
+        <span>代码仓库 <b>github.com/asval101/bodylens</b></span>
+        <span>演示视频 <b>5′37″</b></span>
+      </div>
+    </div>
+    <div class="dots"><i></i><i></i><i></i></div>
+  </div>
+</body>
+</html>
