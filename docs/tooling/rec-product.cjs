@@ -1,19 +1,28 @@
-/* 产品演示段录制（第二版）
+/* 产品演示段录制（第三版）
  *
- * 与第一版的两处不同：
- *   1. 视口 1280×720 + deviceScaleFactor 1.5 → screencast 帧是 1920×1080，
- *      但布局按 1280 宽算，产品内容占满画面，文字在成片里大 1.5 倍、且是高清渲染不是拉伸。
- *   2. 节奏放慢到 2 分半，每个功能留出看的时间。
+ * 与第二版的三处不同：
+ *   1. 开头多留 5 秒，给「为什么做这个产品」那几句话。
+ *   2. 记一笔之后滚到解读卡，让「AI 解读」标签真的出现在画面里。
+ *      前提是本地已经把模型接上（`node docs/tooling/serve-with-ai.cjs`），
+ *      否则标签会停在「本地解读」，这条会等 15 秒才放弃并打印警告。
+ *   3. 资料库点的是「抽烟」那张卡，不再是「饮酒」——前面记的是抽烟，
+ *      点开别的行为看着会跳。
  *
- * 用法：node .tmpdoc/rec-product.cjs [baseUrl]
+ * 每个 beat 结束时把时间戳写进 <DIR>/marks.json，字幕时间码按它算，不靠估。
+ *
+ * 用法：
+ *   node docs/tooling/serve-with-ai.cjs          # 另一个窗口，先把服务起好
+ *   node docs/tooling/rec-product.cjs [baseUrl]  # 默认 http://127.0.0.1:4173
+ *
+ * 目录已有帧会拒绝重跑（避免覆盖上一版素材），换 REC_DIR 即可。
  */
 const { spawn } = require('child_process');
 const http = require('http'); const fs = require('fs'); const path = require('path');
 
 const BASE = (process.argv[2] || 'http://127.0.0.1:4173').replace(/\/$/, '');
 const EDGE = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
-const PORT = 9763;
-const DIR = '.tmpdoc/rec3';
+const PORT = 9765;
+const DIR = process.env.REC_DIR || '.tmpdoc/rec';
 const W = 1280, H = 720, DSF = 1.5;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const getT = () => new Promise((res, rej) => {
@@ -24,7 +33,7 @@ const getT = () => new Promise((res, rej) => {
 
 const child = spawn(EDGE, [
   '--headless=new', '--remote-debugging-port=' + PORT,
-  '--user-data-dir=' + path.resolve('.tmpdoc/cdp-rec2'),
+  '--user-data-dir=' + path.resolve(DIR + '-cdp'),
   '--no-proxy-server', '--proxy-bypass-list=*',
   '--window-size=' + W + ',' + H, 'about:blank'
 ], { stdio: 'ignore' });
@@ -43,7 +52,7 @@ const CURSOR = `(()=>{
 (async () => {
   fs.mkdirSync(DIR, { recursive: true });
   if (fs.existsSync(path.join(DIR, 'times.json'))) {
-    console.log('目录里已有上一次的帧，请换一个 DIR 再跑'); process.exit(1);
+    console.log('目录里已有上一次的帧，请换一个 REC_DIR 再跑'); process.exit(1);
   }
 
   let t; for (let i = 0; i < 60; i++) { try { t = await getT(); if (t && t.length) break; } catch (e) { } await sleep(200); }
@@ -135,13 +144,18 @@ const CURSOR = `(()=>{
 
   await call('Page.startScreencast', { format: 'jpeg', quality: 90, maxWidth: 1920, maxHeight: 1080, everyNthFrame: 1 });
   console.log('录制开始');
-  const mark = l => console.log('  ' + l + '  @' + ((frames.length ? frames[frames.length - 1].ts : 0) / 1000).toFixed(1) + 's  帧' + frames.length);
+  const marks = {};
+  const mark = l => {
+    const ts = frames.length ? frames[frames.length - 1].ts / 1000 : 0;
+    marks[l] = +ts.toFixed(2);
+    console.log('  ' + l + '  @' + ts.toFixed(1) + 's  帧' + frames.length);
+  };
 
-  /* ---- A 首屏空态 ---- */
-  await sleep(6800);
-  await moveTo('[data-pick="smoke"]'); await sleep(2600);
-  await scrollY(430, 2000); await sleep(4400);
-  await scrollY(0, 2000); await sleep(3000);
+  /* ---- A 首屏空态（讲初衷，多留 5 秒） ---- */
+  await sleep(9200);
+  await moveTo('[data-pick="smoke"]'); await sleep(2400);
+  await scrollY(430, 2000); await sleep(5200);
+  await scrollY(0, 2200); await sleep(4600);
   await mark('A 首屏空态');
 
   /* ---- B 记一笔 ---- */
@@ -162,20 +176,27 @@ const CURSOR = `(()=>{
   await sleep(3200);
   await mark('C-2 退出聚焦');
 
-  /* ---- D 解读与推演 ---- */
-  await scrollToText('如果一直这样', 2000); await sleep(4200);
+  /* ---- D 解读（画面里要真的出现「AI 解读」标签） ---- */
+  await scrollTo('#today-ai', 2000);
+  const tagOk = await waitFor(`(document.querySelector('#ai-tag')||{}).textContent==='AI 解读'`, 15000);
+  console.log('   AI 标签：' + (tagOk ? 'AI 解读 ✓' : '没等到，还是 ' + (await run(`(document.querySelector('#ai-tag')||{}).textContent`))));
+  await sleep(6200);
+  await mark('D 解读与 AI');
+
+  /* ---- E 推演 ---- */
+  await scrollToText('如果一直这样', 2000); await sleep(4000);
   await clickText('1 年', 'button');
   await sleep(5000);
-  await mark('D 推演');
+  await mark('E-1 推演');
   await scrollY(9999, 1800); await sleep(4000);
-  await mark('D 近七天');
+  await mark('E-2 近七天');
 
-  /* ---- E 资料库 ---- */
+  /* ---- F 资料库 ---- */
   await scrollY(0, 1500);
   await click('a[href="#library"]', 2600);
   await waitFor(`document.querySelectorAll('.library-card').length>0`);
   await sleep(4400);
-  await mark('E-1 资料库');
+  await mark('F-1 资料库');
   await click('#library-search', 900);
   await run(`(()=>{const e=document.querySelector('#library-search');e.value='烟';
     e.dispatchEvent(new Event('input',{bubbles:true}));})()`);
@@ -183,14 +204,14 @@ const CURSOR = `(()=>{
   await run(`(()=>{const e=document.querySelector('#library-search');e.value='';
     e.dispatchEvent(new Event('input',{bubbles:true}));})()`);
   await sleep(2600);
-  await mark('E-2 搜索');
-  await click('.library-card[data-behavior="alcohol"]', 2200);
-  await sleep(6000);
-  await mark('E-3 详情弹窗');
+  await mark('F-2 搜索');
+  await click('.library-card[data-behavior="smoke"]', 2200);
+  await sleep(6200);
+  await mark('F-3 详情弹窗');
   await click('#detail-close', 900);
   await sleep(3200);
 
-  /* ---- F 今日计划 ---- */
+  /* ---- G 今日计划 ---- */
   await click('a[href="#plan"]');
   await waitFor(`!!document.querySelector('#plan-input')`);
   await sleep(3800);
@@ -208,25 +229,25 @@ const CURSOR = `(()=>{
   await sleep(3800);
   await click('input[data-task-toggle]', 1100);
   await sleep(3200);
-  await mark('F 今日计划');
+  await mark('G 今日计划');
 
-  /* ---- G 设置 ---- */
+  /* ---- H 设置 ---- */
   await click('#settings-link', 1600);
   await sleep(5400);
-  await mark('G 设置');
+  await mark('H 设置');
 
-  /* ---- H 收尾 ---- */
+  /* ---- I 收尾 ---- */
   await click('a[href="#today"]', 1100);
   await sleep(4600);
   await run(`(()=>{const c=document.getElementById('rec-cursor');if(c){c.style.left='1250px';c.style.top='700px';}})()`);
   await sleep(4200);
-  await mark('H 收尾');
-
-
+  await mark('I 收尾');
 
   await call('Page.stopScreencast');
   await sleep(400);
   fs.writeFileSync(path.join(DIR, 'times.json'), JSON.stringify(frames.map(f => Math.round(f.ts))));
+  fs.writeFileSync(path.join(DIR, 'marks.json'), JSON.stringify(marks, null, 2));
   console.log('\n帧数', frames.length, ' 时长', (frames[frames.length - 1].ts / 1000).toFixed(1) + 's');
+  console.log(JSON.stringify(marks, null, 2));
   ws.close(); child.kill(); process.exit(0);
 })().catch(e => { console.error(e); child.kill(); process.exit(1); });
