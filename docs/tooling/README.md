@@ -12,6 +12,10 @@
 
 最终文件：`video/身知BodyLens-演示视频.mp4`（1920×1080 / 30fps / AAC 立体声 / 约 29MB）
 
+换文案后另出一版：`video/身知BodyLens-演示视频-新版文案.mp4`，只有产品段的字幕不同，
+时长、画面、音轨完全一样（同为 5′37″）。两份都留着，对比着看。字幕文本分别是
+`video/字幕-产品段.srt`（旧）与 `video/产品演示段-新版字幕.srt`（新）。
+
 | 段落 | 时间 | 内容 | 由什么生成 |
 | --- | --- | --- | --- |
 | 片头 | 0:00–0:04 | 品牌卡 | `front.html` → `shot-front.cjs` 截 2 倍图 → ffmpeg 拉成 4 秒 |
@@ -33,11 +37,20 @@ node docs/tooling/build-video.cjs <帧目录> video/产品演示段-无声.mp4
 # 4. 字幕（ASS，锁字体锁位置）
 python docs/tooling/make-ass.py
 
+# 4b. 如果字幕来自一份 .srt（改文案时走这条），先转成同样的样式
+python docs/tooling/srt-to-ass.py video/产品演示段-新版字幕.srt .tmpdoc/sub-product-v2.ass
+
 # 5. 烧字幕 + 配乐
 ffmpeg -i 产品演示段-无声.mp4 -i music.m4a \
   -filter_complex "[0:v]ass=sub-product.ass:fontsdir=fonts,fps=30[v];[1:a]afade=t=out:st=140:d=5,volume=0.85[a]" \
   -map [v] -map [a] -c:v libx264 -c:a aac video/产品演示段-1080p.mp4
 ```
+
+**改文案不用重录。** 画面在 `产品演示段-无声.mp4` 里是干净的（无字幕、无音轨），
+换一份字幕重跑第 4b、5 两步就行，两分钟出片，鼠标轨迹和页面状态一个字都不会变。
+
+`sub-product.ass` 里那条样式是照着画面底部留白量出来的（微软雅黑 42px、3.4 描边、
+距底 62px），换工具会丢，所以 `srt-to-ass.py` 把样式写死在脚本里，只换文字和时间。
 
 两个踩过的坑：
 
