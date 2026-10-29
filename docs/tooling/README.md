@@ -158,3 +158,27 @@ node docs/tooling/build-cover.cjs
 
 一个坑：`--window-size` 给的是外框，不加 `--hide-scrollbars` 时视口会少 15px，
 导出的图就是 1905×1080。看到尺寸不对先查这一条，别去改版式。
+
+## 五、提交前体检
+
+```bash
+npm start                                    # 先起本地服务
+node docs/tooling/preflight.cjs              # 本地
+node docs/tooling/preflight.cjs https://body-ledger.com/   # 线上，同一套断言
+```
+
+把 README「分步流程」那 10 行逐条变成断言，跑完打印 PASS/FAIL 和合计。
+2026-10-29 在本地和线上各跑一遍，**12/12 全部通过**。
+
+写的几个坑：
+
+- **不能复用浏览器 profile**：上一次跑留下的 localStorage 会让账本不是空的，量出来全错。
+  脚本每次先 `localStorage.clear()` 再 reload。
+- **等元素出现不够，要等内容就绪**。线上首屏 4 秒才渲染出行为按钮，`#today-number` 这个节点
+  在 HTML 里一开始就在（内容是占位「—」），所以「节点存在」不等于「JS 跑完了」。
+  判断条件改成 `#today-entry-chips 有子元素`。
+- **断网测试不能 reload**。纯静态站点没有 service worker，断网刷新等于重新下载 html，
+  白屏是必然的，而那不是这条要验的东西。正确做法是页面已加载 → 断网 → 直接操作。
+  README 第 9 步也因此补了「不要刷新」四个字。
+- **量 DOM 之前先确认这一帧不是空的**。这个教训在视频验收里也踩过：拿黑场量字幕位置，
+  量出来永远是最后一行。
