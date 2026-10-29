@@ -28,9 +28,11 @@ const child = spawn(EDGE, [
   '--window-size=1200,900', 'about:blank'
 ], { stdio: 'ignore' });
 
+// 第 4 个参数可换页脚左侧标题（默认「技术文档」，不留参数时行为完全不变）
+const FOOTER_TITLE = process.argv[4] || '技术文档';
 const footer = `<div style="width:100%;font-family:'Microsoft YaHei',sans-serif;font-size:7.6pt;color:#8a938d;
   padding:0 17mm;display:flex;justify-content:space-between;align-items:center;letter-spacing:.06em;">
-  <span>身知 BodyLens · 技术文档</span>
+  <span>身知 BodyLens · ${FOOTER_TITLE}</span>
   <span><span class="pageNumber"></span> / <span class="totalPages"></span></span>
 </div>`;
 const header = `<div style="width:100%;font-size:1px;color:transparent;">&#8203;</div>`;

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>身知 BodyLens · 作品介绍文档</title>
+<style>
+  @page { size: A4; margin: 20mm 17mm 18mm 17mm; }
+  :root{
+    --ink:#16211d;
+    --muted:#4c5c56;
+    --faint:#737f79;
+    --line:#e0dcd2;
+    --line-soft:#eeeae1;
+    --mint:#2a765e;
+    --copper:#a04a24;
+    --paper:#f7f6f2;
+    --code:#f4f2ec;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB","Source Han Sans SC",system-ui,sans-serif;
+    color:var(--ink);
+    font-size:10.4pt;
+    line-height:1.82;
+    letter-spacing:.012em;
+    text-align:justify;
+    text-justify:inter-ideograph;
+    -webkit-print-color-adjust:exact;
+    print-color-adjust:exact;
+  }
+  p{ margin:0 0 .72em; }
+  strong{ font-weight:600; }
+  em{ font-style:normal; color:var(--mint); font-weight:600; }
+  .num{ font-variant-numeric:tabular-nums; }
+  code{
+    font-family:"Cascadia Mono","Consolas","SF Mono",monospace;
+    font-size:8.9pt; background:var(--code); padding:.5mm 1.2mm; border-radius:1mm;
+    color:#2f4a42;
+  }
+
+  /* ---------- 封面 ---------- */
+  .cover{ height:250mm; display:flex; flex-direction:column; }
+  .cover .rule-top{ height:3px; background:var(--ink); width:46mm; }
+  .cover h1{
+    font-size:40pt; line-height:1.18; margin:24mm 0 0; font-weight:600; letter-spacing:.06em;
+  }
+  .cover .latin{
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:11.5pt; letter-spacing:.34em; color:var(--mint);
+    margin:5mm 0 0; text-transform:uppercase;
+  }
+  .cover .tagline{
+    font-size:13pt; line-height:1.8; color:var(--muted); margin:10mm 0 0; max-width:132mm;
+  }
+  .cover .spacer{ flex:1; }
+  .cover .meta{
+    border-top:1px solid var(--line); padding-top:6mm;
+    display:grid; grid-template-columns:26mm 1fr; gap:2.2mm 4mm;
+    font-size:9.2pt; line-height:1.7; color:var(--muted);
+  }
+  .cover .meta dt{ color:var(--faint); }
+  .cover .meta dd{ margin:0; color:var(--ink); }
+  .cover .meta a{ color:var(--mint); text-decoration:none; }
+
+  /* ---------- 章节 ---------- */
+  h2{
+    page-break-before:always;
+    font-size:18pt; line-height:1.32; font-weight:600;
+    margin:0 0 1mm; letter-spacing:.02em;
+  }
+  h2 .idx{
+    display:block; font-family:Georgia,serif; font-size:9pt; letter-spacing:.28em;
+    color:var(--mint); margin-bottom:2.5mm; font-weight:400;
+  }
+  h2 .req{
+    display:block; font-size:8.6pt; font-weight:400; color:var(--faint);
+    letter-spacing:.04em; margin-top:2mm;
+  }
+  h2::after{
+    content:""; display:block; width:100%; height:1px; background:var(--line);
+    margin:4mm 0 6mm;
+  }
+  /* 接排的章（不另起新页），用于前一章内容不足一页时 */
+  h2.cont{ page-break-before:auto; margin-top:10mm; }
+  h3{
+    font-size:11.8pt; font-weight:600; margin:6.5mm 0 1.8mm;
+    page-break-after:avoid; letter-spacing:.01em;
+  }
+  h3 .no{ color:var(--mint); font-size:9.2pt; margin-right:2mm; font-family:Georgia,serif; }
+  h2 + h3{ margin-top:0; }
+
+  blockquote{
+    margin:4mm 0; padding:0 0 0 6mm;
+    border-left:2px solid var(--mint);
+    color:var(--ink); font-size:10.2pt;
+  }
+  blockquote p{ margin:0 0 .5em; }
+  blockquote p:last-child{ margin-bottom:0; }
+
+  .lead{
+    font-size:10.8pt; color:var(--muted); line-height:1.85;
+    margin:0 0 5mm;
+  }
+
+  /* ---------- 列表 ---------- */
+  ul,ol{ margin:0 0 .8em; padding-left:5.6mm; }
+  li{ margin:0 0 .42em; }
+  ul.tight li{ margin-bottom:.22em; }
+  ul.plain{ list-style:none; padding-left:0; }
+  ul.plain > li{
+    position:relative; padding-left:5.2mm; margin-bottom:2.4mm;
+  }
+  ul.plain > li::before{
+    content:""; position:absolute; left:0; top:2.5mm;
+    width:2mm; height:2mm; background:var(--mint); border-radius:50%;
+  }
+  ul.plain > li b{ display:block; font-weight:600; margin-bottom:.1em; }
+  ul.plain > li span{ color:var(--muted); }
+
+  /* ---------- 表格 ---------- */
+  table{
+    width:100%; border-collapse:collapse; margin:3mm 0 4mm;
+    font-size:9.3pt; line-height:1.65; page-break-inside:avoid;
+  }
+  th,td{ text-align:left; padding:2.1mm 2.6mm; border-bottom:1px solid var(--line-soft); vertical-align:top; }
+  th{ color:var(--faint); font-weight:500; border-bottom:1px solid var(--line); font-size:8.8pt; letter-spacing:.04em; }
+  td.k{ color:var(--mint); font-weight:600; white-space:nowrap; }
+  tr:last-child td{ border-bottom:1px solid var(--line); }
+
+  /* ---------- 图 ---------- */
+  figure{
+    margin:4mm 0 4.5mm; page-break-inside:avoid;
+  }
+  figure img{
+    display:block; width:80%; height:auto; margin:0 auto;
+    border:1px solid var(--line); border-radius:1.2mm;
+  }
+  /* 竖版截图不能按 100% 宽排，否则高度会溢出整页 */
+  figure.portrait img{ width:46mm; margin:0 auto; }
+  figcaption{
+    font-size:8.6pt; color:var(--faint); line-height:1.6;
+    margin-top:2mm; padding-left:1mm;
+  }
+  figcaption b{ color:var(--muted); font-weight:600; }
+
+  /* ---------- 其他块 ---------- */
+  .note{
+    background:var(--paper); border:1px solid var(--line); border-radius:1.6mm;
+    padding:3.4mm 4.2mm; margin:4mm 0; font-size:9.6pt; line-height:1.72; color:var(--muted);
+  }
+  .note b{ color:var(--ink); font-weight:600; }
+
+  /* 标题与紧随的内容绑在一起，避免标题孤悬在页尾 */
+  .group{ page-break-inside:avoid; }
+
+  .kpis{
+    display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:3mm;
+    margin:4mm 0 5mm;
+  }
+  .kpis div{
+    border-top:2px solid var(--ink); padding-top:2.4mm;
+  }
+  .kpis .v{ font-size:15pt; font-weight:600; line-height:1.2; font-variant-numeric:tabular-nums; }
+  .kpis .l{ font-size:8.4pt; color:var(--faint); line-height:1.5; margin-top:.6mm; }
+
+  .end{
+    margin-top:8mm; padding-top:4mm; border-top:1px solid var(--line);
+    font-size:9.2pt; color:var(--faint);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 封面 ============ -->
+<section class="cover">
+  <div class="rule-top"></div>
+  <h1>身知 BodyLens</h1>
+  <p class="latin">A Ledger of the Body</p>
+  <p class="tagline">把今天做的事，算成身体的账。<br>每个数字都写得出它从哪来，也写得出它有多不确定。</p>
+  <div class="spacer"></div>
+  <dl class="meta">
+    <dt>作品类型</dt><dd>Web 应用（在线可访问，断网可用）</dd>
+    <dt>作品地址</dt><dd><a href="https://body-ledger.com">https://body-ledger.com</a></dd>
+    <dt>源码仓库</dt><dd><a href="https://github.com/asval101/bodylens">https://github.com/asval101/bodylens</a></dd>
+    <dt>本文档说明</dt><dd>按报名表单「作品介绍文档」七项要求逐条撰写，每章对应一项</dd>
+    <dt>编制日期</dt><dd>2026 年 10 月 29 日</dd>
+  </dl>
+</section>
+
+<!-- ============ 一 ============ -->
+<h2><span class="idx">CHAPTER 01</span>项目详情与使用方式<span class="req">对应要求（1）描述项目详情及使用方式</span></h2>
+
+<h3><span class="no">1.1</span>它是什么</h3>
+<p class="lead">身知 BodyLens 是一个把日常行为的后果换算成时间、并落到具体器官上的网页应用。不需要注册，打开就能用，断网也能继续用。</p>
+<p>医学研究给出的结论，大多是「风险上升百分之几十」这种说法。这句话是真的，但对一个二十岁的人几乎不起作用——他看不见「百分之几十」落在自己的哪一天、哪个部位。身知换了一个单位：<em>不是风险，是时间</em>。一支烟约 20 分钟，一包约 400 分钟，按每天一包算一年约 101 天。点一下今天做过的事，这个数字立刻出现，同时告诉用户它出自哪份研究、误差区间有多大、落在肺、心还是脑。</p>
+<p>产品里只有一件事在结算，那就是用户自己填进去的行为。系统不加判断，不给建议，也不把好事和坏事兑成一张账单——收益和损耗不抵消。</p>
+
+<h3><span class="no">1.2</span>给谁用</h3>
+<p>给那些已经知道「该少抽、该早睡」，但看不动百分比的人。典型场景是晚上十一点，用户回想今天抽了几支烟、坐了几个小时，想知道这到底算不算事。身知在三十秒内给一个具体的数，并诚实地标出这个数的边界。</p>
+
+<h3><span class="no">1.3</span>怎么用：三步，没有第四步</h3>
+<table>
+  <thead><tr><th style="width:20mm">顺序</th><th style="width:44mm">操作</th><th>看到什么</th></tr></thead>
+  <tbody>
+    <tr><td class="k">第一步</td><td>在「记一笔」里点一件今天发生的事</td><td>香烟、喝酒、熬夜、久坐、屏幕时间等 30 项，分七个大类</td></tr>
+    <tr><td class="k">第二步</td><td>点一个数量（例如香烟「＋1 支」）</td><td><b>点下去就入账</b>，没有「提交」按钮。总时间当场变化</td></tr>
+    <tr><td class="k">第三步</td><td>看下面三块内容</td><td>这个数字等于什么（一集短剧、一小时睡眠）、涉及哪些器官、这一天的解读、如果一直这样会怎样</td></tr>
+  </tbody>
+</table>
+<p>四个页面各有分工，导航里只有三个入口加一个齿轮：<b>今天</b>（记账、看账、看推演）、<b>行为资料库</b>（全部 30 项行为与 12 个公开来源）、<b>今日计划</b>（写下今天想做的一件小事）、<b>数据与设置</b>（导出备份、恢复、动效与景深开关）。</p>
+
+<h3><span class="no">1.4</span>它不做什么</h3>
+<ul class="tight">
+  <li>不做健康评估，不给医学建议，不预测个人寿命。所有数字都是「按群体研究折算」，页面上每个数字下面都跟着这句话。</li>
+  <li>不收集身份信息。没有账号，没有数据库，数据只存在浏览器本地，可随时导出成 JSON 备份。</li>
+  <li>不把正向行为折算成抵扣。早睡不会被算成「省下 30 分钟」，只会记下「你早睡了」。</li>
+</ul>
+
+<figure>
+  <img src="evidence/screenshots/2026-10-28-01-today-empty.png" alt="空账本首屏">
+  <figcaption><b>首次打开。</b>账本里什么都没有时，大数字位置写的是「还没开始」，三张下位卡片都明确写着「这张卡还没有数字」。这是刻意的：<b>没有数据就不给数，也不举一个例子替用户填进去。</b></figcaption>
+</figure>
+
+<h3><span class="no">1.5</span>界面上每个位置都在回答一个问题</h3>
+<ul class="tight">
+  <li><b>数字下面的那行灰字为什么不能省。</b>「资料折算的估算值 · 不是你的个人预测」紧贴着大数字，因为数字越小越容易被当成结论。这句话不是免责声明，是这个数字成立的全部前提。</li>
+  <li><b>「大约等于一集短剧」不是修辞。</b>20 分钟是它能对上的最近一个日常时间单位。分钟是抽象的，一集短剧不是。</li>
+  <li><b>器官点亮不用警告色。</b>全站只用两种强调色：一种表示可点，一种表示不利影响。剩下的交给黑白灰——用色克制本身就是可信度的一部分。</li>
+  <li><b>动效只表达一件事：数变了。</b>没有装饰性动画。三档开关（完整 / 减弱 / 关闭）在设置里可切，系统「减少动态效果」也会自动生效；全部关掉之后，记账、看器官、改计划的功能一样不缺。</li>
+</ul>
+
+<!-- ============ 二 ============ -->
+<h2><span class="idx">CHAPTER 02</span>项目的亮点<span class="req">对应要求（2）描述项目的亮点</span></h2>
+
+<p class="lead">同类产品大多停在「提醒你不要做」和「给你一个百分比」之间。这个作品的全部努力，是把那句话变成一个能对上自己明天的数，同时不丢掉严谨。</p>
+
+<ul class="plain">
+  <li><b>换了一个单位：从「风险」换成「时间账」</b>
+    <span>一支烟 20 分钟、一杯酒 15 分钟、一小时屏幕 21.8 分钟、一小时睡眠不足 11 分钟。这些数字能排进同一栏，因为它们单位相同；「肝受损」和「肺受损」不能比较，所以产品不比较那个。同一把尺子从一次行为量到一辈子，用户自己能看见差别。</span></li>
+  <li><b>每个数字都能追到出处，写不出区间就不许显示</b>
+    <span>数字不写在页面里，只存在一份权重表 <code>data/weights.js</code> 中，每条都带来源、区间和适用条件。代码里有校验：缺了 caveat 的数字在测试阶段直接报错。资料库里没把握的项目——比如含糖饮料——就明确写「没有可信口径」，不拿一个凑数的数字顶上。</span></li>
+  <li><b>AI 只负责换措辞，一个数都不许碰</b>
+    <span>所有数值在本地算完，AI 拿到的是算好的结论，任务是把它说成人话。它输出的句子如果和本地数字对不上，这段解读直接丢弃，标签从「AI 解读」退回「本地解读」。没有密钥、没有网络、超时、限流，全部走同一条退路，功能不缺。</span></li>
+  <li><b>不替用户做决定，也不替用户记账</b>
+    <span>空账本不给数字；正向行为和损耗分两栏记，互不抵消；推演只给区间，不给结论。产品允许用户看完什么也不做——这是设计里最难守住、也是最要紧的一条。</span></li>
+  <li><b>零依赖、断网可用、十分钟能跑起来</b>
+    <span>原生 HTML/CSS/JS，没有框架、没有构建步骤、没有 <code>node_modules</code>、没有 CDN。约 4,800 行代码，<code>npm start</code> 一条命令起本地服务，85 项自动化测试 151 毫秒跑完。评委不需要装任何包就能验证每一条说法。</span></li>
+</ul>
+
+<div class="kpis">
+  <div><div class="v">30</div><div class="l">项日常行为<br>七个分类</div></div>
+  <div><div class="v">12</div><div class="l">个公开研究<br>资料来源</div></div>
+  <div><div class="v">85</div><div class="l">项自动化测试<br>全部通过</div></div>
+  <div><div class="v">100</div><div class="l">次 Git 提交<br>12 天演进</div></div>
+</div>
+
+<!-- ============ 三 ============ -->
+<h2><span class="idx">CHAPTER 03</span>AI 技术落地的使用情况<span class="req">对应要求（3）AI 测试技术落地使用情况概述</span></h2>
+
+<h3><span class="no">3.1</span>产品里的 AI：只有一处，而且被严格限制</h3>
+<p>全站只有一个地方调用大模型——「这一天的解读」那段话。它的位置是最后一块，前面所有数字、换算、器官归属都已经在本地算完。AI 做的唯一一件事，是把结论换一种说法。卡片右上角的标签会明确写出这句话是谁说的：<b>「AI 解读」</b>或<b>「本地解读」</b>。</p>
+<p>三条约束写在代码里，不是写在文档里：</p>
+<table>
+  <thead><tr><th style="width:32mm">约束</th><th>实现方式</th></tr></thead>
+  <tbody>
+    <tr><td class="k">密钥不进浏览器</td><td>前端不直连任何第三方接口，所有请求走同源 <code>/api/interpret</code>，由服务端持有密钥。前端不知道密钥存在。</td></tr>
+    <tr><td class="k">AI 不算数</td><td>数值一律由 <code>ledger.js</code> 与 <code>forecast.js</code> 在本地算出。AI 的输出里出现与本地结果不一致的数字，这段输出被判为无效。</td></tr>
+    <tr><td class="k">接不上就退回本地</td><td>无网络、无密钥（返回 503）、限流、超时，一律返回本地规则文案。<b>降级路径是默认路径，在线只是增强。</b></td></tr>
+  </tbody>
+</table>
+
+<h3><span class="no">3.2</span>开发过程中的 AI 协同：留了可核对的痕</h3>
+<p>这个项目从第一行代码到上线，是用 AI 结对完成的。这本身不稀奇，稀奇的是过程可回溯：仓库 <code>docs/prompt-log/</code> 下有 <b>10 条 Prompt 链</b>，每条记的是用户原话 → AI 第一轮输出哪里不对 → 人工怎么纠偏 → 落到哪个提交号。</p>
+<ul class="tight">
+  <li><b>3 条带原始证据</b>（公开分享页快照 + 归档截图），时间段分别是 10 月 21 日 15:57–16:58、17:17–17:57 与 10 月 22 日 20:23–20:39，正文可在线打开核对。</li>
+  <li><b>2 条带可复现对照</b>：把同一段操作在改动前后两个提交上各跑一遍截图，评委可以从 git 自行复现，不需要相信任何截图。</li>
+  <li><b>5 条只有文字记录</b>：当时没有留分享快照，只保留文字与提交号，能 <code>git show</code> 还原，但<b>不冒充原始证据</b>，按规则只算补充材料。</li>
+</ul>
+<p>除此之外，演示视频的后半段（2 分 36 秒）是真实协作过程的录屏：三个具体的问题、三次把 AI 的输出否掉、改完再验。这一段不是复述，是当时屏幕上的实际操作。</p>
+
+<div class="group">
+<h3><span class="no">3.3</span>测试与验收里的 AI 与自动化</h3>
+<p>这个作品对「AI 说完成」这句话是不信任的，所有验收都落在可执行的脚本上。</p>
+<table>
+  <thead><tr><th style="width:38mm">手段</th><th style="width:22mm">规模</th><th>解决了什么</th></tr></thead>
+  <tbody>
+    <tr><td class="k">单元测试</td><td>85 项 · 151ms</td><td>账本累加、权重口径、情境转换、趋势补齐。口径写错会在测试里直接失败，不会等到用户看见。</td></tr>
+    <tr><td class="k">无头浏览器探针</td><td>50 项断言</td><td>弹窗开合、锁背景滚动、滚动条替身、降级分支。这些是「看截图看不出来、但用户一碰就坏」的部分。</td></tr>
+    <tr><td class="k">提交前体检</td><td>12 项 · 本地 + 线上各一遍</td><td>把 README 里的分步流程写成断言，逐条对「应该看到」。2026-10-29 本地 12/12、线上 12/12。</td></tr>
+    <tr><td class="k">像素级验收</td><td>逐帧</td><td>动效用 <code>getBoundingClientRect()</code> 序列量，不靠截图判断——截图有 100~200ms 延迟，抓不到 100ms 级的过程。</td></tr>
+  </tbody>
+</table>
+<div class="note"><b>这套体检抓出过三个真问题：</b>一是复用浏览器配置会让账本带着上一次的残留数据，「首屏」量出两支烟；二是「节点存在」不等于「JS 跑完」，首屏要等 4 秒才渲染，写死等待时间会假失败；三是断网后刷新必然白屏——纯静态站点没有 Service Worker，页面本身不在缓存里。第三条已写进 README，并注明这是刻意的取舍，不是疏漏。</div>
+</div>
+
+<h3><span class="no">3.4</span>脚本可以由 AI 写，判据必须由人定</h3>
+<p>上面这些探针脚本大部分是 AI 写的，但「什么算通过」这一条，必须由人来写。第一次跑提交前体检，13 项里有 4 项失败，其中 <em>3 项是断言写错了，不是产品坏了</em>：脚本按自己的想象去页面上找一段文案，而页面上那句话本来就不是那么写的。如果当时是让 AI 判断「通过率 70% 说明有 4 个 bug」，这几处会被当成缺陷去「修」，把好代码改坏。</p>
+<p>所以验收脚本里有一条硬规则：<b>失败时先回答「是产品不对，还是判据不对」</b>，判据写在 README 的流程表里，与产品行为一一对应。表对不上时，要么修产品，要么改表并写明原因——没有第三种处理方式。这条规则在 2026-10-29 那次全绿之前，实际拦下过三次「假失败」和一次真实的断网白屏。</p>
+
+<!-- ============ 四 ============ -->
+<h2><span class="idx">CHAPTER 04</span>项目涉及的关键技术<span class="req">对应要求（4）描述项目中涉及的关键技术</span></h2>
+
+<p class="lead">官方推荐的是 React / Vue / Node 这一套。这个项目一套都没用，原因不是偏好，是四条硬指标——零依赖、断网可用、十分钟能跑起来、界面不能有明显掉帧——把主流方案全筛掉了。技术上的难点因此不在「用什么框架」，而在「没有框架时怎么保证不乱」。</p>
+
+<h3><span class="no">4.1</span>单一真相源：数据只有一份</h3>
+<p><code>data/catalog.js</code> 记行为，<code>data/weights.js</code> 记权重、来源、区间与适用条件。这两个文件是唯一的数据来源，<b>任何页面都不许写死分钟数</b>。资料库详情页的数字也是从权重表读的，改口径只改一处，全站同步。这条规则在评审中最容易被验证：全文搜索 「20 分钟」这类字面量，只会在权重表里命中。</p>
+
+<h3><span class="no">4.2</span>唯一一处转换</h3>
+<p>整个应用只有一处「账本 → 资料库情境」的转换，在 <code>today.js</code> 的 <code>scenario()</code>。计划页要读今天记了什么，也走这一个函数，不另写一套映射。少一处转换，就少一处不一致——这是把「账本和推演要认同一个数」这条要求变成结构，而不是靠人记住。</p>
+
+<h3><span class="no">4.3</span>推演不是 AI 算的</h3>
+<p>「如果一直这样」这张卡把权重逐日累加，得到一周、一个月、一年的区间，不是问模型「大概会怎样」。算一年的推演耗时 2.5 毫秒。这条边界同样有纪律：只有吸烟、饮酒、久坐三项进推演，因为只有这三项有足够扎实的剂量—时间研究；睡眠不足一小时按 11 分钟计，摊到六十年就超出了这个口径能成立的范围，所以哪怕它最抓人，也不进推演。</p>
+
+<h3><span class="no">4.4</span>人体是手写的 SVG</h3>
+<p>右栏可点击的人体没有用任何图形库或序列帧，是一组自己调的 SVG 路径：外壳、器官、锚影分三层，每层有各自的克制规则（外壳只做减淡不做变形，器官保留色相，描边负责在浅色背景上撑出轮廓）。十二个器官在同一个坐标系里，点哪块出哪块的详情。这块的教训是「骨架只能做减法」——试图重算坐标让手臂避开躯干，结果手臂穿进了身体。</p>
+
+<div class="group">
+<h3><span class="no">4.5</span>数字口径的三条铁律</h3>
+<table>
+  <thead><tr><th style="width:36mm">铁律</th><th>落在哪</th></tr></thead>
+  <tbody>
+    <tr><td class="k">有数字必有 caveat</td><td><code>weights.js</code> 里带校验：缺来源或缺区间的条目过不了测试</td></tr>
+    <tr><td class="k">推算要写路径</td><td>每个推算出来的数带 <code>item.hint</code>，说明是按什么口径算的</td></tr>
+    <tr><td class="k">只在尺度内成立</td><td>推演有白名单，超出研究尺度的项不许进</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3><span class="no">4.6</span>零依赖带来的工程约束</h3>
+<p>没有框架，就必须自己把框架默认给出的东西补上：模块是立即执行函数加 <code>window.BodyLens</code> 命名空间，<code>index.html</code> 里按依赖顺序手写 <code>&lt;script&gt;</code>；模板是字符串加事件委托，比手写 <code>createElement</code> 短，比引入模板引擎轻；样式统一走一套 CSS 变量，配色只有三个职责，其余交给黑白灰。</p>
+<p>代价是要自己守边界。没有类型检查，就用 85 项测试兜底；没有打包器，脚本顺序本身就是依赖声明，改了加载顺序要同时改测试；没有组件，就得靠约定——比如「新增动效一律进 <code>vfx.js</code>，业务代码里不许出现视觉动画」，这条约定写进了 <code>AGENTS.md</code>，也在代码评审时逐条核对过。收益是全站没有一个跨域请求、没有构建产物、没有版本地狱，<code>npm test</code> 跑的是 Node 自带的测试器，连测试框架都没装。</p>
+
+<h3><span class="no">4.7</span>一次删掉两个页面的重构</h3>
+<p>早期版本是三个平级页面：今天、人体、资料库。用户记完一笔账，要点一次导航才能看见这笔记在身体哪里——「话」和「行动」之间隔了一次点击。提交 <code>a113487</code> 把三个页面合并成一页：左边账本、右边人体，改一笔，人体当场亮。</p>
+<p>代价是布局代码复杂了不少：一页里六块内容的窄屏顺序要手排（账 → 计划 → 人体 → 推演 → 趋势），而单栏断点下 DOM 顺序又不能真的改，只能用布局树重排。这一步花了比其他改动更多的时间，但它是这次改版里最值的一处——产品的主张「看见后果」本身就是这个布局在表达，不是一个功能项。</p>
+
+<!-- ============ 五 ============ -->
+<h2><span class="idx">CHAPTER 05</span>项目相关的图片<span class="req">对应要求（5）项目相关的图片 / 照片</span></h2>
+
+<p class="lead">以下四张都是线上 <b>body-ledger.com</b> 的真实界面截图，2026 年 10 月 28 日从服务器直接抓取，并核对过本地与线上文件的 md5 一致。完整 8 张见仓库 <code>docs/evidence/screenshots/</code>。</p>
+
+<figure>
+  <img src="evidence/screenshots/2026-10-28-02-today-recorded.png" alt="记入行为后的今天页">
+  <figcaption><b>记账之后。</b>左栏大数字是今天被拿走的时间，紧接着写明「资料折算的估算值 · 不是你的个人预测」；再往下是这个数等于什么（大约一集短剧）、涉及哪些器官。右栏人体上对应的器官被点亮。用户不需要读任何说明就知道该看哪里。</figcaption>
+</figure>
+
+<figure>
+  <img src="evidence/screenshots/2026-10-28-03-today-forecast.png" alt="如果一直这样">
+  <figcaption><b>如果一直这样。</b>用同一份权重换时间尺度：一周、一个月、一年。这张卡的数字不是模型生成的，是把权重逐日累加得到的。空账本时它不给数字，只写「这张卡还没有数字」。</figcaption>
+</figure>
+
+<figure>
+  <img src="evidence/screenshots/2026-10-28-05-library-detail.png" alt="器官详情">
+  <figcaption><b>器官详情。</b>点右栏的器官，弹出这个器官在做什么、今天这些行为和它是什么关系、依据哪份研究、哪些地方还没有数据。最后一栏是刻意留的——写清「这里我不知道」，比编一句更可信。</figcaption>
+</figure>
+
+<figure class="portrait">
+  <img src="evidence/screenshots/2026-10-28-08-today-390.png" alt="手机窄屏">
+  <figcaption><b>手机窄屏（390 宽）。</b>单栏排布，人体下沉到账本之后。六个板块的先后顺序按「先看账、再看人、最后看推演」重排，没有横向溢出。截图取自真实 390 宽视口，不是缩放模拟。</figcaption>
+</figure>
+
+<!-- ============ 六 ============ -->
+<h2><span class="idx">CHAPTER 06</span>发表与获奖情况<span class="req">对应要求（6）项目之前是否发表过或获奖，请说明</span></h2>
+
+<p class="lead">没有。这个作品在本次提交之前，没有在任何地方发表过，也没有参加过任何比赛或获得过任何奖项。</p>
+<p>项目从 2026 年 10 月 17 日开始做，10 月 18 日建立 Git 仓库并持续提交，到本文档编制时共 100 次提交、12 天。它一直只是一个个人的东西，没有对外发布过，也没有投稿到任何平台或期刊。本次是它第一次公开提交，也是第一次接受外部评审。</p>
+<p>线上地址 <b>body-ledger.com</b> 是为这次参赛部署的，此前不存在公开可访问的版本。如果评审需要，服务器的部署记录、证书签发时间与 Git 提交时间线可以对上。</p>
+
+<!-- ============ 七 ============ -->
+<h2 class="cont"><span class="idx">CHAPTER 07</span>与其他项目的关系<span class="req">对应要求（7）若项目是在其他项目基础上优化，请说明优化部分</span></h2>
+
+<p class="lead">不是。这个作品是原创实现，不是在任何一个已有项目的基础上改的。</p>
+<p>为了说得更清楚，把「用了别人的东西」和「没用的」分开列一下：</p>
+<table>
+  <thead><tr><th style="width:52mm">项目</th><th style="width:24mm">情况</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>前端框架（React / Vue 等）</td><td class="k">未使用</td><td>原生 HTML/CSS/JS</td></tr>
+    <tr><td>图表 / 人体图形库</td><td class="k">未使用</td><td>人体是手写 SVG 路径，图表是原生绘制</td></tr>
+    <tr><td>第三方运行时依赖、CDN</td><td class="k">零</td><td>仓库内无 <code>node_modules</code>，全站无跨域请求</td></tr>
+    <tr><td>UI 组件库 / 模板</td><td class="k">未使用</td><td>版式与交互都是自己写的</td></tr>
+    <tr><td>字体</td><td class="k">系统字体</td><td>使用系统中文字体栈，不分发任何字体文件</td></tr>
+    <tr><td>研究数据与结论</td><td class="k">公开来源</td><td>12 个公开发表的资料来源，逐条列在资料库里，可点开查看出处</td></tr>
+  </tbody>
+</table>
+<p>关于起点需要如实说明一件事：<b>10 月 17 日之前的早期探索没有建立版本管理</b>，那部分代码在 10 月 18 日作为一条基线一次性纳入了 Git（提交 <code>7f02b82</code>），提交信息里写明了缘由。它是一条基线，不是按功能拆分的历史，也没有伪装成那样。此后 99 次提交是真实的演进过程，每次对应一个可独立描述的改动，可与 <code>docs/prompt-log/</code> 下的 Prompt 链逐条对照。</p>
+
+
+</body>
+</html>
