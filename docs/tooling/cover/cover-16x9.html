@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: 1920px 1080px; margin: 0; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1920px; height:1080px; overflow:hidden; }
+  body {
+    background:#f7f6f2;
+    font-family:"Microsoft YaHei","微软雅黑",sans-serif;
+    color:#16211d;
+    position:relative;
+  }
+  /* 极淡的暖色光晕，只为让右侧截图有落点 */
+  .glow {
+    position:absolute; right:-260px; top:-320px;
+    width:1400px; height:1400px; border-radius:50%;
+    background:radial-gradient(circle, rgba(42,118,94,.085) 0%, rgba(42,118,94,.03) 45%, rgba(42,118,94,0) 70%);
+  }
+  .wrap { position:absolute; inset:0; display:flex; align-items:center; }
+  .left { width:820px; padding-left:112px; padding-right:56px; }
+  .eyebrow {
+    display:flex; align-items:center; gap:14px;
+    font-size:21px; letter-spacing:.30em; color:#2a765e;
+    font-weight:600; text-transform:uppercase;
+  }
+  .eyebrow i { display:block; width:44px; height:2px; background:#2a765e; opacity:.55; }
+  h1 {
+    margin-top:34px;
+    font-size:86px; line-height:1.22; font-weight:700; letter-spacing:-.01em;
+  }
+  h1 em { font-style:normal; color:#2a765e; }
+  .sub {
+    margin-top:36px; font-size:29px; line-height:1.72; color:#4c5c56;
+  }
+  .sub b { font-weight:600; color:#16211d; }
+  .rule { margin-top:40px; width:88px; height:3px; background:#a04a24; opacity:.85; }
+  .foot {
+    position:absolute; left:112px; bottom:74px;
+    font-size:20px; color:#737f79; letter-spacing:.02em;
+  }
+  .foot span { color:#2a765e; font-weight:600; }
+  .shot {
+    position:absolute; left:828px; top:210px;
+    width:1056px; height:660px;
+    border-radius:16px; overflow:hidden;
+    box-shadow:0 30px 70px rgba(22,33,29,.16), 0 6px 18px rgba(22,33,29,.07);
+    border:1px solid #e4e0d7;
+    background:#fff;
+  }
+  .shot img { width:100%; height:100%; object-fit:cover; object-position:left top; display:block; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="wrap">
+    <div class="left">
+      <div class="eyebrow"><i></i>身知 BodyLens</div>
+      <h1>你今天做的事，<br><em>身体都记着。</em></h1>
+      <p class="sub">把抽烟、喝酒、熬夜、久坐，<br>折算成<b>看得见的时间和影响</b>。</p>
+      <div class="rule"></div>
+    </div>
+  </div>
+  <div class="shot">
+    <img src="../../evidence/screenshots/2026-10-28-02-today-recorded.png" alt="">
+  </div>
+  <div class="foot"><span>body-ledger.com</span>　·　每个数字都有研究出处与误差区间</div>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1200px; height:1200px; overflow:hidden; }
+  body {
+    background:#f7f6f2;
+    font-family:"Microsoft YaHei","微软雅黑",sans-serif;
+    color:#16211d;
+    position:relative;
+  }
+  .glow {
+    position:absolute; left:-300px; bottom:-420px;
+    width:1300px; height:1300px; border-radius:50%;
+    background:radial-gradient(circle, rgba(42,118,94,.085) 0%, rgba(42,118,94,.03) 45%, rgba(42,118,94,0) 70%);
+  }
+  .top { padding:84px 96px 0; position:relative; }
+  .eyebrow {
+    display:flex; align-items:center; gap:14px;
+    font-size:19px; letter-spacing:.30em; color:#2a765e; font-weight:600;
+  }
+  .eyebrow i { display:block; width:40px; height:2px; background:#2a765e; opacity:.55; }
+  h1 { margin-top:26px; font-size:70px; line-height:1.24; font-weight:700; letter-spacing:-.01em; }
+  h1 em { font-style:normal; color:#2a765e; }
+  .sub { margin-top:24px; font-size:25px; line-height:1.6; color:#4c5c56; }
+  .sub b { font-weight:600; color:#16211d; }
+  .link { margin-top:16px; font-size:18px; color:#737f79; }
+  .link span { color:#2a765e; font-weight:600; }
+  .shot {
+    position:absolute; left:96px; top:470px;
+    width:1040px; height:650px;
+    border-radius:14px; overflow:hidden;
+    box-shadow:0 26px 60px rgba(22,33,29,.16), 0 5px 14px rgba(22,33,29,.07);
+    border:1px solid #e4e0d7; background:#fff;
+  }
+  .shot img { width:100%; height:100%; object-fit:cover; object-position:left top; display:block; }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="top">
+    <div class="eyebrow"><i></i>身知 BodyLens</div>
+    <h1>你今天做的事，<br><em>身体都记着。</em></h1>
+    <p class="sub">把抽烟、喝酒、熬夜、久坐，折算成<b>看得见的时间和影响</b>。</p>
+    <p class="link"><span>body-ledger.com</span>　·　每个数字都有研究出处与误差区间</p>
+  </div>
+  <div class="shot">
+    <img src="../../evidence/screenshots/2026-10-28-02-today-recorded.png" alt="">
+  </div>
+</body>
+</html>
