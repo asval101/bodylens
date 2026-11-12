@@ -455,7 +455,11 @@
       box.innerHTML = '';
       return;
     }
-    const head = list.length > 1 ? '今天可以试的几件小事' : '今天可以试的一件小事';
+    /* 标题不带日期。
+     * 下面的建议写的是「明天试 4 支」，而这一块加入的是「今日计划」，
+     * 原来标题写「今天可以试的」，三个时间词挤在一起互相打架。
+     * 换成「接下来」，三处各管各的：建议说什么时候做，计划说记在哪一天。 */
+    const head = list.length > 1 ? '接下来可以试的几件小事' : '接下来可以试的一件小事';
     box.innerHTML =
       '<div class="actions-head"><span>' + head + '</span><span class="tiny-label">ONE SMALL STEP</span></div>' +
       '<ul class="action-list">' + list.slice(0, 3).map(a =>
