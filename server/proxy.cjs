@@ -7,7 +7,7 @@
  * 为什么不用 Express：装了依赖就多一步 npm install，
  * 「10 分钟复现」这条硬指标会立刻变脆。Node 内置的 http + fetch 够了。
  *
- * 环境变量（写在同目录 .env，由 systemd 注入）：
+ * 环境变量（同目录 .env；本地自动读取，线上由 systemd 的 EnvironmentFile 注入）：
  *   AI_API_KEY    必填。没有它服务照常启动，只是 /api/interpret 返回 503，
  *                 前端会自动退回本地解读——这正好是断网可用的演练。
  *   AI_BASE_URL   默认 https://api.deepseek.com   （OpenAI 兼容即可）
@@ -22,6 +22,22 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const zlib = require('node:zlib');
+
+/* 读同目录的 .env。
+ * 线上由 systemd 的 EnvironmentFile 注入，那里 process.env 已经有值，
+ * 这里只补缺的，不覆盖。自己写十几行而不装 dotenv —— 装了依赖就多一步
+ * npm install，「10 分钟复现」这条硬指标会立刻变脆。 */
+(function loadEnvFile() {
+  let raw;
+  try { raw = fs.readFileSync(path.join(__dirname, '.env'), 'utf8'); } catch (e) { return; }
+  for (const line of raw.split(/\r?\n/)) {
+    const m = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/.exec(line);
+    if (!m) continue;
+    let v = m[2].trim();
+    if (v.length > 1 && (v[0] === '"' || v[0] === "'") && v[v.length - 1] === v[0]) v = v.slice(1, -1);
+    if (process.env[m[1]] === undefined) process.env[m[1]] = v;
+  }
+})();
 
 const PORT = Number(process.env.PORT || 8080);
 const BIND = process.env.BIND || '0.0.0.0';
