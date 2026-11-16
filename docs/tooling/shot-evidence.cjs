@@ -69,7 +69,7 @@ const child = spawn(EDGE, [
   await waitFor(`!!document.querySelector('[data-pick]')`);
   await sleep(600);
   await run('window.scrollTo(0,0)');
-  await shoot('2026-10-28-01-today-empty');
+  await shoot('2026-11-16-01-today-empty');
 
   /* ---------- 2. 今天页 · 记一笔之后 ---------- */
   await run(`document.querySelector('[data-pick="smoke"]').click()`);
@@ -77,38 +77,38 @@ const child = spawn(EDGE, [
   await run(`(document.querySelector('[data-qty]')||{click(){}}).click()`);
   await sleep(900);
   await run('window.scrollTo(0,0)');
-  await shoot('2026-10-28-02-today-recorded');
+  await shoot('2026-11-16-02-today-recorded');
 
   /* ---------- 3. 今天页 · 推演卡（切到 1 年） ---------- */
   await run(`(()=>{const a=[...document.querySelectorAll('button,a')].find(e=>/1\\s*年/.test(e.textContent));if(a)a.click();})()`);
   await sleep(700);
   await run(`(()=>{const e=[...document.querySelectorAll('*')].find(x=>/如果一直这样/.test(x.textContent||'')&&x.children.length<6);if(e)e.scrollIntoView({block:'center'});})()`);
-  await shoot('2026-10-28-03-today-forecast');
+  await shoot('2026-11-16-03-today-forecast');
 
   /* ---------- 4. 行为资料库 ---------- */
   await call('Page.navigate', { url: BASE + '/#library' });
   await waitFor(`document.querySelectorAll('.library-card').length>0`);
   await sleep(500);
   await run('window.scrollTo(0,0)');
-  await shoot('2026-10-28-04-library');
+  await shoot('2026-11-16-04-library');
 
   /* ---------- 5. 资料库详情弹窗 ---------- */
   await run(`(()=>{const c=document.querySelector('.library-card[data-behavior="smoke"]')||document.querySelector('.library-card');c.click();})()`);
   await waitFor(`!document.getElementById('detail-modal').hidden`);
   await sleep(900);
-  await shoot('2026-10-28-05-library-detail');
+  await shoot('2026-11-16-05-library-detail');
 
   /* ---------- 6. 今日计划 ---------- */
   await call('Page.navigate', { url: BASE + '/#plan' });
   await waitFor(`!!document.querySelector('#plan-form')`);
   await sleep(500);
-  await shoot('2026-10-28-06-plan');
+  await shoot('2026-11-16-06-plan');
 
   /* ---------- 7. 数据与设置 ---------- */
   await call('Page.navigate', { url: BASE + '/#settings' });
   await waitFor(`!!document.querySelector('#export-backup')`);
   await sleep(500);
-  await shoot('2026-10-28-07-settings');
+  await shoot('2026-11-16-07-settings');
 
   /* ---------- 8. 窄屏 390 ---------- */
   await size(390, 844);
@@ -116,7 +116,7 @@ const child = spawn(EDGE, [
   await waitFor(`!!document.querySelector('[data-pick]')`);
   await sleep(600);
   await run('window.scrollTo(0,0)');
-  await shoot('2026-10-28-08-today-390');
+  await shoot('2026-11-16-08-today-390');
 
   console.log('\n控制台异常：', errs.length ? errs.slice(0, 3) : '无');
   ws.close(); child.kill(); process.exit(0);

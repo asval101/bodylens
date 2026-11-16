@@ -208,7 +208,7 @@
     <tr><td class="k">第三步</td><td>看下面三块内容</td><td>这个数字等于什么（一集短剧、一小时睡眠）、涉及哪些器官、这一天的解读、如果一直这样会怎样</td></tr>
   </tbody>
 </table>
-<p>四个页面各有分工，导航里只有三个入口加一个齿轮：<b>今天</b>（记账、看账、看推演）、<b>行为资料库</b>（全部 30 项行为与 12 个公开来源）、<b>今日计划</b>（写下今天想做的一件小事）、<b>数据与设置</b>（导出备份、恢复、动效与景深开关）。</p>
+<p>四个页面各有分工，导航里只有三个入口加一个齿轮：<b>今天</b>（记账、看账、看推演）、<b>行为资料库</b>（全部 31 项行为与 14 个公开来源）、<b>今日计划</b>（写下今天想做的一件小事）、<b>数据与设置</b>（导出备份、恢复、动效与景深开关）。</p>
 
 <h3><span class="no">1.4</span>它不做什么</h3>
 <ul class="tight">
@@ -218,7 +218,7 @@
 </ul>
 
 <figure>
-  <img src="evidence/screenshots/2026-10-28-01-today-empty.png" alt="空账本首屏">
+  <img src="evidence/screenshots/2026-11-16-01-today-empty.png" alt="空账本首屏">
   <figcaption><b>首次打开。</b>账本里什么都没有时，大数字位置写的是「还没开始」，三张下位卡片都明确写着「这张卡还没有数字」。这是刻意的：<b>没有数据就不给数，也不举一个例子替用户填进去。</b></figcaption>
 </figure>
 
@@ -245,14 +245,14 @@
   <li><b>不替用户做决定，也不替用户记账</b>
     <span>空账本不给数字；正向行为和损耗分两栏记，互不抵消；推演只给区间，不给结论。产品允许用户看完什么也不做——这是设计里最难守住、也是最要紧的一条。</span></li>
   <li><b>零依赖、断网可用、十分钟能跑起来</b>
-    <span>原生 HTML/CSS/JS，没有框架、没有构建步骤、没有 <code>node_modules</code>、没有 CDN。约 4,800 行代码，<code>npm start</code> 一条命令起本地服务，85 项自动化测试 151 毫秒跑完。评委不需要装任何包就能验证每一条说法。</span></li>
+    <span>原生 HTML/CSS/JS，没有框架、没有构建步骤、没有 <code>node_modules</code>、没有 CDN。约 4,800 行代码，<code>npm start</code> 一条命令起本地服务，85 项自动化测试不到半秒跑完。评委不需要装任何包就能验证每一条说法。</span></li>
 </ul>
 
 <div class="kpis">
-  <div><div class="v">30</div><div class="l">项日常行为<br>七个分类</div></div>
-  <div><div class="v">12</div><div class="l">个公开研究<br>资料来源</div></div>
+  <div><div class="v">31</div><div class="l">项日常行为<br>七个分类</div></div>
+  <div><div class="v">14</div><div class="l">个公开研究<br>资料来源</div></div>
   <div><div class="v">85</div><div class="l">项自动化测试<br>全部通过</div></div>
-  <div><div class="v">107</div><div class="l">次 Git 提交<br>12 天演进</div></div>
+  <div><div class="v">114</div><div class="l">次 Git 提交<br>30 天演进</div></div>
 </div>
 
 <!-- ============ 三 ============ -->
@@ -341,22 +341,22 @@
 <p class="lead">以下四张都是线上 <b>body-ledger.com</b> 的真实界面截图，2026 年 10 月 28 日从服务器直接抓取，并核对过本地与线上文件的 md5 一致。完整 8 张见仓库 <code>docs/evidence/screenshots/</code>。</p>
 
 <figure>
-  <img src="evidence/screenshots/2026-10-28-02-today-recorded.png" alt="记入行为后的今天页">
+  <img src="evidence/screenshots/2026-11-16-02-today-recorded.png" alt="记入行为后的今天页">
   <figcaption><b>记账之后。</b>左栏大数字是今天被拿走的时间，紧接着写明「资料折算的估算值 · 不是你的个人预测」；再往下是这个数等于什么（大约一集短剧）、涉及哪些器官。右栏人体上对应的器官被点亮。用户不需要读任何说明就知道该看哪里。</figcaption>
 </figure>
 
 <figure>
-  <img src="evidence/screenshots/2026-10-28-03-today-forecast.png" alt="如果一直这样">
+  <img src="evidence/screenshots/2026-11-16-03-today-forecast.png" alt="如果一直这样">
   <figcaption><b>如果一直这样。</b>用同一份权重换时间尺度：一周、一个月、一年。这张卡的数字不是模型生成的，是把权重逐日累加得到的。空账本时它不给数字，只写「这张卡还没有数字」。</figcaption>
 </figure>
 
 <figure>
-  <img src="evidence/screenshots/2026-10-28-05-library-detail.png" alt="器官详情">
+  <img src="evidence/screenshots/2026-11-16-05-library-detail.png" alt="器官详情">
   <figcaption><b>器官详情。</b>点右栏的器官，弹出这个器官在做什么、今天这些行为和它是什么关系、依据哪份研究、哪些地方还没有数据。最后一栏是刻意留的——写清「这里我不知道」，比编一句更可信。</figcaption>
 </figure>
 
 <figure class="portrait">
-  <img src="evidence/screenshots/2026-10-28-08-today-390.png" alt="手机窄屏">
+  <img src="evidence/screenshots/2026-11-16-08-today-390.png" alt="手机窄屏">
   <figcaption><b>手机窄屏（390 宽）。</b>单栏排布，人体下沉到账本之后。六个板块的先后顺序按「先看账、再看人、最后看推演」重排，没有横向溢出。截图取自真实 390 宽视口，不是缩放模拟。</figcaption>
 </figure>
 
@@ -364,7 +364,7 @@
 <h2><span class="idx">CHAPTER 06</span>发表与获奖情况<span class="req">对应要求（6）项目之前是否发表过或获奖，请说明</span></h2>
 
 <p class="lead">没有。这个作品在本次提交之前，没有在任何地方发表过，也没有参加过任何比赛或获得过任何奖项。</p>
-<p>项目从 2026 年 10 月 17 日开始做，10 月 18 日建立 Git 仓库并持续提交，到本文档编制时共 107 次提交（截至 5a408fe）、12 天。它一直只是一个个人的东西，没有对外发布过，也没有投稿到任何平台或期刊。本次是它第一次公开提交，也是第一次接受外部评审。</p>
+<p>项目从 2026 年 10 月 17 日开始做，10 月 18 日建立 Git 仓库并持续提交，到本文档编制时共 114 次提交（截至 <code>59c81a8</code>）、30 天。它一直只是一个个人的东西，没有对外发布过，也没有投稿到任何平台或期刊。本次是它第一次公开提交，也是第一次接受外部评审。</p>
 <p>线上地址 <b>body-ledger.com</b> 是为这次参赛部署的，此前不存在公开可访问的版本。如果评审需要，服务器的部署记录、证书签发时间与 Git 提交时间线可以对上。</p>
 
 <!-- ============ 七 ============ -->
@@ -380,10 +380,10 @@
     <tr><td>第三方运行时依赖、CDN</td><td class="k">零</td><td>仓库内无 <code>node_modules</code>，全站无跨域请求</td></tr>
     <tr><td>UI 组件库 / 模板</td><td class="k">未使用</td><td>版式与交互都是自己写的</td></tr>
     <tr><td>字体</td><td class="k">系统字体</td><td>使用系统中文字体栈，不分发任何字体文件</td></tr>
-    <tr><td>研究数据与结论</td><td class="k">公开来源</td><td>12 个公开发表的资料来源，逐条列在资料库里，可点开查看出处</td></tr>
+    <tr><td>研究数据与结论</td><td class="k">公开来源</td><td>14 个公开发表的资料来源，逐条列在资料库里，可点开查看出处</td></tr>
   </tbody>
 </table>
-<p>关于起点需要如实说明一件事：<b>10 月 17 日之前的早期探索没有建立版本管理</b>，那部分代码在 10 月 18 日作为一条基线一次性纳入了 Git（提交 <code>7f02b82</code>），提交信息里写明了缘由。它是一条基线，不是按功能拆分的历史，也没有伪装成那样。此后 106 次提交是真实的演进过程，每次对应一个可独立描述的改动，可与 <code>docs/prompt-log/</code> 下的 Prompt 链逐条对照。</p>
+<p>关于起点需要如实说明一件事：<b>10 月 17 日之前的早期探索没有建立版本管理</b>，那部分代码在 10 月 18 日作为一条基线一次性纳入了 Git（提交 <code>7f02b82</code>），提交信息里写明了缘由。它是一条基线，不是按功能拆分的历史，也没有伪装成那样。此后 113 次提交是真实的演进过程，每次对应一个可独立描述的改动，可与 <code>docs/prompt-log/</code> 下的 Prompt 链逐条对照。</p>
 
 
 </body>
