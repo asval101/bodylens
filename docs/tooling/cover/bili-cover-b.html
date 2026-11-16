@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size:1920px 1080px; margin:0; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1920px;height:1080px;overflow:hidden}
+  body{background:#f7f6f2;font-family:"Microsoft YaHei","微软雅黑",sans-serif;color:#16211d;position:relative}
+  .glow{position:absolute;left:-340px;top:-460px;width:1560px;height:1560px;border-radius:50%;
+    background:radial-gradient(circle,rgba(42,118,94,.10) 0%,rgba(42,118,94,.035) 45%,rgba(42,118,94,0) 70%)}
+  .left{position:absolute;left:108px;top:0;width:880px;height:1000px;
+    display:flex;flex-direction:column;justify-content:center}
+  .eyebrow{display:flex;align-items:center;gap:16px;font-size:24px;letter-spacing:.28em;
+    color:#2a765e;font-weight:600}
+  .eyebrow i{display:block;width:52px;height:2px;background:#2a765e;opacity:.55}
+  .big{margin-top:40px;font-size:108px;line-height:1.26;font-weight:700;letter-spacing:-.015em}
+  .big em{font-style:normal;color:#2a765e}
+  .sub{margin-top:42px;font-size:37px;line-height:1.62;color:#4c5c56}
+  .sub b{font-weight:600;color:#16211d}
+  .foot{position:absolute;left:108px;bottom:62px;font-size:21px;color:#737f79;letter-spacing:.01em}
+  .foot b{color:#2a765e;font-weight:600}
+  .shot{position:absolute;right:30px;top:148px;width:1012px;height:632px;
+    border-radius:22px 0 0 22px;overflow:hidden;background:#fff;
+    border:1px solid #e4e0d7;border-right:0;
+    box-shadow:0 36px 84px rgba(22,33,29,.20),0 8px 22px rgba(22,33,29,.08)}
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:left top;display:block}
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="left">
+    <div class="eyebrow"><i></i>身知 BODYLENS</div>
+    <div class="big">把今天做的事，<br><em>算成时间。</em></div>
+    <p class="sub">抽烟、喝酒、熬夜、久坐，<br>都有一笔<b>看得见的账</b>。</p>
+  </div>
+  <div class="shot"><img src="../../evidence/screenshots/2026-11-16-02-today-recorded.png" alt=""></div>
+  <div class="foot"><b>body-ledger.com</b>　·　人群研究的平均结果，不是个人预测</div>
+</body>
+</html>

@@ -50,6 +50,9 @@ if (!fs.existsSync(SHOT)) {
 const JOBS = [
   { html: 'cover-16x9.html', png: '封面-16x9.png', w: 1920, h: 1080 },
   { html: 'cover-1x1.html', png: '封面-1x1.png', w: 1200, h: 1200 },
+  /* B 站视频封面：16:9，1920×1080 提交后由平台缩放，缩略图里也能读清 */
+  { html: 'bili-cover-a.html', png: '封面-视频A-数字版.png', w: 1920, h: 1080 },
+  { html: 'bili-cover-b.html', png: '封面-视频B-主张版.png', w: 1920, h: 1080 },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });
