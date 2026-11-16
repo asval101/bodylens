@@ -33,7 +33,7 @@
     alcohol: 'alcohol',
     shortSleep: 'short-sleep',
     sit: 'tv-sit',
-    sugar: 'sugary',
+    redmeat: 'red-meat',
     walk: 'walk',
     sleep: 'enough-sleep'
   };
