@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size:1440px 1080px; margin:0; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1440px;height:1080px;overflow:hidden}
+  body{background:#f7f6f2;font-family:"Microsoft YaHei","微软雅黑",sans-serif;color:#16211d;position:relative}
+  /* 光晕压在左上，和文案同侧，避免右下截图区出现第二处亮斑 */
+  .glow{position:absolute;left:-420px;top:-520px;width:1400px;height:1400px;border-radius:50%;
+    background:radial-gradient(circle,rgba(42,118,94,.11) 0%,rgba(42,118,94,.04) 45%,rgba(42,118,94,0) 70%)}
+
+  .left{position:absolute;left:92px;top:84px;width:500px}
+  .eyebrow{display:flex;align-items:center;gap:14px;font-size:21px;letter-spacing:.28em;
+    color:#2a765e;font-weight:600}
+  .eyebrow i{display:block;width:44px;height:2px;background:#2a765e;opacity:.55}
+  /* 标题 70px × 7 字 = 490px，正好收在 500 的栏宽里，不需要手动折字 */
+  .big{margin-top:30px;font-size:70px;line-height:1.30;font-weight:700;letter-spacing:-.015em}
+  .big em{font-style:normal;color:#2a765e}
+  .sub{margin-top:26px;font-size:28px;line-height:1.60;color:#4c5c56}
+  .sub b{font-weight:600;color:#16211d}
+
+  /* 网址和免责各占一行，横着写会伸到截图底下被吃掉；
+     字号放大一点，让这个角落能压住画面，不然左下角像剩了个碎片 */
+  .foot{position:absolute;left:92px;bottom:54px;font-size:19px;line-height:1.9;color:#737f79}
+  .foot b{display:block;color:#2a765e;font-weight:600;font-size:24px;letter-spacing:.01em;
+    margin-bottom:2px}
+
+  /* 截图贴右下角：只留左上角是圆角，另三条边出血到画布外缘 */
+  .shot{position:absolute;right:0;bottom:0;width:960px;height:600px;
+    border-radius:26px 0 0 0;overflow:hidden;background:#fff;
+    border-top:1px solid #e4e0d7;border-left:1px solid #e4e0d7;
+    box-shadow:0 30px 74px rgba(22,33,29,.19),0 6px 18px rgba(22,33,29,.07)}
+  /* 画框比例 960:600 = 1.6，和截图的 1440:900 完全一致，所以是整页显示、没有裁切 */
+  .shot img{width:100%;height:100%;object-fit:cover;object-position:left top;display:block}
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <div class="left">
+    <div class="eyebrow"><i></i>身知 BODYLENS</div>
+    <div class="big">把今天做的事，<br><em>算成时间。</em></div>
+    <p class="sub">抽烟、喝酒、熬夜、久坐，<br>都有一笔<b>看得见的账</b>。</p>
+  </div>
+  <div class="shot"><img src="../../evidence/screenshots/2026-11-16-02-today-recorded.png" alt=""></div>
+  <div class="foot">
+    <b>body-ledger.com</b><br>
+    人群研究的平均结果，不是个人预测
+  </div>
+</body>
+</html>

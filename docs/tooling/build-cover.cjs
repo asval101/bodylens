@@ -53,6 +53,8 @@ const JOBS = [
   /* B 站视频封面：16:9，1920×1080 提交后由平台缩放，缩略图里也能读清 */
   { html: 'bili-cover-a.html', png: '封面-视频A-数字版.png', w: 1920, h: 1080 },
   { html: 'bili-cover-b.html', png: '封面-视频B-主张版.png', w: 1920, h: 1080 },
+  /* 同一版的 4:3 尺寸：1440×1080，不是把 16:9 裁掉两边，是重排的 */
+  { html: 'bili-cover-b-4x3.html', png: '封面-视频B-主张版-4x3.png', w: 1440, h: 1080 },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });
