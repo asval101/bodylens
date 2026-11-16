@@ -271,8 +271,13 @@
     chips.innerHTML = W.order.map((id, i) => {
       const item = W.get(id);
       const picked = id === pickedItem;
+      /* 按钮上只能放两三个字，「红肉」这种词光看标签不知道指什么。
+       * 悬停给一句人话解释（数据层有 what 就用 what，没有就用它那句 line），
+       * 移动端没有悬停，所以数量按钮旁边的常驻提示里也写了「一份约 85 克」。 */
+      const tip = item.what || item.line || item.name;
       return '<button type="button" class="entry-chip' + (picked ? ' is-picked' : '') + '"' +
         ' style="--i:' + i + '"' +
+        ' title="' + esc(item.name + '：' + tip) + '"' +
         ' data-pick="' + id + '" aria-pressed="' + picked + '">' + esc(item.name) + '</button>';
     }).join('');
 

@@ -21,7 +21,7 @@
   /* 资料库的行为 id → 账本的行为 id。
    * 两边是两套命名（资料库为每个行为写了一条证据，账本只收能折算的八项），
    * 这张表是唯一的桥，加新行为时两边都要登记。 */
-  const LEDGER_OF={'smoke':'smoke','alcohol':'alcohol','short-sleep':'shortSleep','sit':'sit','tv-sit':'sit','walk':'walk','sugary':'sugar'};
+  const LEDGER_OF={'smoke':'smoke','alcohol':'alcohol','short-sleep':'shortSleep','sit':'sit','tv-sit':'sit','walk':'walk','red-meat':'redmeat','sugary':'sugar'};
 
   const KEY='bodylens-user-v1', RESTORE_KEY='bodylens-restore-v1';
   const defaultState=()=>({tasks:[],prefs:{motion:true,depth:true},organ:'lungs',view:'front'});
